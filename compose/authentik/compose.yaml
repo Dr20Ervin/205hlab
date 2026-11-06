@@ -6,6 +6,11 @@ services:
     shm_size: 512mb
     container_name: authentik-server
     command: server
+    deploy:
+          resources:
+            limits:
+              cpus: '2.0'
+              memory: 2G
     environment:
       - AUTHENTIK_SECRET_KEY=${AUTHENTIK_SECRET_KEY:?AUTHENTIK_SECRET_KEY Not defined}
       - AUTHENTIK_ERROR_REPORTING__ENABLED=${ERROR_REPORTING_ENABLED:-false}
@@ -64,6 +69,11 @@ services:
     shm_size: 512mb
     container_name: authentik-worker
     command: worker
+    deploy:
+          resources:
+            limits:
+              cpus: '1.0'
+              memory: 1G
     environment:
       - AUTHENTIK_SECRET_KEY=${AUTHENTIK_SECRET_KEY:?AUTHENTIK_SECRET_KEY Not defined}
       - AUTHENTIK_ERROR_REPORTING__ENABLED=${ERROR_REPORTING_ENABLED:-false}
