@@ -1,0 +1,68 @@
+---
+services:
+  changedetection:
+    image: lscr.io/linuxserver/changedetection.io:${VERSION_TAG:-latest}
+    restart: unless-stopped
+    container_name: changedetection
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 1G
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TZ:-UTC}
+      - BASE_URL=https://changedetection.${FQDN:?FQDN Not defined}
+      - PLAYWRIGHT_DRIVER_URL=ws://playwright-chrome:3000/?stealth=1&--disable-web-security=true
+      - USE_X_SETTINGS=1
+    networks:
+      - traefik_network
+      - changedetection_network
+    volumes:
+      - changedetection_config:/config
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=traefik_network
+      - traefik.http.services.changedetection_web.loadBalancer.server.port=5000
+      - traefik.http.routers.changedetection_http.service=changedetection_web
+      - traefik.http.routers.changedetection_http.rule=Host(`changedetection.${FQDN}`)
+      - traefik.http.routers.changedetection_http.entrypoints=web
+      - traefik.http.routers.changedetection_https.service=changedetection_web
+      - traefik.http.routers.changedetection_https.rule=Host(`changedetection.${FQDN}`)
+      - traefik.http.routers.changedetection_https.entrypoints=websecure
+      - traefik.http.routers.changedetection_https.tls=true
+      - traefik.http.routers.changedetection_https.tls.certresolver=cloudflare
+      - traefik.http.middlewares.cd-headers.headers.customrequestheaders.X-Forwarded-Proto=https
+      - traefik.http.routers.changedetection_https.middlewares=cd-headers
+
+  playwright-chrome:
+    image: dgtlmoon/sockpuppetbrowser:${PLAYWRIGHT_VERSION_TAG:-latest}
+    restart: unless-stopped
+    container_name: playwright-chrome
+    cap_add:
+      - SYS_ADMIN
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+    environment:
+      - SCREEN_WIDTH=1920
+      - SCREEN_HEIGHT=1024
+      - SCREEN_DEPTH=16
+      - MAX_CONCURRENT_CHROME_PROCESSES=${MAX_CONCURRENT_CHROME_PROCESSES:-3}
+    networks:
+      - changedetection_network
+
+networks:
+  changedetection_network:
+    name: changedetection_network
+    driver: bridge
+  traefik_network:
+    external: true
+
+volumes:
+  changedetection_config:
+    name: changedetection-config
+    driver: local
