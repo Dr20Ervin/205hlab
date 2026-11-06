@@ -1,7 +1,7 @@
 ---
 services:
   server:
-    image: ghcr.io/goauthentik/server:${VERSION_TAG:?VERSION_TAG Not defined}
+    image: ghcr.io/goauthentik/server:2026.8.5
     restart: unless-stopped
     shm_size: 512mb
     container_name: authentik-server
@@ -64,7 +64,7 @@ services:
       - traefik.http.routers.authentik_https.tls.certresolver=cloudflare
 
   worker:
-    image: ghcr.io/goauthentik/server:${VERSION_TAG:?VERSION_TAG Not defined}
+    image: ghcr.io/goauthentik/server:2026.8.5
     restart: unless-stopped
     shm_size: 512mb
     container_name: authentik-worker
