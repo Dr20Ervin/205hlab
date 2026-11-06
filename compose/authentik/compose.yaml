@@ -1,0 +1,113 @@
+---
+services:
+  server:
+    image: ghcr.io/goauthentik/server:${VERSION_TAG:?VERSION_TAG Not defined}
+    restart: unless-stopped
+    shm_size: 512mb
+    container_name: authentik-server
+    command: server
+    environment:
+      - AUTHENTIK_SECRET_KEY=${AUTHENTIK_SECRET_KEY:?AUTHENTIK_SECRET_KEY Not defined}
+      - AUTHENTIK_ERROR_REPORTING__ENABLED=${ERROR_REPORTING_ENABLED:-false}
+      - AUTHENTIK_POSTGRESQL__HOST=${DATABASE_HOST:?DATABASE_HOST Not defined}
+      - AUTHENTIK_POSTGRESQL__PORT=${DATABASE_PORT:-5432}
+      - AUTHENTIK_POSTGRESQL__USER=${DATABASE_USER:?DATABASE_USER Not defined}
+      - AUTHENTIK_POSTGRESQL__NAME=${DATABASE_NAME:-authentik}
+      - AUTHENTIK_POSTGRESQL__PASSWORD=${DATABASE_PASSWORD:?DATABASE_PASSWORD Not defined}
+      - AUTHENTIK_EMAIL__HOST=${EMAIL_HOST:?EMAIL_HOST Not defined}
+      - AUTHENTIK_EMAIL__PORT=${EMAIL_PORT:-465}
+      - AUTHENTIK_EMAIL__FROM=noreply-authentik@${FQDN:?FQDN Not defined}
+      - AUTHENTIK_EMAIL__USERNAME=${EMAIL_USERNAME:?EMAIL_USERNAME Not defined}
+      - AUTHENTIK_EMAIL__PASSWORD=${EMAIL_PASSWORD:?EMAIL_PASSWORD Not defined}
+      - AUTHENTIK_EMAIL__USE_SSL=${EMAIL_USE_SSL:-true}
+      - AUTHENTIK_EMAIL__TIMEOUT=${EMAIL_TIMEOUT:-10}
+    networks:
+      - traefik_network
+      - authentik_backend
+      - postgres_network
+      - monitoring_network
+    volumes:
+      - authentik_data:/data
+      - authentik_templates:/templates
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=traefik_network
+      - traefik.http.services.authentik_web.loadBalancer.server.port=9000
+      - traefik.http.routers.authentik_http.service=authentik_web
+      - traefik.http.routers.authentik_http.rule=Host(`authentik.${FQDN}`)
+      - traefik.http.routers.authentik_http.entrypoints=web
+      - "traefik.http.middlewares.authentik.forwardauth.address=\
+        http://authentik-server:9000/outpost.goauthentik.io/auth/traefik"
+      - "traefik.http.middlewares.authentik.forwardauth.trustForwardHeader=true"
+      - "traefik.http.middlewares.authentik.forwardauth.authResponseHeaders=\
+        X-authentik-username,\
+        X-authentik-groups,\
+        X-authentik-entitlements,\
+        X-authentik-email,\
+        X-authentik-name,\
+        X-authentik-uid,\
+        X-authentik-jwt,\
+        X-authentik-meta-jwks,\
+        X-authentik-meta-outpost,\
+        X-authentik-meta-provider,\
+        X-authentik-meta-app,\
+        X-authentik-meta-version"
+      - traefik.http.routers.authentik_https.service=authentik_web
+      - traefik.http.routers.authentik_https.rule=Host(`authentik.${FQDN}`)
+      - traefik.http.routers.authentik_https.entrypoints=websecure
+      - traefik.http.routers.authentik_https.tls=true
+      - traefik.http.routers.authentik_https.tls.certresolver=cloudflare
+
+  worker:
+    image: ghcr.io/goauthentik/server:${VERSION_TAG:?VERSION_TAG Not defined}
+    restart: unless-stopped
+    shm_size: 512mb
+    container_name: authentik-worker
+    command: worker
+    environment:
+      - AUTHENTIK_SECRET_KEY=${AUTHENTIK_SECRET_KEY:?AUTHENTIK_SECRET_KEY Not defined}
+      - AUTHENTIK_ERROR_REPORTING__ENABLED=${ERROR_REPORTING_ENABLED:-false}
+      - AUTHENTIK_POSTGRESQL__HOST=${DATABASE_HOST:?DATABASE_HOST Not defined}
+      - AUTHENTIK_POSTGRESQL__PORT=${DATABASE_PORT:-5432}
+      - AUTHENTIK_POSTGRESQL__USER=${DATABASE_USER:?DATABASE_USER Not defined}
+      - AUTHENTIK_POSTGRESQL__NAME=${DATABASE_NAME:-authentik}
+      - AUTHENTIK_POSTGRESQL__PASSWORD=${DATABASE_PASSWORD:?DATABASE_PASSWORD Not defined}
+      - AUTHENTIK_EMAIL__HOST=${EMAIL_HOST:?EMAIL_HOST Not defined}
+      - AUTHENTIK_EMAIL__PORT=${EMAIL_PORT:-465}
+      - AUTHENTIK_EMAIL__FROM=noreply-authentik@${FQDN:?FQDN Not defined}
+      - AUTHENTIK_EMAIL__USERNAME=${EMAIL_USERNAME:?EMAIL_USERNAME Not defined}
+      - AUTHENTIK_EMAIL__PASSWORD=${EMAIL_PASSWORD:?EMAIL_PASSWORD Not defined}
+      - AUTHENTIK_EMAIL__USE_SSL=${EMAIL_USE_SSL:-true}
+      - AUTHENTIK_EMAIL__TIMEOUT=${EMAIL_TIMEOUT:-10}
+    user: root
+    networks:
+      - authentik_backend
+      - postgres_network
+      - monitoring_network
+    volumes:
+      - /run/docker.sock:/run/docker.sock
+      - authentik_data:/data
+      - authentik_certs:/certs
+      - authentik_templates:/templates
+
+networks:
+  authentik_backend:
+    name: authentik_backend
+    driver: bridge
+  traefik_network:
+    external: true
+  postgres_network:
+     external: true 
+  monitoring_network:
+    external: true
+
+volumes:
+  authentik_data:
+    name: authentik-data
+    driver: local
+  authentik_certs:
+    name: authentik-certs
+    driver: local
+  authentik_templates:
+    name: authentik-templates
+    driver: local
