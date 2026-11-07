@@ -63,12 +63,6 @@ services:
       - monitoring_network
     depends_on:
       - scrutiny
-    healthcheck:
-      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:9900/metrics || exit 1"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-      start_period: 15s
 
 networks:
   monitoring_network:

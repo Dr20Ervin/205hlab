@@ -57,8 +57,8 @@ services:
       - ${DYNAMIC_PATH:?DYNAMIC_PATH Not defined}:/etc/traefik/dynamic:ro
       - traefik_certs:/var/traefik/certs/:rw
     healthcheck:
-      test: ["CMD", "traefik", "healthcheck", "--ping"]
-      interval: 10s
+      test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1:8082/ping"]
+      interval: 30s
       timeout: 5s
       retries: 3
       start_period: 10s
