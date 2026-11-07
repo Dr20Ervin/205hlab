@@ -1,0 +1,58 @@
+---
+services:
+  grafana:
+    image: docker.io/grafana/grafana:${VERSION_TAG:-13.0.1}
+    restart: unless-stopped
+    container_name: grafana
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 2G
+    environment:
+      - GF_AUTH_GENERIC_OAUTH_ENABLED=${GRAFANA_OAUTH_ENABLED:-true}
+      - GF_AUTH_GENERIC_OAUTH_NAME=authentik
+      - GF_AUTH_GENERIC_OAUTH_CLIENT_ID=${GRAFANA_OAUTH_CLIENT_ID:?GRAFANA_OAUTH_CLIENT_ID Not defined}
+      - GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET=${GRAFANA_OAUTH_CLIENT_SECRET:?GRAFANA_OAUTH_CLIENT_SECRET Not defined}
+      - GF_AUTH_GENERIC_OAUTH_SCOPES=openid profile email entitlements
+      - GF_AUTH_GENERIC_OAUTH_AUTH_URL=https://authentik.${FQDN:?FQDN Not defined}/application/o/authorize/
+      - GF_AUTH_GENERIC_OAUTH_TOKEN_URL=http://authentik-server:9000/application/o/token/
+      - GF_AUTH_GENERIC_OAUTH_API_URL=http://authentik-server:9000/application/o/userinfo/
+      - GF_AUTH_SIGNOUT_REDIRECT_URL=https://authentik.${FQDN:?FQDN Not defined}/application/o/grafana/end-session/
+      - "GF_AUTH_GENERIC_OAUTH_ROLE_ATTRIBUTE_PATH=contains(entitlements[*], 'Grafana Admins') && 'Admin' || contains(entitlements[*], 'Grafana Editors') && 'Editor' || 'Viewer'"
+      - GF_AUTH_OAUTH_AUTO_LOGIN=${GRAFANA_OAUTH_AUTO_LOGIN:-true}
+      - GF_SERVER_ROOT_URL=https://grafana.${FQDN:?FQDN Not defined}
+    networks:
+      - traefik_network
+      - monitoring_network
+    volumes:
+      - grafana_data:/var/lib/grafana
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=traefik_network
+      - traefik.http.services.grafana_web.loadBalancer.server.port=3000
+      - traefik.http.routers.grafana_http.service=grafana_web
+      - traefik.http.routers.grafana_http.rule=Host(`grafana.${FQDN}`)
+      - traefik.http.routers.grafana_http.entrypoints=web
+      - traefik.http.routers.grafana_https.service=grafana_web
+      - traefik.http.routers.grafana_https.rule=Host(`grafana.${FQDN}`)
+      - traefik.http.routers.grafana_https.entrypoints=websecure
+      - traefik.http.routers.grafana_https.tls=true
+      - traefik.http.routers.grafana_https.tls.certresolver=cloudflare
+
+networks:
+  traefik_network:
+    external: true
+  monitoring_network:
+    external: true
+
+volumes:
+  grafana_data:
+    name: grafana-data
+    driver: local

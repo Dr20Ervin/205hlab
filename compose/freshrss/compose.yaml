@@ -1,0 +1,80 @@
+---
+services:
+  freshrss:
+    image: freshrss/freshrss:${VERSION_TAG:-1.30.4}
+    restart: unless-stopped
+    container_name: freshrss
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+    logging:
+      options:
+        max-size: 10m
+    environment:
+      - TZ=${TZ:-UTC}
+      - CRON_MIN=${CRON_MIN:-1,31}
+      - TRUSTED_PROXY=${TRUSTED_PROXY:-172.16.0.0/12 10.0.0.0/8 192.168.0.0/16}
+      - OIDC_ENABLED=${OIDC_ENABLED:-1}
+      - OIDC_PROVIDER_METADATA_URL=https://authentik.${FQDN:?FQDN Not defined}/application/o/${AUTHENTIK_SLUG:?AUTHENTIK_SLUG Not defined}/.well-known/openid-configuration
+      - OIDC_CLIENT_ID=${OIDC_CLIENT_ID:?OIDC_CLIENT_ID Not defined}
+      - OIDC_CLIENT_SECRET=${OIDC_CLIENT_SECRET:?OIDC_CLIENT_SECRET Not defined}
+      - OIDC_CLIENT_CRYPTO_KEY=${OIDC_CLIENT_CRYPTO_KEY:?OIDC_CLIENT_CRYPTO_KEY Not defined}
+      - OIDC_X_FORWARDED_HEADERS=X-Forwarded-Port X-Forwarded-Proto X-Forwarded-Host
+      - OIDC_SCOPES=openid email profile
+      - >-
+        FRESHRSS_INSTALL=
+        --api-enabled
+        --base-url https://freshrss.${FQDN:?FQDN Not defined}
+        --db-type pgsql
+        --db-host ${POSTGRES_HOST:?POSTGRES_HOST Not defined}
+        --db-user ${POSTGRES_USER:?POSTGRES_USER Not defined}
+        --db-password ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD Not defined}
+        --db-base ${POSTGRES_DB:-freshrss}
+        --default-user ${ADMIN_USER:?ADMIN_USER Not defined}
+        --language en
+      - >-
+        FRESHRSS_USER=
+        --user ${ADMIN_USER:?ADMIN_USER Not defined}
+        --password ${ADMIN_PASSWORD:?ADMIN_PASSWORD Not defined}
+        --email admin@${FQDN:?FQDN Not defined}
+        --language en
+    networks:
+      - traefik_network
+      - postgres_network
+    volumes:
+      - freshrss_data:/var/www/FreshRSS/data
+      - freshrss_extensions:/var/www/FreshRSS/extensions
+    healthcheck:
+      test: ["CMD", "cli/health.php"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=traefik_network
+      - traefik.http.services.freshrss_web.loadBalancer.server.port=80
+      - traefik.http.routers.freshrss_http.service=freshrss_web
+      - traefik.http.routers.freshrss_http.rule=Host(`freshrss.${FQDN}`)
+      - traefik.http.routers.freshrss_http.entrypoints=web
+      - traefik.http.routers.freshrss_https.service=freshrss_web
+      - traefik.http.routers.freshrss_https.rule=Host(`freshrss.${FQDN}`)
+      - traefik.http.routers.freshrss_https.entrypoints=websecure
+      - traefik.http.routers.freshrss_https.tls=true
+      - traefik.http.routers.freshrss_https.tls.certresolver=cloudflare
+
+networks:
+  traefik_network:
+    external: true
+  postgres_network:
+    external: true
+
+volumes:
+  freshrss_data:
+    name: freshrss-data
+    driver: local
+  freshrss_extensions:
+    name: freshrss-extensions
+    driver: local

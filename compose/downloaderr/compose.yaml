@@ -1,0 +1,133 @@
+---
+services:
+  gluetun:
+    image: ghcr.io/qdm12/gluetun:${GLUETUN_VERSION_TAG:-v3.41.3}
+    restart: unless-stopped
+    container_name: gluetun
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    ports:
+      - ${MNGT_IP:?MNGT_IP Not defined}:${QBITTORRENT_WEBUI_PORT:-8080}:${QBITTORRENT_WEBUI_PORT:-8080}
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+    environment:
+      - VPN_SERVICE_PROVIDER=${AIRVPN_SERVICE_PROVIDER:-airvpn}
+      - VPN_TYPE=wireguard
+      - WIREGUARD_PRIVATE_KEY=${AIRVPN_WIREGUARD_PRIVATE_KEY:?AIRVPN_WIREGUARD_PRIVATE_KEY Not defined}
+      - WIREGUARD_PRESHARED_KEY=${AIRVPN_WIREGUARD_PRESHARED_KEY:?AIRVPN_WIREGUARD_PRESHARED_KEY Not defined}
+      - WIREGUARD_ADDRESSES=${AIRVPN_WIREGUARD_ADDRESSES:?AIRVPN_WIREGUARD_ADDRESSES Not defined}
+      - SERVER_COUNTRIES=${AIRVPN_SERVER_COUNTRIES:-Romania}
+      - FIREWALL_VPN_INPUT_PORTS=${TORRENTING_PORT:?TORRENTING_PORT Not defined}
+    networks:
+      - servarr_backend
+    healthcheck:
+      test: ["CMD", "/gluetun-entrypoint", "healthcheck"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  qbittorrent:
+    image: lscr.io/linuxserver/qbittorrent:${QBITTORRENT_VERSION_TAG:-latest}
+    restart: unless-stopped
+    container_name: qbittorrent
+    network_mode: "service:gluetun"
+    deploy:
+      resources:
+        limits:
+          cpus: '1.5'
+          memory: 6G
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TZ:-UTC}
+      - WEBUI_PORT=${QBITTORRENT_WEBUI_PORT:-8080}
+      - TORRENTING_PORT=${TORRENTING_PORT:?TORRENTING_PORT Not defined}
+    volumes:
+      - qbittorrent_config:/config
+      - ${DOWNLOADS_DIR:?DOWNLOADS_DIR Not defined}:/downloads
+    depends_on:
+      gluetun:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:${QBITTORRENT_WEBUI_PORT:-8080}/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+  qui:
+    image: ghcr.io/autobrr/qui:${QUI_VERSION_TAG:-latest}
+    restart: unless-stopped
+    container_name: qui
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+    environment:
+      - QUI__DATABASE_ENGINE=postgres
+      - QUI__DATABASE_DSN=postgres://${QUI_DATABASE_USER:-qui_app}:${QUI_DATABASE_PASSWORD:?QUI_DATABASE_PASSWORD Not defined}@${POSTGRES_HOST:?POSTGRES_HOST Not defined}:${POSTGRES_PORT:-5432}/${QUI_DATABASE_NAME:-qui}?sslmode=disable
+      - QUI__DATABASE_CONNECT_TIMEOUT=10
+      - QUI__DATABASE_MAX_OPEN_CONNS=25
+      - QUI__DATABASE_MAX_IDLE_CONNS=5
+      - QUI__DATABASE_CONN_MAX_LIFETIME=300
+      - QUI__SESSION_COOKIE_SECURE=true
+      - QUI__SESSION_SECRET=${QUI_SESSION_SECRET:?QUI_SESSION_SECRET Not defined}
+      - QUI__METRICS_ENABLED=${QUI_METRICS_ENABLED:-true}
+      - QUI__METRICS_HOST=0.0.0.0
+      - QUI__METRICS_PORT=${QUI_METRICS_PORT:-9074}
+      - QUI__OIDC_ENABLED=${QUI_OIDC_ENABLED:-true}
+      - QUI__OIDC_ISSUER=https://authentik.${FQDN:?FQDN Not defined}/application/o/qui/
+      - QUI__OIDC_CLIENT_ID=${QUI_OIDC_CLIENT_ID:?QUI_OIDC_CLIENT_ID Not defined}
+      - QUI__OIDC_CLIENT_SECRET=${QUI_OIDC_CLIENT_SECRET:?QUI_OIDC_CLIENT_SECRET Not defined}
+      - QUI__OIDC_REDIRECT_URL=https://qui.${FQDN:?FQDN Not defined}/api/auth/oidc/callback
+      - QUI__OIDC_DISABLE_BUILT_IN_LOGIN=${QUI_OIDC_DISABLE_BUILT_IN_LOGIN:-true}
+    networks:
+      - traefik_network
+      - servarr_backend
+      - postgres_network
+      - monitoring_network
+    volumes:
+      - qui_config:/config
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://127.0.0.1:7476/health || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=traefik_network
+      - traefik.http.services.qui_web.loadBalancer.server.port=7476
+      - traefik.http.routers.qui_http.service=qui_web
+      - traefik.http.routers.qui_http.rule=Host(`qui.${FQDN}`)
+      - traefik.http.routers.qui_http.entrypoints=web
+      - traefik.http.routers.qui_https.service=qui_web
+      - traefik.http.routers.qui_https.rule=Host(`qui.${FQDN}`)
+      - traefik.http.routers.qui_https.entrypoints=websecure
+      - traefik.http.routers.qui_https.tls=true
+      - traefik.http.routers.qui_https.tls.certresolver=cloudflare
+
+networks:
+  servarr_backend:
+    external: true
+  traefik_network:
+    external: true
+  postgres_network:
+    external: true
+  monitoring_network:
+    external: true
+
+volumes:
+  qui_config:
+    name: qui-config
+    driver: local
+  qbittorrent_config:
+    name: qbittorrent-config
+    driver: local

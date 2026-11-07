@@ -1,0 +1,101 @@
+---
+services:
+  jellyfin:
+    image: lscr.io/linuxserver/jellyfin:${JELLYFIN_VERSION_TAG:-latest}
+    restart: unless-stopped
+    container_name: jellyfin
+    ports:
+      - ${LAN_IP:?LAN_IP Not defined}:8096:8096
+      - ${LAN_IP:?LAN_IP Not defined}:1900:1900/udp
+      - ${LAN_IP:?LAN_IP Not defined}:7359:7359/udp
+    devices:
+      - /dev/dri:/dev/dri
+    deploy:
+      resources:
+        limits:
+          cpus: '3.0'
+          memory: 8G
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TZ:-UTC}
+      - JELLYFIN_PublishedServerUrl=https://jellyfin.${FQDN:?FQDN Not defined}
+    networks:
+      - traefik_network
+      - servarr_backend
+    volumes:
+      - jellyfin_config:/config
+      - ${MEDIA_DIR:?MEDIA_DIR Not defined}/movies:/data/movies:ro
+      - ${MEDIA_DIR:?MEDIA_DIR Not defined}/shows:/data/shows:ro
+      - ${MEDIA_DIR:?MEDIA_DIR Not defined}/music:/data/music:ro
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8096/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=traefik_network
+      - traefik.http.services.jellyfin_web.loadBalancer.server.port=8096
+      - traefik.http.routers.jellyfin_http.service=jellyfin_web
+      - traefik.http.routers.jellyfin_http.rule=Host(`jellyfin.${FQDN}`)
+      - traefik.http.routers.jellyfin_http.entrypoints=web
+      - traefik.http.routers.jellyfin_https.service=jellyfin_web
+      - traefik.http.routers.jellyfin_https.rule=Host(`jellyfin.${FQDN}`)
+      - traefik.http.routers.jellyfin_https.entrypoints=websecure
+      - traefik.http.routers.jellyfin_https.tls=true
+      - traefik.http.routers.jellyfin_https.tls.certresolver=cloudflare
+
+  seerr:
+    image: ghcr.io/seerr-team/seerr:${SEERR_VERSION_TAG:-latest}
+    restart: unless-stopped
+    init: true
+    container_name: seerr
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+    environment:
+      - LOG_LEVEL=${LOG_LEVEL:-debug}
+      - TZ=${TZ:-UTC}
+      - PORT=5055
+    networks:
+      - traefik_network
+      - servarr_backend
+    volumes:
+      - seerr_config:/app/config
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:5055/api/v1/settings/public || exit 1"]
+      start_period: 20s
+      timeout: 3s
+      interval: 15s
+      retries: 3
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=traefik_network
+      - traefik.http.services.seerr_web.loadBalancer.server.port=5055
+      - traefik.http.routers.seerr_http.service=seerr_web
+      - traefik.http.routers.seerr_http.rule=Host(`seer.${FQDN}`)
+      - traefik.http.routers.seerr_http.entrypoints=web
+      - traefik.http.routers.seerr_https.service=seerr_web
+      - traefik.http.routers.seerr_https.rule=Host(`seer.${FQDN}`)
+      - traefik.http.routers.seerr_https.entrypoints=websecure
+      - traefik.http.routers.seerr_https.tls=true
+      - traefik.http.routers.seerr_https.tls.certresolver=cloudflare
+      - traefik.http.routers.seerr_https.middlewares=authentik@docker
+
+networks:
+  traefik_network:
+    external: true
+  servarr_backend:
+    external: true
+
+volumes:
+  jellyfin_config:
+    name: jellyfin-config
+    driver: local
+  seerr_config:
+    name: seerr-config
+    driver: local
