@@ -287,11 +287,11 @@ services:
       parser:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:6868/api/health || exit 1"]
+      test: ["CMD-SHELL", "curl -f http://localhost:6868/api/v1/health || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 20s
+      start_period: 10s
     labels:
       - traefik.enable=true
       - traefik.docker.network=traefik_network
@@ -317,11 +317,11 @@ services:
     networks:
       - servarr_backend
     healthcheck:
-      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:5000/ || exit 1"]
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:5000/health || exit 1"]
       interval: 30s
       timeout: 5s
       retries: 3
-      start_period: 10s
+      start_period: 5s
 
 networks:
   servarr_backend:
