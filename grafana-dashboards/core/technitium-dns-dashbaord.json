@@ -1,0 +1,3788 @@
+{
+  "apiVersion": "dashboard.grafana.app/v2",
+  "kind": "Dashboard",
+  "metadata": {
+    "name": "technitium-dns",
+    "generation": 2,
+    "creationTimestamp": "2026-09-27T17:14:02Z",
+    "labels": {},
+    "annotations": {}
+  },
+  "spec": {
+    "annotations": [
+      {
+        "kind": "AnnotationQuery",
+        "spec": {
+          "query": {
+            "kind": "DataQuery",
+            "group": "datasource",
+            "version": "v0",
+            "spec": {},
+            "labels": {
+              "grafana.app/export-label": "datasource-1"
+            }
+          },
+          "enable": true,
+          "hide": true,
+          "iconColor": "rgba(0, 211, 255, 1)",
+          "name": "Annotations & Alerts",
+          "builtIn": true,
+          "legacyOptions": {
+            "type": "dashboard"
+          }
+        }
+      }
+    ],
+    "cursorSync": "Off",
+    "description": "Full monitoring for Technitium DNS - single servers or clusters. Realtime queries/sec, cache hit %, block %, and SERVFAILs from lifetime counters; windowed stats (LastHour/LastDay/...) with Pi-hole-style top clients, domains, and blocked domains; zone and DHCP inventory; DNS resolution health and server version. Powered by the technitium-dns-prometheus-exporter (Python), with ready-made Prometheus alerting rules in the repo.",
+    "editable": true,
+    "elements": {
+      "panel-10": {
+        "kind": "Panel",
+        "spec": {
+          "id": 10,
+          "title": "Zones / cache / blocklists",
+          "description": "Zones, cache entries, and blocklist zones over time (good for spotting sync/import issues).",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "prometheus",
+                      "version": "v0",
+                      "spec": {
+                        "expr": "technitium_dns_zones{server=\"$server\"}",
+                        "intervalFactor": 1,
+                        "legendFormat": "zones"
+                      },
+                      "labels": {
+                        "grafana.app/export-label": "prometheus-1"
+                      }
+                    },
+                    "refId": "A",
+                    "hidden": false
+                  }
+                },
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "prometheus",
+                      "version": "v0",
+                      "spec": {
+                        "expr": "technitium_dns_cached_entries{server=\"$server\"}",
+                        "intervalFactor": 1,
+                        "legendFormat": "cached entries"
+                      },
+                      "labels": {
+                        "grafana.app/export-label": "prometheus-1"
+                      }
+                    },
+                    "refId": "B",
+                    "hidden": false
+                  }
+                },
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "prometheus",
+                      "version": "v0",
+                      "spec": {
+                        "expr": "technitium_dns_blocklist_zones{server=\"$server\"}",
+                        "intervalFactor": 1,
+                        "legendFormat": "blocklist zones"
+                      },
+                      "labels": {
+                        "grafana.app/export-label": "prometheus-1"
+                      }
+                    },
+                    "refId": "C",
+                    "hidden": false
+                  }
+                }
+              ],
+              "transformations": [],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "timeseries",
+            "version": "12.3.0",
+            "spec": {
+              "options": {
+                "alertThreshold": true,
+                "legend": {
+                  "calcs": [],
+                  "displayMode": "list",
+                  "placement": "bottom",
+                  "showLegend": true
+                },
+                "tooltip": {
+                  "hideZeros": false,
+                  "mode": "multi",
+                  "sort": "none"
+                }
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "unit": "short",
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "value": 0,
+                        "color": "green"
+                      },
+                      {
+                        "value": 80,
+                        "color": "red"
+                      }
+                    ]
+                  },
+                  "color": {
+                    "mode": "palette-classic"
+                  },
+                  "custom": {
+                    "axisBorderShow": false,
+                    "axisCenteredZero": false,
+                    "axisColorMode": "text",
+                    "axisLabel": "",
+                    "axisPlacement": "auto",
+                    "barAlignment": 0,
+                    "barWidthFactor": 0.6,
+                    "drawStyle": "line",
+                    "fillOpacity": 10,
+                    "gradientMode": "none",
+                    "hideFrom": {
+                      "legend": false,
+                      "tooltip": false,
+                      "viz": false
+                    },
+                    "insertNulls": false,
+                    "lineInterpolation": "linear",
+                    "lineWidth": 1,
+                    "pointSize": 3,
+                    "scaleDistribution": {
+                      "type": "linear"
+                    },
+                    "showPoints": "never",
+                    "showValues": false,
+                    "spanNulls": false,
+                    "stacking": {
+                      "group": "A",
+                      "mode": "none"
+                    },
+                    "thresholdsStyle": {
+                      "mode": "off"
+                    }
+                  }
+                },
+                "overrides": []
+              }
+            }
+          },
+          "transparent": true
+        }
+      },
+      "panel-2": {
+        "kind": "Panel",
+        "spec": {
+          "id": 2,
+          "title": "API Status",
+          "description": "Technitium API health from exporter (1 = up, 0 = down). If this is down, other Technitium metrics may be stale or missing.",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "prometheus",
+                      "version": "v0",
+                      "spec": {
+                        "expr": "technitium_up{server=\"$server\"}",
+                        "intervalFactor": 1,
+                        "legendFormat": "API Status"
+                      },
+                      "labels": {
+                        "grafana.app/export-label": "prometheus-1"
+                      }
+                    },
+                    "refId": "A",
+                    "hidden": false
+                  }
+                }
+              ],
+              "transformations": [],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "stat",
+            "version": "12.3.0",
+            "spec": {
+              "options": {
+                "colorMode": "background",
+                "graphMode": "none",
+                "justifyMode": "auto",
+                "orientation": "auto",
+                "percentChangeColorMode": "standard",
+                "reduceOptions": {
+                  "calcs": [
+                    "lastNotNull"
+                  ],
+                  "fields": "",
+                  "values": false
+                },
+                "showPercentChange": false,
+                "textMode": "auto",
+                "wideLayout": true
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "unit": "none",
+                  "mappings": [
+                    {
+                      "type": "value",
+                      "options": {
+                        "0": {
+                          "text": "Down"
+                        },
+                        "1": {
+                          "text": "Up"
+                        }
+                      }
+                    }
+                  ],
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "value": 0,
+                        "color": "#d44a3a"
+                      },
+                      {
+                        "value": 1,
+                        "color": "#299c46"
+                      }
+                    ]
+                  },
+                  "color": {
+                    "mode": "thresholds"
+                  }
+                },
+                "overrides": []
+              }
+            }
+          }
+        }
+      },
+      "panel-20": {
+        "kind": "Panel",
+        "spec": {
+          "id": 20,
+          "title": "Cache Ratio (stats window)",
+          "description": "Share of cached answers inside the current Technitium stats window. Formula: cached / all (denominator includes authoritative, blocked, and dropped queries).",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "prometheus",
+                      "version": "v0",
+                      "spec": {
+                        "editorMode": "code",
+                        "expr": "100 * sum(technitium_dns_queries_window{server=\"$server\", category=\"cached\"}) / clamp_min(sum(technitium_dns_queries_window{server=\"$server\", category=\"all\"}), 1)",
+                        "intervalFactor": 1,
+                        "legendFormat": "cache hit %",
+                        "range": true
+                      },
+                      "labels": {
+                        "grafana.app/export-label": "prometheus-1"
+                      }
+                    },
+                    "refId": "A",
+                    "hidden": false
+                  }
+                }
+              ],
+              "transformations": [],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "gauge",
+            "version": "12.3.0",
+            "spec": {
+              "options": {
+                "minVizHeight": 200,
+                "minVizWidth": 200,
+                "orientation": "horizontal",
+                "reduceOptions": {
+                  "calcs": [
+                    "lastNotNull"
+                  ],
+                  "fields": "",
+                  "values": false
+                },
+                "showThresholdLabels": false,
+                "showThresholdMarkers": true,
+                "sizing": "auto"
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "unit": "percent",
+                  "decimals": 1,
+                  "min": 0,
+                  "max": 100,
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "value": 0,
+                        "color": "red"
+                      },
+                      {
+                        "value": 20,
+                        "color": "#EAB839"
+                      },
+                      {
+                        "value": 40,
+                        "color": "green"
+                      }
+                    ]
+                  },
+                  "color": {
+                    "mode": "thresholds"
+                  }
+                },
+                "overrides": []
+              }
+            }
+          }
+        }
+      },
+      "panel-22": {
+        "kind": "Panel",
+        "spec": {
+          "id": 22,
+          "title": "Query types (A / AAAA / HTTPS / …)",
+          "description": "Breakdown of DNS query types (A, AAAA, HTTPS, PTR, etc.) over time.",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "prometheus",
+                      "version": "v0",
+                      "spec": {
+                        "expr": "technitium_dns_query_type_total{server=\"$server\"}",
+                        "intervalFactor": 1,
+                        "legendFormat": "{{qtype}}"
+                      },
+                      "labels": {
+                        "grafana.app/export-label": "prometheus-1"
+                      }
+                    },
+                    "refId": "A",
+                    "hidden": false
+                  }
+                }
+              ],
+              "transformations": [],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "timeseries",
+            "version": "12.3.0",
+            "spec": {
+              "options": {
+                "alertThreshold": true,
+                "legend": {
+                  "calcs": [],
+                  "displayMode": "list",
+                  "placement": "bottom",
+                  "showLegend": true
+                },
+                "tooltip": {
+                  "hideZeros": false,
+                  "mode": "multi",
+                  "sort": "none"
+                }
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "unit": "short",
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "value": 0,
+                        "color": "green"
+                      },
+                      {
+                        "value": 80,
+                        "color": "red"
+                      }
+                    ]
+                  },
+                  "color": {
+                    "mode": "palette-classic"
+                  },
+                  "custom": {
+                    "axisBorderShow": false,
+                    "axisCenteredZero": false,
+                    "axisColorMode": "text",
+                    "axisLabel": "",
+                    "axisPlacement": "auto",
+                    "barAlignment": 0,
+                    "barWidthFactor": 0.6,
+                    "drawStyle": "bars",
+                    "fillOpacity": 80,
+                    "gradientMode": "none",
+                    "hideFrom": {
+                      "legend": false,
+                      "tooltip": false,
+                      "viz": false
+                    },
+                    "insertNulls": false,
+                    "lineInterpolation": "linear",
+                    "lineWidth": 1,
+                    "pointSize": 3,
+                    "scaleDistribution": {
+                      "type": "linear"
+                    },
+                    "showPoints": "never",
+                    "showValues": false,
+                    "spanNulls": false,
+                    "stacking": {
+                      "group": "A",
+                      "mode": "normal"
+                    },
+                    "thresholdsStyle": {
+                      "mode": "off"
+                    }
+                  }
+                },
+                "overrides": []
+              }
+            }
+          },
+          "transparent": true
+        }
+      },
+      "panel-23": {
+        "kind": "Panel",
+        "spec": {
+          "id": 23,
+          "title": "Protocols",
+          "description": "Breakdown of protocol usage for DNS queries (UDP / TCP / DoH / DoT etc depending on Technitium config).",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "prometheus",
+                      "version": "v0",
+                      "spec": {
+                        "editorMode": "code",
+                        "exemplar": false,
+                        "expr": "technitium_dns_protocol_queries{server=\"$server\"}",
+                        "instant": true,
+                        "intervalFactor": 1,
+                        "legendFormat": "{{protocol}}",
+                        "range": false
+                      },
+                      "labels": {
+                        "grafana.app/export-label": "prometheus-1"
+                      }
+                    },
+                    "refId": "A",
+                    "hidden": false
+                  }
+                }
+              ],
+              "transformations": [],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "piechart",
+            "version": "12.3.0",
+            "spec": {
+              "options": {
+                "displayLabels": [
+                  "name",
+                  "percent"
+                ],
+                "legend": {
+                  "calcs": [],
+                  "displayMode": "table",
+                  "placement": "right",
+                  "showLegend": true
+                },
+                "pieType": "donut",
+                "reduceOptions": {
+                  "calcs": [
+                    "lastNotNull"
+                  ],
+                  "fields": "",
+                  "values": false
+                },
+                "sort": "desc",
+                "tooltip": {
+                  "hideZeros": false,
+                  "mode": "single",
+                  "sort": "none"
+                }
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "unit": "short",
+                  "decimals": 0,
+                  "color": {
+                    "mode": "palette-classic"
+                  },
+                  "custom": {
+                    "hideFrom": {
+                      "legend": false,
+                      "tooltip": false,
+                      "viz": false
+                    }
+                  }
+                },
+                "overrides": []
+              }
+            }
+          }
+        }
+      },
+      "panel-3": {
+        "kind": "Panel",
+        "spec": {
+          "id": 3,
+          "title": "Total Queries (stats window)",
+          "description": "Total DNS queries in the selected Technitium stats window (e.g. LastHour).",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "prometheus",
+                      "version": "v0",
+                      "spec": {
+                        "expr": "technitium_dns_queries_window{server=\"$server\",category=\"all\"}",
+                        "intervalFactor": 1,
+                        "legendFormat": "total"
+                      },
+                      "labels": {
+                        "grafana.app/export-label": "prometheus-1"
+                      }
+                    },
+                    "refId": "A",
+                    "hidden": false
+                  }
+                }
+              ],
+              "transformations": [],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "stat",
+            "version": "12.3.0",
+            "spec": {
+              "options": {
+                "colorMode": "none",
+                "graphMode": "area",
+                "justifyMode": "auto",
+                "orientation": "auto",
+                "percentChangeColorMode": "standard",
+                "reduceOptions": {
+                  "calcs": [
+                    "lastNotNull"
+                  ],
+                  "fields": "",
+                  "values": false
+                },
+                "showPercentChange": false,
+                "textMode": "auto",
+                "wideLayout": true
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "unit": "short",
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "value": 0,
+                        "color": "green"
+                      },
+                      {
+                        "value": 1000000,
+                        "color": "red"
+                      }
+                    ]
+                  },
+                  "color": {
+                    "mode": "thresholds"
+                  }
+                },
+                "overrides": []
+              }
+            }
+          }
+        }
+      },
+      "panel-30": {
+        "kind": "Panel",
+        "spec": {
+          "id": 30,
+          "title": "Zone Health",
+          "description": "List of zones from Technitium with status and type. Uses Info metric labels from technitium_zone_info.",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "prometheus",
+                      "version": "v0",
+                      "spec": {
+                        "expr": "technitium_zone_info{server=\"$server\", internal=\"false\"}",
+                        "format": "table",
+                        "instant": true,
+                        "intervalFactor": 1,
+                        "legendFormat": ""
+                      },
+                      "labels": {
+                        "grafana.app/export-label": "prometheus-1"
+                      }
+                    },
+                    "refId": "A",
+                    "hidden": false
+                  }
+                }
+              ],
+              "transformations": [
+                {
+                  "kind": "Transformation",
+                  "group": "labelsToFields",
+                  "spec": {
+                    "options": {}
+                  }
+                },
+                {
+                  "kind": "Transformation",
+                  "group": "organize",
+                  "spec": {
+                    "options": {
+                      "excludeByName": {
+                        "Value": true,
+                        "__name__": true,
+                        "instance": true,
+                        "job": true,
+                        "server": true
+                      },
+                      "indexByName": {},
+                      "renameByName": {
+                        "disabled": "Status",
+                        "type": "Type",
+                        "zone": "Zone Name"
+                      }
+                    }
+                  }
+                }
+              ],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "table",
+            "version": "12.3.0",
+            "spec": {
+              "options": {
+                "cellHeight": "sm",
+                "showHeader": true,
+                "sortBy": [
+                  {
+                    "desc": true,
+                    "displayName": "disabled"
+                  }
+                ]
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "value": 0,
+                        "color": "green"
+                      }
+                    ]
+                  },
+                  "custom": {
+                    "align": "auto",
+                    "cellOptions": {
+                      "type": "auto"
+                    },
+                    "footer": {
+                      "reducers": []
+                    },
+                    "inspect": false
+                  }
+                },
+                "overrides": [
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "disabled"
+                    },
+                    "properties": [
+                      {
+                        "id": "mappings",
+                        "value": [
+                          {
+                            "options": {
+                              "false": {
+                                "color": "green",
+                                "index": 1,
+                                "text": "Active"
+                              },
+                              "true": {
+                                "color": "red",
+                                "index": 0,
+                                "text": "DISABLED"
+                              }
+                            },
+                            "type": "value"
+                          }
+                        ]
+                      },
+                      {
+                        "id": "custom.cellOptions",
+                        "value": {
+                          "type": "color-background"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "internal"
+                    },
+                    "properties": [
+                      {
+                        "id": "custom.hideFrom.viz",
+                        "value": true
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        }
+      },
+      "panel-31": {
+        "kind": "Panel",
+        "spec": {
+          "id": 31,
+          "title": "DHCP Scopes (Active Leases)",
+          "description": "Active DHCP leases per scope, split by lease type (Dynamic / Reserved / etc) from Technitium DHCP API.",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "prometheus",
+                      "version": "v0",
+                      "spec": {
+                        "expr": "technitium_dhcp_leases_total{server=\"$server\"}",
+                        "intervalFactor": 1,
+                        "legendFormat": "{{scope}}"
+                      },
+                      "labels": {
+                        "grafana.app/export-label": "prometheus-1"
+                      }
+                    },
+                    "refId": "A",
+                    "hidden": false
+                  }
+                }
+              ],
+              "transformations": [],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "bargauge",
+            "version": "12.3.0",
+            "spec": {
+              "options": {
+                "displayMode": "lcd",
+                "legend": {
+                  "calcs": [],
+                  "displayMode": "list",
+                  "placement": "bottom",
+                  "showLegend": false
+                },
+                "maxVizHeight": 300,
+                "minVizHeight": 10,
+                "minVizWidth": 0,
+                "namePlacement": "auto",
+                "orientation": "horizontal",
+                "reduceOptions": {
+                  "calcs": [
+                    "lastNotNull"
+                  ],
+                  "fields": "",
+                  "values": false
+                },
+                "showUnfilled": true,
+                "sizing": "auto",
+                "textMode": "name",
+                "valueMode": "color"
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "value": 0,
+                        "color": "green"
+                      }
+                    ]
+                  },
+                  "color": {
+                    "mode": "palette-classic"
+                  }
+                },
+                "overrides": []
+              }
+            }
+          }
+        }
+      },
+      "panel-34": {
+        "kind": "Panel",
+        "spec": {
+          "id": 34,
+          "title": "Cache hit ratio (trend)",
+          "description": "Cache hit ratio over time from response types. Formula: Cached / (Cached + Recursive). Measures cache effectiveness for resolver-dependent queries only — authoritative, blocked, and dropped are excluded. Differs from the 'Cache Ratio' gauge which uses cached / all queries.",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "prometheus",
+                      "version": "v0",
+                      "spec": {
+                        "editorMode": "code",
+                        "expr": "100\n  * sum(technitium_dns_response_type_total{server=\"$server\", type=\"Cached\"})\n  / sum(technitium_dns_response_type_total{server=\"$server\", type=~\"Cached|Recursive\"})\n",
+                        "intervalFactor": 1,
+                        "legendFormat": "cache hit %",
+                        "range": true
+                      },
+                      "labels": {
+                        "grafana.app/export-label": "prometheus-1"
+                      }
+                    },
+                    "refId": "A",
+                    "hidden": false
+                  }
+                }
+              ],
+              "transformations": [],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "timeseries",
+            "version": "12.3.0",
+            "spec": {
+              "options": {
+                "alertThreshold": true,
+                "legend": {
+                  "calcs": [],
+                  "displayMode": "list",
+                  "placement": "bottom",
+                  "showLegend": true
+                },
+                "tooltip": {
+                  "hideZeros": false,
+                  "mode": "multi",
+                  "sort": "none"
+                }
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "unit": "percent",
+                  "decimals": 1,
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "value": 0,
+                        "color": "red"
+                      },
+                      {
+                        "value": 20,
+                        "color": "yellow"
+                      },
+                      {
+                        "value": 40,
+                        "color": "green"
+                      }
+                    ]
+                  },
+                  "color": {
+                    "mode": "thresholds"
+                  },
+                  "custom": {
+                    "axisBorderShow": false,
+                    "axisCenteredZero": false,
+                    "axisColorMode": "text",
+                    "axisLabel": "",
+                    "axisPlacement": "auto",
+                    "barAlignment": 0,
+                    "barWidthFactor": 0.6,
+                    "drawStyle": "line",
+                    "fillOpacity": 0,
+                    "gradientMode": "none",
+                    "hideFrom": {
+                      "legend": false,
+                      "tooltip": false,
+                      "viz": false
+                    },
+                    "insertNulls": false,
+                    "lineInterpolation": "linear",
+                    "lineWidth": 1,
+                    "pointSize": 5,
+                    "scaleDistribution": {
+                      "type": "linear"
+                    },
+                    "showPoints": "auto",
+                    "showValues": false,
+                    "spanNulls": false,
+                    "stacking": {
+                      "group": "A",
+                      "mode": "none"
+                    },
+                    "thresholdsStyle": {
+                      "mode": "off"
+                    }
+                  }
+                },
+                "overrides": []
+              }
+            }
+          },
+          "transparent": true
+        }
+      },
+      "panel-35": {
+        "kind": "Panel",
+        "spec": {
+          "id": 35,
+          "title": "Total Managed Zones",
+          "description": "Total number of zones managed by Technitium (from dashboard stats).",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "prometheus",
+                      "version": "v0",
+                      "spec": {
+                        "editorMode": "code",
+                        "expr": "technitium_dns_zones{server=\"$server\"}",
+                        "intervalFactor": 1,
+                        "legendFormat": "zones",
+                        "range": true
+                      },
+                      "labels": {
+                        "grafana.app/export-label": "prometheus-1"
+                      }
+                    },
+                    "refId": "A",
+                    "hidden": false
+                  }
+                }
+              ],
+              "transformations": [],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "stat",
+            "version": "12.3.0",
+            "spec": {
+              "options": {
+                "colorMode": "none",
+                "graphMode": "area",
+                "justifyMode": "auto",
+                "orientation": "auto",
+                "percentChangeColorMode": "standard",
+                "reduceOptions": {
+                  "calcs": [
+                    "lastNotNull"
+                  ],
+                  "fields": "",
+                  "values": false
+                },
+                "showPercentChange": false,
+                "textMode": "auto",
+                "wideLayout": true
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "unit": "short",
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "value": 0,
+                        "color": "green"
+                      },
+                      {
+                        "value": 100,
+                        "color": "blue"
+                      }
+                    ]
+                  },
+                  "color": {
+                    "mode": "thresholds"
+                  }
+                },
+                "overrides": []
+              }
+            }
+          }
+        }
+      },
+      "panel-36": {
+        "kind": "Panel",
+        "spec": {
+          "id": 36,
+          "title": "Zones in Allow List",
+          "description": "Number of zones explicitly in allow-list (from dashboard stats).",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "prometheus",
+                      "version": "v0",
+                      "spec": {
+                        "editorMode": "code",
+                        "expr": "technitium_dns_allowlist_zones{server=\"$server\"}",
+                        "intervalFactor": 1,
+                        "legendFormat": "zones",
+                        "range": true
+                      },
+                      "labels": {
+                        "grafana.app/export-label": "prometheus-1"
+                      }
+                    },
+                    "refId": "A",
+                    "hidden": false
+                  }
+                }
+              ],
+              "transformations": [],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "stat",
+            "version": "12.3.0",
+            "spec": {
+              "options": {
+                "colorMode": "none",
+                "graphMode": "area",
+                "justifyMode": "auto",
+                "orientation": "auto",
+                "percentChangeColorMode": "standard",
+                "reduceOptions": {
+                  "calcs": [
+                    "lastNotNull"
+                  ],
+                  "fields": "",
+                  "values": false
+                },
+                "showPercentChange": false,
+                "textMode": "auto",
+                "wideLayout": true
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "unit": "short",
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "value": 0,
+                        "color": "green"
+                      },
+                      {
+                        "value": 100,
+                        "color": "blue"
+                      }
+                    ]
+                  },
+                  "color": {
+                    "mode": "thresholds"
+                  }
+                },
+                "overrides": []
+              }
+            }
+          }
+        }
+      },
+      "panel-37": {
+        "kind": "Panel",
+        "spec": {
+          "id": 37,
+          "title": "Allowed Zones",
+          "description": "Number of zones explicitly allowed (whitelisted).",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "prometheus",
+                      "version": "v0",
+                      "spec": {
+                        "editorMode": "code",
+                        "expr": "technitium_dns_allowed_zones{server=\"$server\"}",
+                        "intervalFactor": 1,
+                        "legendFormat": "zones",
+                        "range": true
+                      },
+                      "labels": {
+                        "grafana.app/export-label": "prometheus-1"
+                      }
+                    },
+                    "refId": "A",
+                    "hidden": false
+                  }
+                }
+              ],
+              "transformations": [],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "stat",
+            "version": "12.3.0",
+            "spec": {
+              "options": {
+                "colorMode": "none",
+                "graphMode": "area",
+                "justifyMode": "auto",
+                "orientation": "auto",
+                "percentChangeColorMode": "standard",
+                "reduceOptions": {
+                  "calcs": [
+                    "lastNotNull"
+                  ],
+                  "fields": "",
+                  "values": false
+                },
+                "showPercentChange": false,
+                "textMode": "auto",
+                "wideLayout": true
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "unit": "short",
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "value": 0,
+                        "color": "green"
+                      },
+                      {
+                        "value": 100,
+                        "color": "blue"
+                      }
+                    ]
+                  },
+                  "color": {
+                    "mode": "thresholds"
+                  }
+                },
+                "overrides": []
+              }
+            }
+          }
+        }
+      },
+      "panel-38": {
+        "kind": "Panel",
+        "spec": {
+          "id": 38,
+          "title": "Manually Blocked Zones",
+          "description": "Number of zones manually marked as blocked (distinct from imported blocklist zones).",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "prometheus",
+                      "version": "v0",
+                      "spec": {
+                        "editorMode": "code",
+                        "expr": "technitium_dns_manual_blocked_zones{server=\"$server\"}",
+                        "intervalFactor": 1,
+                        "legendFormat": "zones",
+                        "range": true
+                      },
+                      "labels": {
+                        "grafana.app/export-label": "prometheus-1"
+                      }
+                    },
+                    "refId": "A",
+                    "hidden": false
+                  }
+                }
+              ],
+              "transformations": [],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "stat",
+            "version": "12.3.0",
+            "spec": {
+              "options": {
+                "colorMode": "none",
+                "graphMode": "area",
+                "justifyMode": "auto",
+                "orientation": "auto",
+                "percentChangeColorMode": "standard",
+                "reduceOptions": {
+                  "calcs": [
+                    "lastNotNull"
+                  ],
+                  "fields": "",
+                  "values": false
+                },
+                "showPercentChange": false,
+                "textMode": "auto",
+                "wideLayout": true
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "unit": "short",
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "value": 0,
+                        "color": "green"
+                      },
+                      {
+                        "value": 100,
+                        "color": "blue"
+                      }
+                    ]
+                  },
+                  "color": {
+                    "mode": "thresholds"
+                  }
+                },
+                "overrides": []
+              }
+            }
+          }
+        }
+      },
+      "panel-39": {
+        "kind": "Panel",
+        "spec": {
+          "id": 39,
+          "title": "Zones in Block List",
+          "description": "Number of zones from imported blocklists (distinct from manually blocked zones).",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "prometheus",
+                      "version": "v0",
+                      "spec": {
+                        "editorMode": "code",
+                        "expr": "technitium_dns_blocklist_zones{server=\"$server\"}",
+                        "intervalFactor": 1,
+                        "legendFormat": "zones",
+                        "range": true
+                      },
+                      "labels": {
+                        "grafana.app/export-label": "prometheus-1"
+                      }
+                    },
+                    "refId": "A",
+                    "hidden": false
+                  }
+                }
+              ],
+              "transformations": [],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "stat",
+            "version": "12.3.0",
+            "spec": {
+              "options": {
+                "colorMode": "none",
+                "graphMode": "area",
+                "justifyMode": "auto",
+                "orientation": "auto",
+                "percentChangeColorMode": "standard",
+                "reduceOptions": {
+                  "calcs": [
+                    "lastNotNull"
+                  ],
+                  "fields": "",
+                  "values": false
+                },
+                "showPercentChange": false,
+                "textMode": "auto",
+                "wideLayout": true
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "unit": "short",
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "value": 0,
+                        "color": "green"
+                      },
+                      {
+                        "value": 100,
+                        "color": "blue"
+                      }
+                    ]
+                  },
+                  "color": {
+                    "mode": "thresholds"
+                  }
+                },
+                "overrides": []
+              }
+            }
+          }
+        }
+      },
+      "panel-4": {
+        "kind": "Panel",
+        "spec": {
+          "id": 4,
+          "title": "% Blocked (stats window)",
+          "description": "Share of blocked queries inside the current Technitium stats window (blocked / all).",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "prometheus",
+                      "version": "v0",
+                      "spec": {
+                        "editorMode": "code",
+                        "expr": "100 * sum(technitium_dns_queries_window{server=\"$server\", category=\"blocked\"}) / clamp_min(sum(technitium_dns_queries_window{server=\"$server\", category=\"all\"}), 1)",
+                        "intervalFactor": 1,
+                        "legendFormat": "% blocked",
+                        "range": true
+                      },
+                      "labels": {
+                        "grafana.app/export-label": "prometheus-1"
+                      }
+                    },
+                    "refId": "A",
+                    "hidden": false
+                  }
+                }
+              ],
+              "transformations": [],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "gauge",
+            "version": "12.3.0",
+            "spec": {
+              "options": {
+                "minVizHeight": 200,
+                "minVizWidth": 200,
+                "orientation": "horizontal",
+                "reduceOptions": {
+                  "calcs": [
+                    "lastNotNull"
+                  ],
+                  "fields": "",
+                  "values": false
+                },
+                "showThresholdLabels": false,
+                "showThresholdMarkers": true,
+                "sizing": "auto"
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "unit": "percent",
+                  "decimals": 1,
+                  "min": 0,
+                  "max": 100,
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "value": 0,
+                        "color": "green"
+                      },
+                      {
+                        "value": 20,
+                        "color": "#EAB839"
+                      },
+                      {
+                        "value": 50,
+                        "color": "red"
+                      }
+                    ]
+                  },
+                  "color": {
+                    "mode": "thresholds"
+                  }
+                },
+                "overrides": []
+              }
+            }
+          }
+        }
+      },
+      "panel-40": {
+        "kind": "Panel",
+        "spec": {
+          "id": 40,
+          "title": "Clients Over Time",
+          "description": "Number of unique clients seen per scrape over time (based on stats window snapshot).",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "prometheus",
+                      "version": "v0",
+                      "spec": {
+                        "editorMode": "code",
+                        "expr": "technitium_dns_clients_window{server=\"$server\"}",
+                        "intervalFactor": 1,
+                        "legendFormat": "clients",
+                        "range": true
+                      },
+                      "labels": {
+                        "grafana.app/export-label": "prometheus-1"
+                      }
+                    },
+                    "refId": "A",
+                    "hidden": false
+                  }
+                }
+              ],
+              "transformations": [],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "timeseries",
+            "version": "12.3.0",
+            "spec": {
+              "options": {
+                "alertThreshold": true,
+                "legend": {
+                  "calcs": [],
+                  "displayMode": "table",
+                  "placement": "right",
+                  "showLegend": false
+                },
+                "tooltip": {
+                  "hideZeros": false,
+                  "mode": "multi",
+                  "sort": "none"
+                }
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "unit": "short",
+                  "decimals": 0,
+                  "min": 0,
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "value": 0,
+                        "color": "green"
+                      }
+                    ]
+                  },
+                  "color": {
+                    "mode": "palette-classic"
+                  },
+                  "custom": {
+                    "axisBorderShow": false,
+                    "axisCenteredZero": false,
+                    "axisColorMode": "text",
+                    "axisLabel": "",
+                    "axisPlacement": "auto",
+                    "barAlignment": 0,
+                    "barWidthFactor": 0.6,
+                    "drawStyle": "line",
+                    "fillOpacity": 10,
+                    "gradientMode": "none",
+                    "hideFrom": {
+                      "legend": false,
+                      "tooltip": false,
+                      "viz": false
+                    },
+                    "insertNulls": false,
+                    "lineInterpolation": "linear",
+                    "lineWidth": 1,
+                    "pointSize": 3,
+                    "scaleDistribution": {
+                      "type": "linear"
+                    },
+                    "showPoints": "never",
+                    "showValues": false,
+                    "spanNulls": false,
+                    "stacking": {
+                      "group": "A",
+                      "mode": "none"
+                    },
+                    "thresholdsStyle": {
+                      "mode": "off"
+                    }
+                  },
+                  "fieldMinMax": false
+                },
+                "overrides": []
+              }
+            }
+          }
+        }
+      },
+      "panel-41": {
+        "kind": "Panel",
+        "spec": {
+          "id": 41,
+          "title": "Top Clients (Trend)",
+          "description": "Top clients over time (hits per client from stats window snapshot). Use for spotting noisy clients.",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "prometheus",
+                      "version": "v0",
+                      "spec": {
+                        "editorMode": "code",
+                        "expr": "technitium_dns_top_client_hits{server=\"$server\"}",
+                        "interval": "",
+                        "intervalFactor": 1,
+                        "legendFormat": "{{client_ip}} - {{client_name}}",
+                        "range": true
+                      },
+                      "labels": {
+                        "grafana.app/export-label": "prometheus-1"
+                      }
+                    },
+                    "refId": "A",
+                    "hidden": false
+                  }
+                }
+              ],
+              "transformations": [],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "timeseries",
+            "version": "12.3.0",
+            "spec": {
+              "options": {
+                "legend": {
+                  "calcs": [],
+                  "displayMode": "list",
+                  "placement": "bottom",
+                  "showLegend": true
+                },
+                "tooltip": {
+                  "hideZeros": false,
+                  "mode": "single",
+                  "sort": "none"
+                }
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "value": 0,
+                        "color": "green"
+                      },
+                      {
+                        "value": 80,
+                        "color": "red"
+                      }
+                    ]
+                  },
+                  "color": {
+                    "mode": "palette-classic"
+                  },
+                  "custom": {
+                    "axisBorderShow": false,
+                    "axisCenteredZero": false,
+                    "axisColorMode": "text",
+                    "axisLabel": "",
+                    "axisPlacement": "auto",
+                    "barAlignment": 0,
+                    "barWidthFactor": 0.6,
+                    "drawStyle": "line",
+                    "fillOpacity": 0,
+                    "gradientMode": "none",
+                    "hideFrom": {
+                      "legend": false,
+                      "tooltip": false,
+                      "viz": false
+                    },
+                    "insertNulls": false,
+                    "lineInterpolation": "linear",
+                    "lineWidth": 1,
+                    "pointSize": 5,
+                    "scaleDistribution": {
+                      "type": "linear"
+                    },
+                    "showPoints": "auto",
+                    "showValues": false,
+                    "spanNulls": false,
+                    "stacking": {
+                      "group": "A",
+                      "mode": "none"
+                    },
+                    "thresholdsStyle": {
+                      "mode": "off"
+                    }
+                  }
+                },
+                "overrides": []
+              }
+            }
+          }
+        }
+      },
+      "panel-5": {
+        "kind": "Panel",
+        "spec": {
+          "id": 5,
+          "title": "Unique Clients (stats window)",
+          "description": "Number of unique DNS clients seen in the current Technitium stats window.",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "prometheus",
+                      "version": "v0",
+                      "spec": {
+                        "expr": "technitium_dns_clients_window{server=\"$server\"}",
+                        "intervalFactor": 1,
+                        "legendFormat": "clients"
+                      },
+                      "labels": {
+                        "grafana.app/export-label": "prometheus-1"
+                      }
+                    },
+                    "refId": "A",
+                    "hidden": false
+                  }
+                }
+              ],
+              "transformations": [],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "stat",
+            "version": "12.3.0",
+            "spec": {
+              "options": {
+                "colorMode": "none",
+                "graphMode": "area",
+                "justifyMode": "auto",
+                "orientation": "auto",
+                "percentChangeColorMode": "standard",
+                "reduceOptions": {
+                  "calcs": [
+                    "lastNotNull"
+                  ],
+                  "fields": "",
+                  "values": false
+                },
+                "showPercentChange": false,
+                "textMode": "auto",
+                "wideLayout": true
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "unit": "short",
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "value": 0,
+                        "color": "green"
+                      },
+                      {
+                        "value": 100,
+                        "color": "blue"
+                      }
+                    ]
+                  },
+                  "color": {
+                    "mode": "thresholds"
+                  }
+                },
+                "overrides": []
+              }
+            }
+          }
+        }
+      },
+      "panel-51": {
+        "kind": "Panel",
+        "spec": {
+          "id": 51,
+          "title": "Server Uptime",
+          "description": "DNS server uptime since last restart (lifetime counter).",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "prometheus",
+                      "version": "v0",
+                      "spec": {
+                        "expr": "technitium_realtime_uptime_seconds{server=\"$server\"}",
+                        "intervalFactor": 1,
+                        "legendFormat": "uptime"
+                      },
+                      "labels": {
+                        "grafana.app/export-label": "prometheus-1"
+                      }
+                    },
+                    "refId": "A",
+                    "hidden": false
+                  }
+                }
+              ],
+              "transformations": [],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "stat",
+            "version": "12.3.0",
+            "spec": {
+              "options": {
+                "colorMode": "none",
+                "graphMode": "none",
+                "justifyMode": "auto",
+                "orientation": "auto",
+                "percentChangeColorMode": "standard",
+                "reduceOptions": {
+                  "calcs": [
+                    "lastNotNull"
+                  ],
+                  "fields": "",
+                  "values": false
+                },
+                "showPercentChange": false,
+                "textMode": "auto",
+                "wideLayout": true
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "unit": "dtdurations",
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "value": 0,
+                        "color": "green"
+                      }
+                    ]
+                  },
+                  "color": {
+                    "mode": "thresholds"
+                  }
+                },
+                "overrides": []
+              }
+            }
+          }
+        }
+      },
+      "panel-52": {
+        "kind": "Panel",
+        "spec": {
+          "id": 52,
+          "title": "Queries / sec",
+          "description": "Current queries per second rate (averaged over 1 min, lifetime counters).",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "prometheus",
+                      "version": "v0",
+                      "spec": {
+                        "editorMode": "code",
+                        "expr": "rate(technitium_dns_realtime_queries_total{server=\"$server\",category=\"all\"}[10m])",
+                        "intervalFactor": 1,
+                        "legendFormat": "QPS"
+                      },
+                      "labels": {
+                        "grafana.app/export-label": "prometheus-1"
+                      }
+                    },
+                    "refId": "A",
+                    "hidden": false
+                  }
+                }
+              ],
+              "transformations": [],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "stat",
+            "version": "12.3.0",
+            "spec": {
+              "options": {
+                "colorMode": "none",
+                "graphMode": "area",
+                "justifyMode": "auto",
+                "orientation": "auto",
+                "percentChangeColorMode": "standard",
+                "reduceOptions": {
+                  "calcs": [
+                    "lastNotNull"
+                  ],
+                  "fields": "",
+                  "values": false
+                },
+                "showPercentChange": false,
+                "textMode": "auto",
+                "wideLayout": true
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "unit": "rps",
+                  "decimals": 1,
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "value": 0,
+                        "color": "green"
+                      },
+                      {
+                        "value": 100,
+                        "color": "#EAB839"
+                      },
+                      {
+                        "value": 500,
+                        "color": "red"
+                      }
+                    ]
+                  },
+                  "color": {
+                    "mode": "thresholds"
+                  }
+                },
+                "overrides": []
+              }
+            }
+          }
+        }
+      },
+      "panel-53": {
+        "kind": "Panel",
+        "spec": {
+          "id": 53,
+          "title": "Cache Hit % (realtime)",
+          "description": "Cache hit ratio from realtime lifetime counters (cached / all avg over 1 min).",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "prometheus",
+                      "version": "v0",
+                      "spec": {
+                        "editorMode": "code",
+                        "expr": "100 * sum(rate(technitium_dns_realtime_queries_total{server=\"$server\",category=\"cached\"}[10m])) / clamp_min(sum(rate(technitium_dns_realtime_queries_total{server=\"$server\",category=\"all\"}[10m])), 1)",
+                        "intervalFactor": 1,
+                        "legendFormat": "%",
+                        "range": true
+                      },
+                      "labels": {
+                        "grafana.app/export-label": "prometheus-1"
+                      }
+                    },
+                    "refId": "A",
+                    "hidden": false
+                  }
+                }
+              ],
+              "transformations": [],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "gauge",
+            "version": "12.3.0",
+            "spec": {
+              "options": {
+                "minVizHeight": 200,
+                "minVizWidth": 200,
+                "orientation": "horizontal",
+                "reduceOptions": {
+                  "calcs": [
+                    "lastNotNull"
+                  ],
+                  "fields": "",
+                  "values": false
+                },
+                "showThresholdLabels": false,
+                "showThresholdMarkers": true,
+                "sizing": "auto"
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "unit": "percent",
+                  "decimals": 1,
+                  "min": 0,
+                  "max": 100,
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "value": 0,
+                        "color": "red"
+                      },
+                      {
+                        "value": 20,
+                        "color": "#EAB839"
+                      },
+                      {
+                        "value": 40,
+                        "color": "green"
+                      }
+                    ]
+                  },
+                  "color": {
+                    "mode": "thresholds"
+                  }
+                },
+                "overrides": []
+              }
+            }
+          }
+        }
+      },
+      "panel-54": {
+        "kind": "Panel",
+        "spec": {
+          "id": 54,
+          "title": "Block % (realtime)",
+          "description": "Blocked ratio from realtime lifetime counters (blocked / all avg over 1 min).",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "prometheus",
+                      "version": "v0",
+                      "spec": {
+                        "editorMode": "code",
+                        "expr": "100 * sum(rate(technitium_dns_realtime_queries_total{server=\"$server\",category=\"blocked\"}[10m])) / clamp_min(sum(rate(technitium_dns_realtime_queries_total{server=\"$server\",category=\"all\"}[10m])), 1)",
+                        "intervalFactor": 1,
+                        "legendFormat": "%",
+                        "range": true
+                      },
+                      "labels": {
+                        "grafana.app/export-label": "prometheus-1"
+                      }
+                    },
+                    "refId": "A",
+                    "hidden": false
+                  }
+                }
+              ],
+              "transformations": [],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "gauge",
+            "version": "12.3.0",
+            "spec": {
+              "options": {
+                "minVizHeight": 200,
+                "minVizWidth": 200,
+                "orientation": "horizontal",
+                "reduceOptions": {
+                  "calcs": [
+                    "lastNotNull"
+                  ],
+                  "fields": "",
+                  "values": false
+                },
+                "showThresholdLabels": false,
+                "showThresholdMarkers": true,
+                "sizing": "auto"
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "unit": "percent",
+                  "decimals": 1,
+                  "min": 0,
+                  "max": 100,
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "value": 0,
+                        "color": "green"
+                      },
+                      {
+                        "value": 20,
+                        "color": "#EAB839"
+                      },
+                      {
+                        "value": 50,
+                        "color": "red"
+                      }
+                    ]
+                  },
+                  "color": {
+                    "mode": "thresholds"
+                  }
+                },
+                "overrides": []
+              }
+            }
+          }
+        }
+      },
+      "panel-55": {
+        "kind": "Panel",
+        "spec": {
+          "id": 55,
+          "title": "Lifetime Clients",
+          "description": "Total unique clients seen since server start (lifetime counter).",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "prometheus",
+                      "version": "v0",
+                      "spec": {
+                        "expr": "technitium_realtime_clients_total{server=\"$server\"}",
+                        "intervalFactor": 1,
+                        "legendFormat": "clients"
+                      },
+                      "labels": {
+                        "grafana.app/export-label": "prometheus-1"
+                      }
+                    },
+                    "refId": "A",
+                    "hidden": false
+                  }
+                }
+              ],
+              "transformations": [],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "stat",
+            "version": "12.3.0",
+            "spec": {
+              "options": {
+                "colorMode": "none",
+                "graphMode": "area",
+                "justifyMode": "auto",
+                "orientation": "auto",
+                "percentChangeColorMode": "standard",
+                "reduceOptions": {
+                  "calcs": [
+                    "lastNotNull"
+                  ],
+                  "fields": "",
+                  "values": false
+                },
+                "showPercentChange": false,
+                "textMode": "auto",
+                "wideLayout": true
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "unit": "short",
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "value": 0,
+                        "color": "green"
+                      },
+                      {
+                        "value": 100,
+                        "color": "blue"
+                      }
+                    ]
+                  },
+                  "color": {
+                    "mode": "thresholds"
+                  }
+                },
+                "overrides": []
+              }
+            }
+          }
+        }
+      },
+      "panel-56": {
+        "kind": "Panel",
+        "spec": {
+          "id": 56,
+          "title": "QPS by Category (realtime)",
+          "description": "Per-second rate by query result category (averaged over 1 min). Shows real throughput.",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "prometheus",
+                      "version": "v0",
+                      "spec": {
+                        "editorMode": "code",
+                        "expr": "rate(technitium_dns_realtime_queries_total{server=\"$server\",category!=\"all\"}[10m])",
+                        "intervalFactor": 1,
+                        "legendFormat": "{{category}}"
+                      },
+                      "labels": {
+                        "grafana.app/export-label": "prometheus-1"
+                      }
+                    },
+                    "refId": "A",
+                    "hidden": false
+                  }
+                }
+              ],
+              "transformations": [],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "timeseries",
+            "version": "12.3.0",
+            "spec": {
+              "options": {
+                "alertThreshold": true,
+                "legend": {
+                  "calcs": [],
+                  "displayMode": "table",
+                  "placement": "right",
+                  "showLegend": true
+                },
+                "tooltip": {
+                  "hideZeros": false,
+                  "mode": "multi",
+                  "sort": "none"
+                }
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "unit": "rps",
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "value": 0,
+                        "color": "green"
+                      }
+                    ]
+                  },
+                  "color": {
+                    "mode": "palette-classic"
+                  },
+                  "custom": {
+                    "axisBorderShow": false,
+                    "axisCenteredZero": false,
+                    "axisColorMode": "text",
+                    "axisLabel": "",
+                    "axisPlacement": "auto",
+                    "barAlignment": 0,
+                    "barWidthFactor": 0.6,
+                    "drawStyle": "line",
+                    "fillOpacity": 10,
+                    "gradientMode": "none",
+                    "hideFrom": {
+                      "legend": false,
+                      "tooltip": false,
+                      "viz": false
+                    },
+                    "insertNulls": false,
+                    "lineInterpolation": "linear",
+                    "lineWidth": 1,
+                    "pointSize": 3,
+                    "scaleDistribution": {
+                      "type": "linear"
+                    },
+                    "showPoints": "never",
+                    "showValues": false,
+                    "spanNulls": false,
+                    "stacking": {
+                      "group": "A",
+                      "mode": "normal"
+                    },
+                    "thresholdsStyle": {
+                      "mode": "off"
+                    }
+                  }
+                },
+                "overrides": []
+              }
+            }
+          }
+        }
+      },
+      "panel-57": {
+        "kind": "Panel",
+        "spec": {
+          "id": 57,
+          "title": "Servfail Errors",
+          "description": "Rate of server failures (SERVFAIL) from realtime lifetime counters.",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "prometheus",
+                      "version": "v0",
+                      "spec": {
+                        "editorMode": "code",
+                        "expr": "rate(technitium_dns_realtime_queries_total{server=\"$server\",category=\"servfail\"}[10m])",
+                        "intervalFactor": 1,
+                        "legendFormat": "servfail/s"
+                      },
+                      "labels": {
+                        "grafana.app/export-label": "prometheus-1"
+                      }
+                    },
+                    "refId": "A",
+                    "hidden": false
+                  }
+                }
+              ],
+              "transformations": [],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "stat",
+            "version": "12.3.0",
+            "spec": {
+              "options": {
+                "colorMode": "none",
+                "graphMode": "area",
+                "justifyMode": "auto",
+                "orientation": "auto",
+                "percentChangeColorMode": "standard",
+                "reduceOptions": {
+                  "calcs": [
+                    "lastNotNull"
+                  ],
+                  "fields": "",
+                  "values": false
+                },
+                "showPercentChange": false,
+                "textMode": "auto",
+                "wideLayout": true
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "unit": "rps",
+                  "decimals": 2,
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "value": 0,
+                        "color": "green"
+                      },
+                      {
+                        "value": 0.1,
+                        "color": "red"
+                      }
+                    ]
+                  },
+                  "color": {
+                    "mode": "thresholds"
+                  }
+                },
+                "overrides": []
+              }
+            }
+          }
+        }
+      },
+      "panel-58": {
+        "kind": "Panel",
+        "spec": {
+          "id": 58,
+          "title": "Stats Window",
+          "description": "Currently configured stats window range from the exporter (e.g. LastHour, LastDay).",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "prometheus",
+                      "version": "v0",
+                      "spec": {
+                        "editorMode": "code",
+                        "expr": "technitium_stats_range_info{server=\"$server\"}",
+                        "format": "table",
+                        "instant": true,
+                        "intervalFactor": 1,
+                        "legendFormat": ""
+                      },
+                      "labels": {
+                        "grafana.app/export-label": "prometheus-1"
+                      }
+                    },
+                    "refId": "A",
+                    "hidden": false
+                  }
+                }
+              ],
+              "transformations": [
+                {
+                  "kind": "Transformation",
+                  "group": "labelsToFields",
+                  "spec": {
+                    "options": {}
+                  }
+                },
+                {
+                  "kind": "Transformation",
+                  "group": "organize",
+                  "spec": {
+                    "options": {
+                      "includeByName": {
+                        "Window": true,
+                        "range": true
+                      },
+                      "indexByName": {
+                        "Window": 0
+                      },
+                      "renameByName": {
+                        "range": "Window"
+                      }
+                    }
+                  }
+                }
+              ],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "table",
+            "version": "12.3.0",
+            "spec": {
+              "options": {
+                "cellHeight": "sm",
+                "footer": {
+                  "reducers": []
+                },
+                "showHeader": false
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "unit": "none",
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "value": 0,
+                        "color": "green"
+                      }
+                    ]
+                  },
+                  "color": {
+                    "mode": "thresholds"
+                  }
+                },
+                "overrides": []
+              }
+            }
+          }
+        }
+      },
+      "panel-59": {
+        "kind": "Panel",
+        "spec": {
+          "id": 59,
+          "title": "DNS Health",
+          "description": "DNS resolution health via /api/dnsClient/healthCheck (1 = server resolves queries). Stronger signal than API Status: a server with a dead port 53 still shows API Up. Requires Technitium >= 15.3 and exporter >= 2.2.0; shows n/a on older versions.",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "prometheus",
+                      "version": "v0",
+                      "spec": {
+                        "expr": "technitium_health{server=\"$server\"}",
+                        "intervalFactor": 1,
+                        "legendFormat": "DNS Health"
+                      },
+                      "labels": {
+                        "grafana.app/export-label": "prometheus-1"
+                      }
+                    },
+                    "refId": "A",
+                    "hidden": false
+                  }
+                }
+              ],
+              "transformations": [],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "stat",
+            "version": "12.3.0",
+            "spec": {
+              "options": {
+                "colorMode": "background",
+                "graphMode": "none",
+                "justifyMode": "auto",
+                "orientation": "auto",
+                "percentChangeColorMode": "standard",
+                "reduceOptions": {
+                  "calcs": [
+                    "lastNotNull"
+                  ],
+                  "fields": "",
+                  "values": false
+                },
+                "showPercentChange": false,
+                "textMode": "auto",
+                "wideLayout": true
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "unit": "none",
+                  "mappings": [
+                    {
+                      "type": "value",
+                      "options": {
+                        "0": {
+                          "text": "Failing"
+                        },
+                        "1": {
+                          "text": "OK"
+                        }
+                      }
+                    }
+                  ],
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "value": 0,
+                        "color": "#d44a3a"
+                      },
+                      {
+                        "value": 1,
+                        "color": "#299c46"
+                      }
+                    ]
+                  },
+                  "color": {
+                    "mode": "thresholds"
+                  },
+                  "noValue": "n/a"
+                },
+                "overrides": []
+              }
+            }
+          }
+        }
+      },
+      "panel-6": {
+        "kind": "Panel",
+        "spec": {
+          "id": 6,
+          "title": "Queries by Category (Trend)",
+          "description": "Breakdown of queries in the current stats window by category (no_error, nxdomain, blocked, etc.), plotted over time via Prometheus scraping.",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "prometheus",
+                      "version": "v0",
+                      "spec": {
+                        "expr": "technitium_dns_queries_window{server=\"$server\",category!=\"all\"}",
+                        "intervalFactor": 1,
+                        "legendFormat": "{{category}}"
+                      },
+                      "labels": {
+                        "grafana.app/export-label": "prometheus-1"
+                      }
+                    },
+                    "refId": "A",
+                    "hidden": false
+                  }
+                }
+              ],
+              "transformations": [],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "timeseries",
+            "version": "12.3.0",
+            "spec": {
+              "options": {
+                "alertThreshold": true,
+                "legend": {
+                  "calcs": [],
+                  "displayMode": "table",
+                  "placement": "right",
+                  "showLegend": true
+                },
+                "tooltip": {
+                  "hideZeros": false,
+                  "mode": "multi",
+                  "sort": "none"
+                }
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "unit": "short",
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "value": 0,
+                        "color": "green"
+                      }
+                    ]
+                  },
+                  "color": {
+                    "mode": "palette-classic"
+                  },
+                  "custom": {
+                    "axisBorderShow": false,
+                    "axisCenteredZero": false,
+                    "axisColorMode": "text",
+                    "axisLabel": "",
+                    "axisPlacement": "auto",
+                    "barAlignment": 0,
+                    "barWidthFactor": 0.6,
+                    "drawStyle": "line",
+                    "fillOpacity": 10,
+                    "gradientMode": "none",
+                    "hideFrom": {
+                      "legend": false,
+                      "tooltip": false,
+                      "viz": false
+                    },
+                    "insertNulls": false,
+                    "lineInterpolation": "linear",
+                    "lineWidth": 1,
+                    "pointSize": 3,
+                    "scaleDistribution": {
+                      "type": "linear"
+                    },
+                    "showPoints": "never",
+                    "showValues": false,
+                    "spanNulls": false,
+                    "stacking": {
+                      "group": "A",
+                      "mode": "none"
+                    },
+                    "thresholdsStyle": {
+                      "mode": "off"
+                    }
+                  }
+                },
+                "overrides": []
+              }
+            }
+          }
+        }
+      },
+      "panel-60": {
+        "kind": "Panel",
+        "spec": {
+          "id": 60,
+          "title": "Version",
+          "description": "Technitium DNS server version (the controller's, in cluster mode). From /api/user/session/get; requires exporter >= 2.2.0.",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "prometheus",
+                      "version": "v0",
+                      "spec": {
+                        "expr": "technitium_server_info",
+                        "intervalFactor": 1,
+                        "legendFormat": "{{version}}"
+                      },
+                      "labels": {
+                        "grafana.app/export-label": "prometheus-1"
+                      }
+                    },
+                    "refId": "A",
+                    "hidden": false
+                  }
+                }
+              ],
+              "transformations": [],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "stat",
+            "version": "12.3.0",
+            "spec": {
+              "options": {
+                "colorMode": "none",
+                "graphMode": "none",
+                "justifyMode": "auto",
+                "orientation": "auto",
+                "percentChangeColorMode": "standard",
+                "reduceOptions": {
+                  "calcs": [
+                    "lastNotNull"
+                  ],
+                  "fields": "",
+                  "values": false
+                },
+                "showPercentChange": false,
+                "textMode": "name",
+                "wideLayout": true
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "unit": "none",
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "value": null,
+                        "color": "green"
+                      }
+                    ]
+                  },
+                  "color": {
+                    "mode": "fixed",
+                    "fixedColor": "text"
+                  },
+                  "noValue": "n/a"
+                },
+                "overrides": []
+              }
+            }
+          }
+        }
+      },
+      "panel-7": {
+        "kind": "Panel",
+        "spec": {
+          "id": 7,
+          "title": "Top Queried Domains",
+          "description": "Most-queried domains in the current stats window (hits per domain).",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "prometheus",
+                      "version": "v0",
+                      "spec": {
+                        "editorMode": "code",
+                        "exemplar": false,
+                        "expr": "technitium_dns_top_domain_hits{server=\"$server\"}",
+                        "format": "time_series",
+                        "instant": true,
+                        "intervalFactor": 1,
+                        "legendFormat": "{{domain}}",
+                        "range": false
+                      },
+                      "labels": {
+                        "grafana.app/export-label": "prometheus-1"
+                      }
+                    },
+                    "refId": "A",
+                    "hidden": false
+                  }
+                }
+              ],
+              "transformations": [],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "piechart",
+            "version": "12.3.0",
+            "spec": {
+              "options": {
+                "displayLabels": [
+                  "name",
+                  "value"
+                ],
+                "legend": {
+                  "calcs": [],
+                  "displayMode": "table",
+                  "placement": "bottom",
+                  "showLegend": true,
+                  "values": [
+                    "value"
+                  ]
+                },
+                "pieType": "donut",
+                "reduceOptions": {
+                  "calcs": [
+                    "lastNotNull"
+                  ],
+                  "fields": "",
+                  "values": false
+                },
+                "sort": "desc",
+                "tooltip": {
+                  "hideZeros": false,
+                  "mode": "single",
+                  "sort": "none"
+                }
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "unit": "short",
+                  "decimals": 0,
+                  "color": {
+                    "mode": "palette-classic"
+                  },
+                  "custom": {
+                    "hideFrom": {
+                      "legend": false,
+                      "tooltip": false,
+                      "viz": false
+                    }
+                  }
+                },
+                "overrides": []
+              }
+            }
+          }
+        }
+      },
+      "panel-8": {
+        "kind": "Panel",
+        "spec": {
+          "id": 8,
+          "title": "Top Blocked Domains",
+          "description": "Most-blocked domains in the selected stats window (hits per blocked domain).",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "prometheus",
+                      "version": "v0",
+                      "spec": {
+                        "editorMode": "code",
+                        "exemplar": false,
+                        "expr": "technitium_dns_top_blocked_domain_hits{server=\"$server\"}",
+                        "instant": true,
+                        "intervalFactor": 1,
+                        "legendFormat": "{{domain}}",
+                        "range": false
+                      },
+                      "labels": {
+                        "grafana.app/export-label": "prometheus-1"
+                      }
+                    },
+                    "refId": "A",
+                    "hidden": false
+                  }
+                }
+              ],
+              "transformations": [],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "piechart",
+            "version": "12.3.0",
+            "spec": {
+              "options": {
+                "displayLabels": [
+                  "name",
+                  "value"
+                ],
+                "legend": {
+                  "calcs": [],
+                  "displayMode": "table",
+                  "placement": "bottom",
+                  "showLegend": true,
+                  "values": [
+                    "value"
+                  ]
+                },
+                "pieType": "donut",
+                "reduceOptions": {
+                  "calcs": [
+                    "lastNotNull"
+                  ],
+                  "fields": "",
+                  "values": false
+                },
+                "sort": "desc",
+                "tooltip": {
+                  "hideZeros": false,
+                  "mode": "single",
+                  "sort": "none"
+                }
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "unit": "short",
+                  "decimals": 0,
+                  "color": {
+                    "mode": "palette-classic"
+                  },
+                  "custom": {
+                    "hideFrom": {
+                      "legend": false,
+                      "tooltip": false,
+                      "viz": false
+                    }
+                  },
+                  "fieldMinMax": false
+                },
+                "overrides": []
+              }
+            }
+          }
+        }
+      },
+      "panel-9": {
+        "kind": "Panel",
+        "spec": {
+          "id": 9,
+          "title": "Top Clients",
+          "description": "Tabular view of top clients with total hits in the current stats window snapshot.",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "prometheus",
+                      "version": "v0",
+                      "spec": {
+                        "editorMode": "code",
+                        "exemplar": false,
+                        "expr": "technitium_dns_top_client_hits{server=\"$server\"}",
+                        "format": "table",
+                        "instant": true,
+                        "intervalFactor": 1,
+                        "legendFormat": "{{client_ip}} - {{client_name}}",
+                        "range": false
+                      },
+                      "labels": {
+                        "grafana.app/export-label": "prometheus-1"
+                      }
+                    },
+                    "refId": "A",
+                    "hidden": false
+                  }
+                }
+              ],
+              "transformations": [
+                {
+                  "kind": "Transformation",
+                  "group": "labelsToFields",
+                  "spec": {
+                    "options": {}
+                  }
+                },
+                {
+                  "kind": "Transformation",
+                  "group": "organize",
+                  "spec": {
+                    "options": {
+                      "excludeByName": {
+                        "Time": true,
+                        "__name__": true,
+                        "instance": true,
+                        "job": true,
+                        "server": true
+                      },
+                      "includeByName": {},
+                      "indexByName": {},
+                      "renameByName": {
+                        "Value": "Hits",
+                        "client_ip": " IP Address",
+                        "client_name": "Hostname"
+                      }
+                    }
+                  }
+                },
+                {
+                  "kind": "Transformation",
+                  "group": "sortBy",
+                  "spec": {
+                    "options": {
+                      "fields": {},
+                      "sort": [
+                        {
+                          "desc": true,
+                          "field": "Hits"
+                        }
+                      ]
+                    }
+                  }
+                }
+              ],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "table",
+            "version": "12.3.0",
+            "spec": {
+              "options": {
+                "cellHeight": "sm",
+                "enablePagination": false,
+                "frozenColumns": {
+                  "left": -5
+                },
+                "showHeader": true,
+                "sortBy": [
+                  {
+                    "desc": true,
+                    "displayName": "Value"
+                  }
+                ]
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "value": 0,
+                        "color": "green"
+                      }
+                    ]
+                  },
+                  "color": {
+                    "mode": "thresholds"
+                  },
+                  "custom": {
+                    "align": "auto",
+                    "cellOptions": {
+                      "type": "auto"
+                    },
+                    "filterable": false,
+                    "footer": {
+                      "reducers": []
+                    },
+                    "inspect": false,
+                    "wrapHeaderText": false,
+                    "wrapText": false
+                  }
+                },
+                "overrides": []
+              }
+            }
+          }
+        }
+      }
+    },
+    "layout": {
+      "kind": "RowsLayout",
+      "spec": {
+        "rows": [
+          {
+            "kind": "RowsLayoutRow",
+            "spec": {
+              "title": "System & Infrastructure Health",
+              "collapse": false,
+              "repeat": {
+                "mode": "variable",
+                "value": "server"
+              },
+              "layout": {
+                "kind": "GridLayout",
+                "spec": {
+                  "items": [
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "x": 0,
+                        "y": 0,
+                        "width": 2,
+                        "height": 5,
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-2"
+                        }
+                      }
+                    },
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "x": 2,
+                        "y": 0,
+                        "width": 2,
+                        "height": 5,
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-58"
+                        }
+                      }
+                    },
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "x": 4,
+                        "y": 0,
+                        "width": 16,
+                        "height": 5,
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-30"
+                        }
+                      }
+                    },
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "x": 20,
+                        "y": 0,
+                        "width": 2,
+                        "height": 5,
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-59"
+                        }
+                      }
+                    },
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "x": 22,
+                        "y": 0,
+                        "width": 2,
+                        "height": 5,
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-60"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "kind": "RowsLayoutRow",
+            "spec": {
+              "title": "Realtime Metrics",
+              "collapse": false,
+              "layout": {
+                "kind": "GridLayout",
+                "spec": {
+                  "items": [
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "x": 0,
+                        "y": 0,
+                        "width": 4,
+                        "height": 4,
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-51"
+                        }
+                      }
+                    },
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "x": 4,
+                        "y": 0,
+                        "width": 4,
+                        "height": 4,
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-52"
+                        }
+                      }
+                    },
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "x": 8,
+                        "y": 0,
+                        "width": 4,
+                        "height": 4,
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-53"
+                        }
+                      }
+                    },
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "x": 12,
+                        "y": 0,
+                        "width": 4,
+                        "height": 4,
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-54"
+                        }
+                      }
+                    },
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "x": 16,
+                        "y": 0,
+                        "width": 4,
+                        "height": 4,
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-55"
+                        }
+                      }
+                    },
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "x": 20,
+                        "y": 0,
+                        "width": 4,
+                        "height": 4,
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-57"
+                        }
+                      }
+                    },
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "x": 0,
+                        "y": 4,
+                        "width": 24,
+                        "height": 10,
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-56"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "kind": "RowsLayoutRow",
+            "spec": {
+              "title": "Traffic Overview",
+              "collapse": false,
+              "repeat": {
+                "mode": "variable",
+                "value": "server"
+              },
+              "layout": {
+                "kind": "GridLayout",
+                "spec": {
+                  "items": [
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "x": 0,
+                        "y": 0,
+                        "width": 4,
+                        "height": 4,
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-3"
+                        }
+                      }
+                    },
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "x": 4,
+                        "y": 0,
+                        "width": 4,
+                        "height": 4,
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-4"
+                        }
+                      }
+                    },
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "x": 8,
+                        "y": 0,
+                        "width": 4,
+                        "height": 4,
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-20"
+                        }
+                      }
+                    },
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "x": 12,
+                        "y": 0,
+                        "width": 4,
+                        "height": 4,
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-5"
+                        }
+                      }
+                    },
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "x": 16,
+                        "y": 0,
+                        "width": 8,
+                        "height": 3,
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-31"
+                        }
+                      }
+                    },
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "x": 16,
+                        "y": 3,
+                        "width": 8,
+                        "height": 24,
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-8"
+                        }
+                      }
+                    },
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "x": 0,
+                        "y": 4,
+                        "width": 4,
+                        "height": 4,
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-35"
+                        }
+                      }
+                    },
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "x": 4,
+                        "y": 4,
+                        "width": 4,
+                        "height": 2,
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-36"
+                        }
+                      }
+                    },
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "x": 8,
+                        "y": 4,
+                        "width": 4,
+                        "height": 4,
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-38"
+                        }
+                      }
+                    },
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "x": 12,
+                        "y": 4,
+                        "width": 4,
+                        "height": 4,
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-39"
+                        }
+                      }
+                    },
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "x": 4,
+                        "y": 6,
+                        "width": 4,
+                        "height": 2,
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-37"
+                        }
+                      }
+                    },
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "x": 0,
+                        "y": 8,
+                        "width": 16,
+                        "height": 9,
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-6"
+                        }
+                      }
+                    },
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "x": 0,
+                        "y": 17,
+                        "width": 16,
+                        "height": 7,
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-34"
+                        }
+                      }
+                    },
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "x": 0,
+                        "y": 24,
+                        "width": 16,
+                        "height": 4,
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-40"
+                        }
+                      }
+                    },
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "x": 16,
+                        "y": 27,
+                        "width": 8,
+                        "height": 20,
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-7"
+                        }
+                      }
+                    },
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "x": 0,
+                        "y": 28,
+                        "width": 8,
+                        "height": 13,
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-41"
+                        }
+                      }
+                    },
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "x": 8,
+                        "y": 28,
+                        "width": 8,
+                        "height": 13,
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-9"
+                        }
+                      }
+                    },
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "x": 0,
+                        "y": 41,
+                        "width": 16,
+                        "height": 9,
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-22"
+                        }
+                      }
+                    },
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "x": 16,
+                        "y": 47,
+                        "width": 8,
+                        "height": 10,
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-23"
+                        }
+                      }
+                    },
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "x": 0,
+                        "y": 50,
+                        "width": 16,
+                        "height": 7,
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-10"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    "links": [],
+    "liveNow": false,
+    "preload": false,
+    "tags": [
+      "prometheus",
+      "technitium",
+      "dns"
+    ],
+    "timeSettings": {
+      "from": "now-1h",
+      "to": "now",
+      "autoRefresh": "10s",
+      "autoRefreshIntervals": [
+        "5s",
+        "10s",
+        "30s",
+        "1m",
+        "5m",
+        "15m"
+      ],
+      "hideTimepicker": false,
+      "fiscalYearStartMonth": 0
+    },
+    "title": "Technitium DNS Exporter",
+    "variables": [
+      {
+        "kind": "DatasourceVariable",
+        "spec": {
+          "name": "DS_PROMETHEUS",
+          "pluginId": "prometheus",
+          "refresh": "onDashboardLoad",
+          "regex": "",
+          "current": {
+            "text": "",
+            "value": ""
+          },
+          "options": [],
+          "multi": false,
+          "includeAll": false,
+          "label": "Datasource",
+          "hide": "dontHide",
+          "skipUrlSync": false,
+          "allowCustomValue": true
+        }
+      },
+      {
+        "kind": "QueryVariable",
+        "spec": {
+          "name": "server",
+          "current": {
+            "text": "",
+            "value": ""
+          },
+          "label": "Server",
+          "hide": "dontHide",
+          "refresh": "onDashboardLoad",
+          "skipUrlSync": false,
+          "query": {
+            "kind": "DataQuery",
+            "group": "prometheus",
+            "version": "v0",
+            "spec": {
+              "__legacyStringValue": "label_values(technitium_up, server)"
+            },
+            "labels": {
+              "grafana.app/export-label": "prometheus-1"
+            }
+          },
+          "regex": "",
+          "sort": "alphabeticalAsc",
+          "definition": "label_values(technitium_up, server)",
+          "options": [],
+          "multi": false,
+          "includeAll": false,
+          "allowCustomValue": true
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,1875 @@
+{
+  "apiVersion": "dashboard.grafana.app/v2",
+  "kind": "Dashboard",
+  "metadata": {
+    "name": "scrutiny-smart-dashboard",
+    "generation": 8,
+    "creationTimestamp": "2026-09-28T16:19:20Z",
+    "labels": {},
+    "annotations": {}
+  },
+  "spec": {
+    "annotations": [
+      {
+        "kind": "AnnotationQuery",
+        "spec": {
+          "query": {
+            "kind": "DataQuery",
+            "group": "grafana",
+            "version": "v0",
+            "spec": {},
+            "labels": {
+              "grafana.app/export-label": "grafana-1"
+            }
+          },
+          "enable": true,
+          "hide": true,
+          "iconColor": "rgba(0, 211, 255, 1)",
+          "name": "Annotations & Alerts",
+          "builtIn": true
+        }
+      }
+    ],
+    "cursorSync": "Crosshair",
+    "description": "Scrutiny SMART",
+    "editable": true,
+    "elements": {
+      "panel-1": {
+        "kind": "Panel",
+        "spec": {
+          "id": 1,
+          "title": "Total number of devices",
+          "description": "",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "prometheus",
+                      "version": "v0",
+                      "spec": {
+                        "expr": "max without(instance, job, pod, container, endpoint, namespace, service) (scrutiny_devices_total)"
+                      },
+                      "labels": {
+                        "grafana.app/export-label": "prometheus-1"
+                      }
+                    },
+                    "refId": "A",
+                    "hidden": false
+                  }
+                }
+              ],
+              "transformations": [],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "stat",
+            "version": "13.0.1",
+            "spec": {
+              "options": {
+                "colorMode": "value",
+                "graphMode": "none",
+                "justifyMode": "auto",
+                "orientation": "auto",
+                "percentChangeColorMode": "standard",
+                "reduceOptions": {
+                  "calcs": [
+                    "lastNotNull"
+                  ],
+                  "fields": "",
+                  "values": false
+                },
+                "showPercentChange": false,
+                "textMode": "auto",
+                "wideLayout": true
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "unit": "short",
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "value": 0,
+                        "color": "green"
+                      }
+                    ]
+                  },
+                  "color": {
+                    "mode": "thresholds"
+                  }
+                },
+                "overrides": []
+              }
+            }
+          }
+        }
+      },
+      "panel-10": {
+        "kind": "Panel",
+        "spec": {
+          "id": 10,
+          "title": "Device List",
+          "description": "",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "prometheus",
+                      "version": "v0",
+                      "spec": {
+                        "expr": "group without(instance, job, pod, container, endpoint, namespace, service) (scrutiny_device_info{host_id=~\"$host\"})",
+                        "format": "table",
+                        "instant": true
+                      },
+                      "labels": {
+                        "grafana.app/export-label": "prometheus-1"
+                      }
+                    },
+                    "refId": "A",
+                    "hidden": false
+                  }
+                },
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "prometheus",
+                      "version": "v0",
+                      "spec": {
+                        "expr": "max without(instance, job, pod, container, endpoint, namespace, service) (scrutiny_smart_temperature_celsius{host_id=~\"$host\"})",
+                        "format": "table",
+                        "instant": true
+                      },
+                      "labels": {
+                        "grafana.app/export-label": "prometheus-1"
+                      }
+                    },
+                    "refId": "B",
+                    "hidden": false
+                  }
+                },
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "prometheus",
+                      "version": "v0",
+                      "spec": {
+                        "expr": "max without(instance, job, pod, container, endpoint, namespace, service) (scrutiny_smart_power_on_hours{host_id=~\"$host\"})",
+                        "format": "table",
+                        "instant": true
+                      },
+                      "labels": {
+                        "grafana.app/export-label": "prometheus-1"
+                      }
+                    },
+                    "refId": "C",
+                    "hidden": false
+                  }
+                },
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "prometheus",
+                      "version": "v0",
+                      "spec": {
+                        "expr": "max without(instance, job, pod, container, endpoint, namespace, service) (scrutiny_device_capacity_bytes{host_id=~\"$host\"})",
+                        "format": "table",
+                        "instant": true
+                      },
+                      "labels": {
+                        "grafana.app/export-label": "prometheus-1"
+                      }
+                    },
+                    "refId": "D",
+                    "hidden": false
+                  }
+                },
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "prometheus",
+                      "version": "v0",
+                      "spec": {
+                        "expr": "min without(instance, job, pod, container, endpoint, namespace, service) (scrutiny_device_status{host_id=~\"$host\"})",
+                        "format": "table",
+                        "instant": true
+                      },
+                      "labels": {
+                        "grafana.app/export-label": "prometheus-1"
+                      }
+                    },
+                    "refId": "E",
+                    "hidden": false
+                  }
+                },
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "prometheus",
+                      "version": "v0",
+                      "spec": {
+                        "expr": "max without(instance, job, pod, container, endpoint, namespace, service) (scrutiny_smart_collector_timestamp{host_id=~\"$host\"})",
+                        "format": "table",
+                        "instant": true
+                      },
+                      "labels": {
+                        "grafana.app/export-label": "prometheus-1"
+                      }
+                    },
+                    "refId": "F",
+                    "hidden": false
+                  }
+                }
+              ],
+              "transformations": [
+                {
+                  "kind": "Transformation",
+                  "group": "merge",
+                  "spec": {
+                    "options": {
+                      "reducers": []
+                    }
+                  }
+                },
+                {
+                  "kind": "Transformation",
+                  "group": "organize",
+                  "spec": {
+                    "options": {
+                      "excludeByName": {
+                        "Time": true,
+                        "__name__": true,
+                        "container": true,
+                        "endpoint": true,
+                        "instance": true,
+                        "job": true,
+                        "namespace": true,
+                        "pod": true,
+                        "service": true
+                      },
+                      "indexByName": {
+                        "Value #B": 7,
+                        "Value #C": 8,
+                        "Value #D": 9,
+                        "Value #E": 10,
+                        "Value #F": 11,
+                        "device_name": 2,
+                        "firmware": 6,
+                        "host_id": 1,
+                        "model_name": 3,
+                        "protocol": 4,
+                        "serial_number": 5,
+                        "wwn": 0
+                      },
+                      "renameByName": {
+                        "Value #A": "Info",
+                        "Value #B": "Temperature",
+                        "Value #C": "Power-on Hours",
+                        "Value #D": "Capacity",
+                        "Value #E": "Status",
+                        "Value #F": "Last Updated",
+                        "device_name": "Device Name",
+                        "firmware": "Firmware",
+                        "form_factor": "Form Factor",
+                        "host_id": "Host",
+                        "model_name": "Model",
+                        "protocol": "Protocol",
+                        "serial_number": "Serial Number",
+                        "wwn": "WWN"
+                      }
+                    }
+                  }
+                },
+                {
+                  "kind": "Transformation",
+                  "group": "groupBy",
+                  "spec": {
+                    "options": {
+                      "fields": {
+                        "Capacity": {
+                          "aggregations": [
+                            "lastNotNull"
+                          ],
+                          "operation": "aggregate"
+                        },
+                        "Device Name": {
+                          "aggregations": [
+                            "lastNotNull"
+                          ],
+                          "operation": "aggregate"
+                        },
+                        "Firmware": {
+                          "aggregations": [
+                            "lastNotNull"
+                          ],
+                          "operation": "aggregate"
+                        },
+                        "Host": {
+                          "aggregations": [],
+                          "operation": "groupby"
+                        },
+                        "Last Updated": {
+                          "aggregations": [
+                            "lastNotNull"
+                          ],
+                          "operation": "aggregate"
+                        },
+                        "Model": {
+                          "aggregations": [
+                            "lastNotNull"
+                          ],
+                          "operation": "aggregate"
+                        },
+                        "Power-on Hours": {
+                          "aggregations": [
+                            "lastNotNull"
+                          ],
+                          "operation": "aggregate"
+                        },
+                        "Protocol": {
+                          "aggregations": [
+                            "lastNotNull"
+                          ],
+                          "operation": "aggregate"
+                        },
+                        "Serial Number": {
+                          "aggregations": [
+                            "lastNotNull"
+                          ],
+                          "operation": "aggregate"
+                        },
+                        "Status": {
+                          "aggregations": [
+                            "lastNotNull"
+                          ],
+                          "operation": "aggregate"
+                        },
+                        "Temperature": {
+                          "aggregations": [
+                            "lastNotNull"
+                          ],
+                          "operation": "aggregate"
+                        },
+                        "WWN": {
+                          "aggregations": [],
+                          "operation": "groupby"
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "kind": "Transformation",
+                  "group": "organize",
+                  "spec": {
+                    "options": {
+                      "excludeByName": {},
+                      "indexByName": {
+                        "Capacity": 8,
+                        "Device Name": 1,
+                        "Firmware": 5,
+                        "Host": 0,
+                        "Last Updated": 10,
+                        "Model": 2,
+                        "Power-on Hours": 7,
+                        "Protocol": 3,
+                        "Serial Number": 4,
+                        "Status": 9,
+                        "Temperature": 6,
+                        "WWN": 11
+                      },
+                      "renameByName": {
+                        "Capacity (lastNotNull)": "Capacity",
+                        "Device Name (lastNotNull)": "Device Name",
+                        "Firmware (lastNotNull)": "Firmware",
+                        "Last Updated (lastNotNull)": "Last Updated",
+                        "Model (lastNotNull)": "Model",
+                        "Power-on Hours (lastNotNull)": "Power-on Hours",
+                        "Protocol (lastNotNull)": "Protocol",
+                        "Serial Number (lastNotNull)": "Serial Number",
+                        "Status (lastNotNull)": "Status",
+                        "Temperature (lastNotNull)": "Temperature"
+                      }
+                    }
+                  }
+                }
+              ],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "table",
+            "version": "13.0.1",
+            "spec": {
+              "options": {
+                "cellHeight": "sm",
+                "showHeader": true,
+                "sortBy": [
+                  {
+                    "desc": false,
+                    "displayName": "Power-on Hours"
+                  }
+                ]
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "value": 0,
+                        "color": "green"
+                      },
+                      {
+                        "value": 1,
+                        "color": "red"
+                      }
+                    ]
+                  },
+                  "color": {
+                    "mode": "thresholds"
+                  },
+                  "custom": {
+                    "align": "auto",
+                    "cellOptions": {
+                      "type": "auto"
+                    },
+                    "footer": {
+                      "reducers": []
+                    },
+                    "inspect": false
+                  }
+                },
+                "overrides": [
+                  {
+                    "matcher": {
+                      "id": "byRegexp",
+                      "scope": "series",
+                      "options": "/State/"
+                    },
+                    "properties": [
+                      {
+                        "id": "mappings",
+                        "value": [
+                          {
+                            "options": {
+                              "0": {
+                                "color": "green",
+                                "index": 0,
+                                "text": "Normal"
+                              },
+                              "1": {
+                                "color": "red",
+                                "index": 1,
+                                "text": "Fault"
+                              }
+                            },
+                            "type": "value"
+                          }
+                        ]
+                      },
+                      {
+                        "id": "custom.cellOptions",
+                        "value": {
+                          "mode": "gradient",
+                          "type": "color-background"
+                        }
+                      },
+                      {
+                        "id": "thresholds",
+                        "value": {
+                          "mode": "absolute",
+                          "steps": [
+                            {
+                              "color": "green",
+                              "value": 0
+                            },
+                            {
+                              "color": "red",
+                              "value": 1
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "matcher": {
+                      "id": "byRegexp",
+                      "scope": "series",
+                      "options": "/Temperature/"
+                    },
+                    "properties": [
+                      {
+                        "id": "unit",
+                        "value": "celsius"
+                      },
+                      {
+                        "id": "decimals",
+                        "value": 1
+                      },
+                      {
+                        "id": "custom.cellOptions",
+                        "value": {
+                          "mode": "gradient",
+                          "type": "color-background"
+                        }
+                      },
+                      {
+                        "id": "thresholds",
+                        "value": {
+                          "mode": "absolute",
+                          "steps": [
+                            {
+                              "color": "green",
+                              "value": 0
+                            },
+                            {
+                              "color": "yellow",
+                              "value": 55
+                            },
+                            {
+                              "color": "red",
+                              "value": 65
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "matcher": {
+                      "id": "byRegexp",
+                      "scope": "series",
+                      "options": "/Power-on time/"
+                    },
+                    "properties": [
+                      {
+                        "id": "unit",
+                        "value": "h"
+                      },
+                      {
+                        "id": "decimals",
+                        "value": 2
+                      }
+                    ]
+                  },
+                  {
+                    "matcher": {
+                      "id": "byRegexp",
+                      "scope": "series",
+                      "options": "/Capacity/"
+                    },
+                    "properties": [
+                      {
+                        "id": "unit",
+                        "value": "bytes"
+                      },
+                      {
+                        "id": "decimals",
+                        "value": 2
+                      }
+                    ]
+                  },
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "Last Updated"
+                    },
+                    "properties": [
+                      {
+                        "id": "unit",
+                        "value": "dateTimeAsIso"
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        }
+      },
+      "panel-11": {
+        "kind": "Panel",
+        "spec": {
+          "id": 11,
+          "title": "ATA Critical Error Indicators",
+          "description": "",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "prometheus",
+                      "version": "v0",
+                      "spec": {
+                        "editorMode": "code",
+                        "expr": "max without(instance, job, pod, container, endpoint, namespace, service) (scrutiny_smart_attr_5_raw_value{attribute_id=\"5\", protocol=\"ATA\", host_id=~\"$host\"})",
+                        "interval": "",
+                        "legendFormat": "{{host_id}}/{{device_name}} - Reallocate sectors",
+                        "range": true
+                      },
+                      "labels": {
+                        "grafana.app/export-label": "prometheus-1"
+                      }
+                    },
+                    "refId": "A",
+                    "hidden": false
+                  }
+                },
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "prometheus",
+                      "version": "v0",
+                      "spec": {
+                        "editorMode": "code",
+                        "expr": "max without(instance, job, pod, container, endpoint, namespace, service) (scrutiny_smart_attr_197_raw_value{attribute_id=\"197\", protocol=\"ATA\", host_id=~\"$host\"})",
+                        "legendFormat": "{{host_id}}/{{device_name}} - Pending sectors",
+                        "range": true
+                      },
+                      "labels": {
+                        "grafana.app/export-label": "prometheus-1"
+                      }
+                    },
+                    "refId": "B",
+                    "hidden": false
+                  }
+                },
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "prometheus",
+                      "version": "v0",
+                      "spec": {
+                        "editorMode": "code",
+                        "expr": "max without(instance, job, pod, container, endpoint, namespace, service) (scrutiny_smart_attr_198_raw_value{attribute_id=\"198\", protocol=\"ATA\", host_id=~\"$host\"})",
+                        "interval": "",
+                        "legendFormat": "{{host_id}}/{{device_name}} - Offline, Uncorrectable",
+                        "range": true
+                      },
+                      "labels": {
+                        "grafana.app/export-label": "prometheus-1"
+                      }
+                    },
+                    "refId": "C",
+                    "hidden": false
+                  }
+                }
+              ],
+              "transformations": [],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "timeseries",
+            "version": "13.0.1",
+            "spec": {
+              "options": {
+                "annotations": {
+                  "clustering": -1,
+                  "multiLane": false
+                },
+                "legend": {
+                  "calcs": [
+                    "lastNotNull"
+                  ],
+                  "displayMode": "table",
+                  "placement": "right",
+                  "showLegend": true
+                },
+                "tooltip": {
+                  "hideZeros": false,
+                  "mode": "multi",
+                  "sort": "desc"
+                }
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "unit": "short",
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "value": 0,
+                        "color": "green"
+                      },
+                      {
+                        "value": 1,
+                        "color": "red"
+                      }
+                    ]
+                  },
+                  "color": {
+                    "mode": "palette-classic"
+                  },
+                  "custom": {
+                    "axisBorderShow": false,
+                    "axisCenteredZero": false,
+                    "axisColorMode": "text",
+                    "axisLabel": "",
+                    "axisPlacement": "auto",
+                    "barAlignment": 0,
+                    "barWidthFactor": 0.6,
+                    "drawStyle": "line",
+                    "fillOpacity": 10,
+                    "gradientMode": "none",
+                    "hideFrom": {
+                      "legend": false,
+                      "tooltip": false,
+                      "viz": false
+                    },
+                    "insertNulls": false,
+                    "lineInterpolation": "linear",
+                    "lineWidth": 1,
+                    "pointSize": 5,
+                    "scaleDistribution": {
+                      "type": "linear"
+                    },
+                    "showPoints": "never",
+                    "showValues": false,
+                    "spanNulls": true,
+                    "stacking": {
+                      "group": "A",
+                      "mode": "none"
+                    },
+                    "thresholdsStyle": {
+                      "mode": "off"
+                    }
+                  }
+                },
+                "overrides": []
+              }
+            }
+          }
+        }
+      },
+      "panel-13": {
+        "kind": "Panel",
+        "spec": {
+          "id": 13,
+          "title": "SMART Status (string field)",
+          "description": "",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "prometheus",
+                      "version": "v0",
+                      "spec": {
+                        "expr": "group without(instance, job, pod, container, endpoint, namespace, service) (scrutiny_smart_attr_5_status_info{host_id=~\"$host\"})",
+                        "format": "table",
+                        "instant": true
+                      },
+                      "labels": {
+                        "grafana.app/export-label": "prometheus-1"
+                      }
+                    },
+                    "refId": "A",
+                    "hidden": false
+                  }
+                },
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "prometheus",
+                      "version": "v0",
+                      "spec": {
+                        "expr": "group without(instance, job, pod, container, endpoint, namespace, service) (scrutiny_smart_attr_197_status_info{host_id=~\"$host\"})",
+                        "format": "table",
+                        "instant": true
+                      },
+                      "labels": {
+                        "grafana.app/export-label": "prometheus-1"
+                      }
+                    },
+                    "refId": "B",
+                    "hidden": false
+                  }
+                },
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "prometheus",
+                      "version": "v0",
+                      "spec": {
+                        "expr": "group without(instance, job, pod, container, endpoint, namespace, service) (scrutiny_smart_attr_198_status_info{host_id=~\"$host\"})",
+                        "format": "table",
+                        "instant": true
+                      },
+                      "labels": {
+                        "grafana.app/export-label": "prometheus-1"
+                      }
+                    },
+                    "refId": "C",
+                    "hidden": false
+                  }
+                },
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "prometheus",
+                      "version": "v0",
+                      "spec": {
+                        "expr": "group without(instance, job, pod, container, endpoint, namespace, service) (scrutiny_smart_attr_critical_warning_status_info{protocol=\"NVMe\", host_id=~\"$host\"})",
+                        "format": "table",
+                        "instant": true
+                      },
+                      "labels": {
+                        "grafana.app/export-label": "prometheus-1"
+                      }
+                    },
+                    "refId": "D",
+                    "hidden": false
+                  }
+                }
+              ],
+              "transformations": [
+                {
+                  "kind": "Transformation",
+                  "group": "merge",
+                  "spec": {
+                    "options": {}
+                  }
+                },
+                {
+                  "kind": "Transformation",
+                  "group": "organize",
+                  "spec": {
+                    "options": {
+                      "excludeByName": {
+                        "Time": true,
+                        "__name__": true,
+                        "container": true,
+                        "endpoint": true,
+                        "instance": true,
+                        "job": true,
+                        "namespace": true,
+                        "pod": true,
+                        "service": true
+                      },
+                      "indexByName": {
+                        "Attribute": 4,
+                        "Device": 1,
+                        "Host": 0,
+                        "Model": 2,
+                        "Protocol": 3,
+                        "Status": 5,
+                        "WWN": 6
+                      },
+                      "renameByName": {
+                        "attribute_id": "Attribute",
+                        "device_name": "Device",
+                        "host_id": "Host",
+                        "model_name": "Model",
+                        "protocol": "Protocol",
+                        "value": "Status",
+                        "wwn": "WWN"
+                      }
+                    }
+                  }
+                }
+              ],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "table",
+            "version": "13.0.1",
+            "spec": {
+              "options": {
+                "cellHeight": "sm",
+                "showHeader": true,
+                "summaryColumns": []
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "value": 0,
+                        "color": "green"
+                      },
+                      {
+                        "value": 1,
+                        "color": "yellow"
+                      }
+                    ]
+                  },
+                  "color": {
+                    "mode": "thresholds"
+                  },
+                  "custom": {
+                    "align": "auto",
+                    "cellOptions": {
+                      "type": "color-background"
+                    },
+                    "footer": {
+                      "reducers": []
+                    },
+                    "inspect": false
+                  }
+                },
+                "overrides": [
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "Status"
+                    },
+                    "properties": [
+                      {
+                        "id": "mappings",
+                        "value": [
+                          {
+                            "options": {
+                              "OK": {
+                                "color": "green",
+                                "index": 1,
+                                "text": "OK"
+                              },
+                              "PASSED": {
+                                "color": "green",
+                                "index": 0,
+                                "text": "PASSED"
+                              }
+                            },
+                            "type": "value"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        }
+      },
+      "panel-2": {
+        "kind": "Panel",
+        "spec": {
+          "id": 2,
+          "title": "Statistics by Protocol",
+          "description": "",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "prometheus",
+                      "version": "v0",
+                      "spec": {
+                        "expr": "max without(instance, job, pod, container, endpoint, namespace, service) (scrutiny_devices_by_protocol)",
+                        "legendFormat": "{{protocol}}"
+                      },
+                      "labels": {
+                        "grafana.app/export-label": "prometheus-1"
+                      }
+                    },
+                    "refId": "A",
+                    "hidden": false
+                  }
+                }
+              ],
+              "transformations": [],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "piechart",
+            "version": "13.0.1",
+            "spec": {
+              "options": {
+                "displayLabels": [
+                  "name",
+                  "value"
+                ],
+                "legend": {
+                  "displayMode": "table",
+                  "placement": "right",
+                  "showLegend": true,
+                  "values": [
+                    "value"
+                  ]
+                },
+                "pieType": "donut",
+                "reduceOptions": {
+                  "calcs": [
+                    "lastNotNull"
+                  ],
+                  "fields": "",
+                  "values": false
+                },
+                "sort": "desc",
+                "tooltip": {
+                  "hideZeros": false,
+                  "mode": "single",
+                  "sort": "none"
+                }
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "color": {
+                    "mode": "palette-classic"
+                  },
+                  "custom": {
+                    "hideFrom": {
+                      "legend": false,
+                      "tooltip": false,
+                      "viz": false
+                    }
+                  }
+                },
+                "overrides": []
+              }
+            }
+          }
+        }
+      },
+      "panel-3": {
+        "kind": "Panel",
+        "spec": {
+          "id": 3,
+          "title": "Number of faulty devices",
+          "description": "",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "prometheus",
+                      "version": "v0",
+                      "spec": {
+                        "expr": "sum(min without(instance, job, pod, container, endpoint, namespace, service) (scrutiny_device_status{host_id=~\"$host\"}))"
+                      },
+                      "labels": {
+                        "grafana.app/export-label": "prometheus-1"
+                      }
+                    },
+                    "refId": "A",
+                    "hidden": false
+                  }
+                }
+              ],
+              "transformations": [],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "stat",
+            "version": "13.0.1",
+            "spec": {
+              "options": {
+                "colorMode": "background",
+                "graphMode": "none",
+                "justifyMode": "auto",
+                "orientation": "auto",
+                "percentChangeColorMode": "standard",
+                "reduceOptions": {
+                  "calcs": [
+                    "sum"
+                  ],
+                  "fields": "",
+                  "values": false
+                },
+                "showPercentChange": false,
+                "textMode": "auto",
+                "wideLayout": true
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "unit": "short",
+                  "mappings": [
+                    {
+                      "type": "value",
+                      "options": {
+                        "0": {
+                          "text": "Normal",
+                          "color": "green",
+                          "index": 0
+                        },
+                        "1": {
+                          "text": "Fault",
+                          "color": "red",
+                          "index": 1
+                        }
+                      }
+                    }
+                  ],
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "value": 0,
+                        "color": "green"
+                      },
+                      {
+                        "value": 1,
+                        "color": "red"
+                      }
+                    ]
+                  },
+                  "color": {
+                    "mode": "thresholds"
+                  }
+                },
+                "overrides": []
+              }
+            }
+          }
+        }
+      },
+      "panel-4": {
+        "kind": "Panel",
+        "spec": {
+          "id": 4,
+          "title": "Device Temperature History",
+          "description": "",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "prometheus",
+                      "version": "v0",
+                      "spec": {
+                        "expr": "max without(instance, job, pod, container, endpoint, namespace, service) (scrutiny_smart_temperature_celsius{host_id=~\"$host\"})",
+                        "legendFormat": "{{host_id}}/{{device_name}}"
+                      },
+                      "labels": {
+                        "grafana.app/export-label": "prometheus-1"
+                      }
+                    },
+                    "refId": "A",
+                    "hidden": false
+                  }
+                }
+              ],
+              "transformations": [],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "timeseries",
+            "version": "13.0.1",
+            "spec": {
+              "options": {
+                "annotations": {
+                  "clustering": -1,
+                  "multiLane": false
+                },
+                "legend": {
+                  "calcs": [
+                    "mean",
+                    "lastNotNull",
+                    "max"
+                  ],
+                  "displayMode": "table",
+                  "placement": "right",
+                  "showLegend": true
+                },
+                "tooltip": {
+                  "hideZeros": false,
+                  "mode": "multi",
+                  "sort": "desc"
+                }
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "unit": "celsius",
+                  "min": 20,
+                  "max": 70,
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "value": 0,
+                        "color": "green"
+                      },
+                      {
+                        "value": 55,
+                        "color": "yellow"
+                      },
+                      {
+                        "value": 65,
+                        "color": "red"
+                      }
+                    ]
+                  },
+                  "color": {
+                    "mode": "palette-classic"
+                  },
+                  "custom": {
+                    "axisBorderShow": false,
+                    "axisCenteredZero": false,
+                    "axisColorMode": "text",
+                    "axisLabel": "",
+                    "axisPlacement": "auto",
+                    "barAlignment": 0,
+                    "barWidthFactor": 0.6,
+                    "drawStyle": "line",
+                    "fillOpacity": 10,
+                    "gradientMode": "none",
+                    "hideFrom": {
+                      "legend": false,
+                      "tooltip": false,
+                      "viz": false
+                    },
+                    "insertNulls": false,
+                    "lineInterpolation": "linear",
+                    "lineWidth": 1,
+                    "pointSize": 5,
+                    "scaleDistribution": {
+                      "type": "linear"
+                    },
+                    "showPoints": "never",
+                    "showValues": false,
+                    "spanNulls": true,
+                    "stacking": {
+                      "group": "A",
+                      "mode": "none"
+                    },
+                    "thresholdsStyle": {
+                      "mode": "off"
+                    }
+                  }
+                },
+                "overrides": []
+              }
+            }
+          }
+        }
+      },
+      "panel-5": {
+        "kind": "Panel",
+        "spec": {
+          "id": 5,
+          "title": "Current Temperature",
+          "description": "",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "prometheus",
+                      "version": "v0",
+                      "spec": {
+                        "expr": "max without(instance, job, pod, container, endpoint, namespace, service) (scrutiny_smart_temperature_celsius{host_id=~\"$host\"})",
+                        "legendFormat": "{{host_id}}/{{device_name}}"
+                      },
+                      "labels": {
+                        "grafana.app/export-label": "prometheus-1"
+                      }
+                    },
+                    "refId": "A",
+                    "hidden": false
+                  }
+                }
+              ],
+              "transformations": [],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "bargauge",
+            "version": "13.0.1",
+            "spec": {
+              "options": {
+                "displayMode": "gradient",
+                "legend": {
+                  "calcs": [],
+                  "displayMode": "list",
+                  "placement": "bottom",
+                  "showLegend": false
+                },
+                "maxVizHeight": 300,
+                "minVizHeight": 10,
+                "minVizWidth": 0,
+                "namePlacement": "auto",
+                "orientation": "horizontal",
+                "reduceOptions": {
+                  "calcs": [
+                    "lastNotNull"
+                  ],
+                  "fields": "",
+                  "values": false
+                },
+                "showUnfilled": true,
+                "sizing": "auto",
+                "valueMode": "color"
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "unit": "celsius",
+                  "min": 20,
+                  "max": 70,
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "value": 0,
+                        "color": "green"
+                      },
+                      {
+                        "value": 55,
+                        "color": "yellow"
+                      },
+                      {
+                        "value": 65,
+                        "color": "red"
+                      }
+                    ]
+                  },
+                  "color": {
+                    "mode": "thresholds"
+                  }
+                },
+                "overrides": []
+              }
+            }
+          }
+        }
+      },
+      "panel-6": {
+        "kind": "Panel",
+        "spec": {
+          "id": 6,
+          "title": "Power on hours",
+          "description": "",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "prometheus",
+                      "version": "v0",
+                      "spec": {
+                        "expr": "max without(instance, job, pod, container, endpoint, namespace, service) (scrutiny_smart_power_on_hours{host_id=~\"$host\"})",
+                        "legendFormat": "{{host_id}}/{{device_name}}"
+                      },
+                      "labels": {
+                        "grafana.app/export-label": "prometheus-1"
+                      }
+                    },
+                    "refId": "A",
+                    "hidden": false
+                  }
+                }
+              ],
+              "transformations": [],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "timeseries",
+            "version": "13.0.1",
+            "spec": {
+              "options": {
+                "annotations": {
+                  "clustering": -1,
+                  "multiLane": false
+                },
+                "legend": {
+                  "calcs": [
+                    "lastNotNull"
+                  ],
+                  "displayMode": "table",
+                  "placement": "right",
+                  "showLegend": true,
+                  "sortBy": "Name",
+                  "sortDesc": false
+                },
+                "tooltip": {
+                  "hideZeros": false,
+                  "mode": "multi",
+                  "sort": "desc"
+                }
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "unit": "h",
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "value": 0,
+                        "color": "green"
+                      }
+                    ]
+                  },
+                  "color": {
+                    "mode": "palette-classic"
+                  },
+                  "custom": {
+                    "axisBorderShow": false,
+                    "axisCenteredZero": false,
+                    "axisColorMode": "text",
+                    "axisLabel": "",
+                    "axisPlacement": "auto",
+                    "barAlignment": 0,
+                    "barWidthFactor": 0.6,
+                    "drawStyle": "line",
+                    "fillOpacity": 10,
+                    "gradientMode": "none",
+                    "hideFrom": {
+                      "legend": false,
+                      "tooltip": false,
+                      "viz": false
+                    },
+                    "insertNulls": false,
+                    "lineInterpolation": "linear",
+                    "lineWidth": 1,
+                    "pointSize": 5,
+                    "scaleDistribution": {
+                      "type": "linear"
+                    },
+                    "showPoints": "never",
+                    "showValues": false,
+                    "spanNulls": true,
+                    "stacking": {
+                      "group": "A",
+                      "mode": "none"
+                    },
+                    "thresholdsStyle": {
+                      "mode": "off"
+                    }
+                  }
+                },
+                "overrides": []
+              }
+            }
+          }
+        }
+      },
+      "panel-7": {
+        "kind": "Panel",
+        "spec": {
+          "id": 7,
+          "title": "Power cycle count",
+          "description": "",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "prometheus",
+                      "version": "v0",
+                      "spec": {
+                        "expr": "max without(instance, job, pod, container, endpoint, namespace, service) (scrutiny_smart_power_cycle_count{host_id=~\"$host\"})",
+                        "legendFormat": "{{host_id}}/{{device_name}}"
+                      },
+                      "labels": {
+                        "grafana.app/export-label": "prometheus-1"
+                      }
+                    },
+                    "refId": "A",
+                    "hidden": false
+                  }
+                }
+              ],
+              "transformations": [],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "timeseries",
+            "version": "13.0.1",
+            "spec": {
+              "options": {
+                "annotations": {
+                  "clustering": -1,
+                  "multiLane": false
+                },
+                "legend": {
+                  "calcs": [
+                    "lastNotNull"
+                  ],
+                  "displayMode": "table",
+                  "placement": "bottom",
+                  "showLegend": true
+                },
+                "tooltip": {
+                  "hideZeros": false,
+                  "mode": "multi",
+                  "sort": "desc"
+                }
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "unit": "short",
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "value": 0,
+                        "color": "green"
+                      }
+                    ]
+                  },
+                  "color": {
+                    "mode": "palette-classic"
+                  },
+                  "custom": {
+                    "axisBorderShow": false,
+                    "axisCenteredZero": false,
+                    "axisColorMode": "text",
+                    "axisLabel": "",
+                    "axisPlacement": "auto",
+                    "barAlignment": 0,
+                    "barWidthFactor": 0.6,
+                    "drawStyle": "line",
+                    "fillOpacity": 10,
+                    "gradientMode": "none",
+                    "hideFrom": {
+                      "legend": false,
+                      "tooltip": false,
+                      "viz": false
+                    },
+                    "insertNulls": false,
+                    "lineInterpolation": "linear",
+                    "lineWidth": 1,
+                    "pointSize": 5,
+                    "scaleDistribution": {
+                      "type": "linear"
+                    },
+                    "showPoints": "never",
+                    "showValues": false,
+                    "spanNulls": true,
+                    "stacking": {
+                      "group": "A",
+                      "mode": "none"
+                    },
+                    "thresholdsStyle": {
+                      "mode": "off"
+                    }
+                  }
+                },
+                "overrides": []
+              }
+            }
+          }
+        }
+      }
+    },
+    "layout": {
+      "kind": "GridLayout",
+      "spec": {
+        "items": [
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "x": 0,
+              "y": 0,
+              "width": 8,
+              "height": 5,
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-1"
+              }
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "x": 8,
+              "y": 0,
+              "width": 8,
+              "height": 5,
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-2"
+              }
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "x": 16,
+              "y": 0,
+              "width": 8,
+              "height": 5,
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-3"
+              }
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "x": 0,
+              "y": 5,
+              "width": 12,
+              "height": 8,
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-4"
+              }
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "x": 12,
+              "y": 5,
+              "width": 12,
+              "height": 8,
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-5"
+              }
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "x": 0,
+              "y": 13,
+              "width": 12,
+              "height": 11,
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-6"
+              }
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "x": 12,
+              "y": 13,
+              "width": 12,
+              "height": 11,
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-7"
+              }
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "x": 0,
+              "y": 24,
+              "width": 24,
+              "height": 12,
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-10"
+              }
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "x": 0,
+              "y": 36,
+              "width": 12,
+              "height": 8,
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-11"
+              }
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "x": 12,
+              "y": 36,
+              "width": 12,
+              "height": 8,
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-13"
+              }
+            }
+          }
+        ]
+      }
+    },
+    "links": [
+      {
+        "title": "Scrutiny",
+        "type": "link",
+        "icon": "external link",
+        "tooltip": "",
+        "url": "https://scrutiny.internal.205hlab.com/",
+        "tags": [],
+        "asDropdown": false,
+        "targetBlank": true,
+        "includeVars": false,
+        "keepTime": false
+      }
+    ],
+    "liveNow": false,
+    "preload": false,
+    "tags": [
+      "scrutiny",
+      "smart",
+      "disk",
+      "monitoring"
+    ],
+    "timeSettings": {
+      "timezone": "browser",
+      "from": "now-5m",
+      "to": "now",
+      "autoRefresh": "30s",
+      "autoRefreshIntervals": [
+        "5s",
+        "10s",
+        "30s",
+        "1m",
+        "5m",
+        "15m",
+        "30m",
+        "1h",
+        "2h",
+        "1d"
+      ],
+      "hideTimepicker": false,
+      "fiscalYearStartMonth": 0
+    },
+    "title": "Scrutiny SMART",
+    "variables": [
+      {
+        "kind": "DatasourceVariable",
+        "spec": {
+          "name": "DS_PROMETHEUS",
+          "pluginId": "prometheus",
+          "refresh": "onDashboardLoad",
+          "regex": "",
+          "current": {
+            "text": "",
+            "value": ""
+          },
+          "options": [],
+          "multi": false,
+          "includeAll": false,
+          "label": "Data source",
+          "hide": "dontHide",
+          "skipUrlSync": false,
+          "allowCustomValue": true
+        }
+      },
+      {
+        "kind": "QueryVariable",
+        "spec": {
+          "name": "host",
+          "current": {
+            "text": "",
+            "value": ""
+          },
+          "label": "Host",
+          "hide": "dontHide",
+          "refresh": "onDashboardLoad",
+          "skipUrlSync": false,
+          "query": {
+            "kind": "DataQuery",
+            "group": "prometheus",
+            "version": "v0",
+            "spec": {
+              "query": "label_values(scrutiny_device_info, host_id)",
+              "refId": "PrometheusVariableQueryEditor-VariableQuery"
+            },
+            "labels": {
+              "grafana.app/export-label": "prometheus-1"
+            }
+          },
+          "regex": "",
+          "regexApplyTo": "value",
+          "sort": "alphabeticalAsc",
+          "definition": "label_values(scrutiny_device_info, host_id)",
+          "options": [],
+          "multi": true,
+          "includeAll": true,
+          "allowCustomValue": true
+        }
+      }
+    ]
+  }
+}
