@@ -1,7 +1,7 @@
 ---
 services:
   grafana:
-    image: docker.io/grafana/grafana:${VERSION_TAG:-13.0.1}
+    image: docker.io/grafana/grafana:13.0.1
     restart: unless-stopped
     container_name: grafana
     deploy:

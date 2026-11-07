@@ -1,7 +1,7 @@
 ---
 services:
   gluetun:
-    image: ghcr.io/qdm12/gluetun:${GLUETUN_VERSION_TAG:-v3.41.3}
+    image: ghcr.io/qdm12/gluetun:v3.41.3
     restart: unless-stopped
     container_name: gluetun
     cap_add:
@@ -33,7 +33,7 @@ services:
       start_period: 10s
 
   qbittorrent:
-    image: lscr.io/linuxserver/qbittorrent:${QBITTORRENT_VERSION_TAG:-latest}
+    image: lscr.io/linuxserver/qbittorrent:latest
     restart: unless-stopped
     container_name: qbittorrent
     network_mode: "service:gluetun"
@@ -62,7 +62,7 @@ services:
       start_period: 20s
 
   qui:
-    image: ghcr.io/autobrr/qui:${QUI_VERSION_TAG:-latest}
+    image: ghcr.io/autobrr/qui:latest
     restart: unless-stopped
     container_name: qui
     deploy:

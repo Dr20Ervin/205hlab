@@ -1,7 +1,7 @@
 ---
 services:
   freshrss:
-    image: freshrss/freshrss:${VERSION_TAG:-1.30.4}
+    image: freshrss/freshrss:1.30.4
     restart: unless-stopped
     container_name: freshrss
     deploy:
