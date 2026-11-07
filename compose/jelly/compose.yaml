@@ -24,7 +24,7 @@ services:
       - traefik_network
       - servarr_backend
     volumes:
-      - jellyfin_config:/config
+      - ${JELLYFIN_CONFIG_DIR:?JELLYFIN_CONFIG_DIR Not defined}:/config
       - ${MEDIA_DIR:?MEDIA_DIR Not defined}/movies:/data/movies:ro
       - ${MEDIA_DIR:?MEDIA_DIR Not defined}/shows:/data/shows:ro
       - ${MEDIA_DIR:?MEDIA_DIR Not defined}/music:/data/music:ro
@@ -93,9 +93,6 @@ networks:
     external: true
 
 volumes:
-  jellyfin_config:
-    name: jellyfin-config
-    driver: local
   seerr_config:
     name: seerr-config
     driver: local
