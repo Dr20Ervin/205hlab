@@ -1,0 +1,130 @@
+---
+services:
+  tracearr-redis:
+    image: redis:8-alpine
+    restart: unless-stopped
+    container_name: tracearr-redis
+    command: redis-server --appendonly yes
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+    networks:
+      - tracearr_backend
+    volumes:
+      - tracearr_redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  tracearr-db:
+    image: timescale/timescaledb-ha:pg18.4-ts2.29.1
+    restart: unless-stopped
+    container_name: tracearr-db
+    shm_size: 512mb
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
+    command: postgres -c timescaledb.license=timescale -c timescaledb.max_tuples_decompressed_per_dml_transaction=100000 -c max_locks_per_transaction=4096 -c timescaledb.telemetry_level=off -c max_connections=150
+    deploy:
+      resources:
+        limits:
+          cpus: '1.5'
+          memory: 2G
+    environment:
+      - POSTGRES_USER=${TRACEARR_DB_USER:-tracearr_app}
+      - POSTGRES_PASSWORD=${TRACEARR_DB_PASSWORD:?TRACEARR_DB_PASSWORD Not defined}
+      - POSTGRES_DB=${TRACEARR_DB_NAME:-tracearr-main}
+    networks:
+      - tracearr_backend
+    volumes:
+      - timescale_data:/home/postgres/pgdata/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tracearr_app"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  tracearr:
+    image: ghcr.io/connorgallopo/tracearr:latest
+    restart: unless-stopped
+    container_name: tracearr
+    deploy:
+      resources:
+        limits:
+          cpus: '1.5'
+          memory: 2G
+    environment:
+      - NODE_ENV=production
+      - HOST=0.0.0.0
+      - PORT=3000
+      - TZ=${TZ:-UTC}
+      - DATABASE_URL=postgres://${TRACEARR_DB_USER:-tracearr_app}:${TRACEARR_DB_PASSWORD:?TRACEARR_DB_PASSWORD Not defined}@tracearr-db:5432/${TRACEARR_DB_NAME:-tracearr-main}
+      - REDIS_URL=redis://tracearr-redis:6379
+      - JWT_SECRET=${TRACEARR_JWT_SECRET:?TRACEARR_JWT_SECRET Not defined}
+      - COOKIE_SECRET=${TRACEARR_COOKIE_SECRET:?TRACEARR_COOKIE_SECRET Not defined}
+      - CORS_ORIGIN=${CORS_ORIGIN:-*}
+      - TRUST_PROXY=true
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+    networks:
+      - servarr_backend
+      - traefik_network
+      - tracearr_backend
+    volumes:
+      - tracearr_data:/app/config
+      - tracearr_backups:/data/backup
+      - tracearr_images:/data/tracearr/image-cache
+    depends_on:
+      tracearr-redis:
+        condition: service_healthy
+      tracearr-db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3000/ || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 25s
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=traefik_network
+      - traefik.http.services.tracearr_web.loadBalancer.server.port=3000
+      - traefik.http.routers.tracearr_http.service=tracearr_web
+      - traefik.http.routers.tracearr_http.rule=Host(`tracearr.${FQDN}`)
+      - traefik.http.routers.tracearr_http.entrypoints=web
+      - traefik.http.routers.tracearr_https.service=tracearr_web
+      - traefik.http.routers.tracearr_https.rule=Host(`tracearr.${FQDN}`)
+      - traefik.http.routers.tracearr_https.entrypoints=websecure
+      - traefik.http.routers.tracearr_https.tls=true
+      - traefik.http.routers.tracearr_https.tls.certresolver=cloudflare
+      - traefik.http.routers.tracearr_https.middlewares=authentik@docker
+
+networks:
+  tracearr_backend:
+    name: tracearr_backend
+    driver: bridge
+  servarr_backend:
+    external: true
+  traefik_network:
+    external: true
+
+volumes:
+  tracearr_data:
+    name: tracearr-data
+    driver: local
+  tracearr_redis_data:
+    name: tracearr-redis-data
+    driver: local
+  tracearr_backups:
+    name: tracearr-backups
+    driver: local
+  tracearr_images:
+    name: tracearr-images
+    driver: local
+  timescale_data:
+    name: tracearr-timescale-data
+    driver: local

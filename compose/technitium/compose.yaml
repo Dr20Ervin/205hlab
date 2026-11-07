@@ -1,0 +1,67 @@
+---
+services:
+  technitium:
+    image: docker.io/technitium/dns-server:15.6.2
+    restart: unless-stopped
+    container_name: technitium
+    hostname: technitium
+    ports:
+      - "53:53/tcp"
+      - "53:53/udp"
+      - "${MNGT_IP:?MNGT_IP Not defined}:5380:5380"
+      - "${MNGT_IP:?MNGT_IP Not defined}:53443:53443/tcp"
+    sysctls:
+      - net.ipv4.ip_local_port_range=1024 65535
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+    environment:
+      - DNS_SERVER_DOMAIN=${DNS_SERVER_DOMAIN:?DNS_SERVER_DOMAIN Not defined}
+      - DNS_SERVER_ADMIN_PASSWORD=${DNS_SERVER_ADMIN_PASSWORD:?DNS_SERVER_ADMIN_PASSWORD Not defined}
+      - DNS_SERVER_LOG_FOLDER_PATH=/var/log/technitium/dns
+      - DNS_SERVER_LOG_USING_LOCAL_TIME=true
+      - DNS_SERVER_RECURSION=AllowOnlyForPrivateNetworks
+      - DNS_SERVER_FORWARDERS=1.1.1.1,9.9.9.9
+      - DNS_SERVER_FORWARDER_PROTOCOL=Udp
+      - DNS_SERVER_ENABLE_BLOCKING=true
+      - DNS_SERVER_OPTIONAL_PROTOCOL_DNS_OVER_HTTP=false
+    networks:
+      - traefik_network
+      - monitoring_network
+    volumes:
+      - technitium_config:/etc/dns
+      - technitium_logs:/var/log/technitium/dns
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:5380/ || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=traefik_network
+      - traefik.http.services.technitium_web.loadBalancer.server.port=5380
+      - traefik.http.routers.technitium_http.service=technitium_web
+      - traefik.http.routers.technitium_http.rule=Host(`technitium.${FQDN}`)
+      - traefik.http.routers.technitium_http.entrypoints=web
+      - traefik.http.routers.technitium_https.service=technitium_web
+      - traefik.http.routers.technitium_https.rule=Host(`technitium.${FQDN}`)
+      - traefik.http.routers.technitium_https.entrypoints=websecure
+      - traefik.http.routers.technitium_https.tls=true
+      - traefik.http.routers.technitium_https.tls.certresolver=cloudflare
+
+networks:
+  traefik_network:
+    external: true
+  monitoring_network:
+    external: true
+
+volumes:
+  technitium_config:
+    name: technitium-config
+    driver: local
+  technitium_logs:
+    name: technitium-logs
+    driver: local

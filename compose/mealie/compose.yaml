@@ -1,0 +1,77 @@
+---
+services:
+  mealie:
+    image: ghcr.io/mealie-recipes/mealie:latest
+    restart: unless-stopped
+    container_name: mealie
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+    environment:
+      - ALLOW_SIGNUP=${ALLOW_SIGNUP:-false}
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TZ:-UTC}
+      - BASE_URL=https://mealie.${FQDN:?FQDN Not defined}
+      - DEFAULT_GROUP=${DEFAULT_GROUP:-Home}
+      - DEFAULT_HOUSEHOLD=${DEFAULT_HOUSEHOLD:-Home}
+      - DB_ENGINE=postgres
+      - POSTGRES_USER=${POSTGRES_USER:-mealie_app}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?POSTGRES_PASSWORD Not defined}
+      - POSTGRES_SERVER=${POSTGRES_HOST:?POSTGRES_HOST Not defined}
+      - POSTGRES_PORT=${POSTGRES_PORT:-5432}
+      - POSTGRES_DB=${POSTGRES_DB:-mealie}
+      - SMTP_HOST=${SMTP_HOST:?SMTP_HOST Not defined}
+      - SMTP_PORT=${SMTP_PORT:-587}
+      - SMTP_AUTH_STRATEGY=${SMTP_AUTH_STRATEGY:-TLS}
+      - SMTP_FROM_EMAIL=noreply-mealie@${FQDN:?FQDN Not defined}
+      - SMTP_USER=${SMTP_USER:?SMTP_USER Not defined}
+      - SMTP_PASSWORD=${SMTP_PASSWORD:?SMTP_PASSWORD Not defined}
+      - OIDC_AUTH_ENABLED=${OIDC_AUTH_ENABLED:-true}
+      - OIDC_PROVIDER_NAME=authentik
+      - OIDC_CONFIGURATION_URL=https://authentik.${FQDN:?FQDN Not defined}/application/o/mealie/.well-known/openid-configuration
+      - OIDC_CLIENT_ID=${OIDC_CLIENT_ID:?OIDC_CLIENT_ID Not defined}
+      - OIDC_CLIENT_SECRET=${OIDC_CLIENT_SECRET:?OIDC_CLIENT_SECRET Not defined}
+      - OIDC_GROUPS_CLAIM=entitlements
+      - OIDC_USER_GROUP=mealie-users
+      - OIDC_ADMIN_GROUP=mealie-admins
+      - ALLOW_PASSWORD_LOGIN=${ALLOW_PASSWORD_LOGIN:-false}
+      - OIDC_AUTO_REDIRECT=${OIDC_AUTO_REDIRECT:-true}
+      - OIDC_REQUIRES_EMAIL_VERIFICATION=${OIDC_REQUIRES_EMAIL_VERIFICATION:-false}
+      - OIDC_REMEMBER_ME=${OIDC_REMEMBER_ME:-true}
+    networks:
+      - traefik_network
+      - postgres_network
+    volumes:
+      - mealie_data:/app/data/
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9000/api/app/about || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=traefik_network
+      - traefik.http.services.mealie_web.loadBalancer.server.port=9000
+      - traefik.http.routers.mealie_http.service=mealie_web
+      - traefik.http.routers.mealie_http.rule=Host(`mealie.${FQDN}`)
+      - traefik.http.routers.mealie_http.entrypoints=web
+      - traefik.http.routers.mealie_https.service=mealie_web
+      - traefik.http.routers.mealie_https.rule=Host(`mealie.${FQDN}`)
+      - traefik.http.routers.mealie_https.entrypoints=websecure
+      - traefik.http.routers.mealie_https.tls=true
+      - traefik.http.routers.mealie_https.tls.certresolver=cloudflare
+
+networks:
+  traefik_network:
+    external: true
+  postgres_network:
+    external: true
+
+volumes:
+  mealie_data:
+    name: mealie-data
+    driver: local

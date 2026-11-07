@@ -1,0 +1,106 @@
+---
+services:
+  node-exporter:
+    image: docker.io/prom/node-exporter:v1.8.2
+    restart: unless-stopped
+    container_name: node-exporter
+    pid: host
+    command:
+      - '--path.rootfs=/host'
+    deploy:
+      resources:
+        limits:
+          cpus: '0.2'
+          memory: 128M
+    networks:
+      - monitoring_network
+    volumes:
+      - /:/host:ro,rslave
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:9100/ || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    restart: unless-stopped
+    container_name: cadvisor
+    privileged: true
+    command:
+      - --housekeeping_interval=30s
+      - --disable_metrics=disk,udp,percpu,sched,tcp,referenced_memory
+      - --docker_only=true
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+    networks:
+      - monitoring_network
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:rw
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8080/healthz || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+  technitium_exporter:
+    image: ghcr.io/guycalledseven/technitium-dns-prometheus-exporter:latest
+    restart: unless-stopped
+    container_name: technitium-exporter
+    deploy:
+      resources:
+        limits:
+          cpus: '0.2'
+          memory: 128M
+    environment:
+      - TECHNITIUM_BASE_URL=${TECHNITIUM_BASE_URL:-http://technitium:5380}
+      - TECHNITIUM_VERIFY_SSL=${TECHNITIUM_VERIFY_SSL:-false}
+      - TECHNITIUM_TOKEN=${TECHNITIUM_TOKEN:?TECHNITIUM_TOKEN Not defined}
+      - TECHNITIUM_NODES=${TECHNITIUM_NODES:-technitium.dns.205hlab.com,technitium-aux.dns.205hlab.com}
+      - TECHNITIUM_STATS_RANGE=${TECHNITIUM_STATS_RANGE:-LastHour}
+      - TECHNITIUM_TOP_LIMIT=${TECHNITIUM_TOP_LIMIT:-50}
+      - EXPORTER_PORT=9105
+    networks:
+      - monitoring_network
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:9105/metrics || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+  postgres-exporter:
+    image: quay.io/prometheuscommunity/postgres-exporter:latest
+    restart: unless-stopped
+    container_name: postgres-exporter
+    deploy:
+      resources:
+        limits:
+          cpus: '0.2'
+          memory: 128M
+    environment:
+      - DATA_SOURCE_NAME=postgresql://${POSTGRES_EXPORTER_USER:-postgres_exporter}:${POSTGRES_EXPORTER_PASSWORD:?POSTGRES_EXPORTER_PASSWORD Not defined}@${POSTGRES_HOST:-205hlab-pgdb}:${POSTGRES_PORT:-5432}/postgres?sslmode=disable
+      - PG_EXPORTER_AUTO_DISCOVER_DATABASES=true
+    networks:
+      - monitoring_network
+      - postgres_network
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:9187/ || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+networks:
+  monitoring_network:
+    external: true
+  postgres_network:
+    external: true

@@ -1,0 +1,75 @@
+---
+services:
+  traefik:
+    image: docker.io/library/traefik:v3.7.14
+    restart: unless-stopped
+    container_name: traefik
+    security_opt:
+      - no-new-privileges:true
+    ports:
+      - "80:80"
+      - "443:443"
+      - "${MNGT_IP:?MNGT_IP Not defined}:8080:8080"
+    command:
+      - "--global.checkNewVersion=true"
+      - "--global.sendAnonymousUsage=false"
+      - "--log.level=info"
+      - "--ping=true"
+      - "--ping.entryPoint=ping"
+      - "--api.dashboard=true"
+      - "--api.insecure=${TRAEFIK_API_INSECURE:-false}"
+      - "--entrypoints.ping.address=:8082"
+      - "--entrypoints.metrics.address=:9090"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.web.http.encodedCharacters.allowEncodedSlash=true"
+      - "--entrypoints.web.http.redirections.entryPoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entryPoint.scheme=https"
+      - "--entrypoints.websecure.address=:443"
+      - "--entrypoints.websecure.http.encodedCharacters.allowEncodedSlash=true"
+      - "--entrypoints.web.forwardedHeaders.trustedIPs=173.245.48.0/20,103.21.244.0/22,103.22.200.0/22,103.31.4.0/22,141.101.64.0/18,108.162.192.0/18,190.93.240.0/20,188.114.96.0/20,197.234.240.0/22,198.41.128.0/17,162.158.0.0/15,104.16.0.0/13,104.24.0.0/14,172.64.0.0/13,131.0.72.0/22,10.14.0.0/24,172.16.0.0/12"
+      - "--entrypoints.websecure.forwardedHeaders.trustedIPs=173.245.48.0/20,103.21.244.0/22,103.22.200.0/22,103.31.4.0/22,141.101.64.0/18,108.162.192.0/18,190.93.240.0/20,188.114.96.0/20,197.234.240.0/22,198.41.128.0/17,162.158.0.0/15,104.16.0.0/13,104.24.0.0/14,172.64.0.0/13,131.0.72.0/22,10.14.0.0/24,172.16.0.0/12"
+      - "--metrics.prometheus=true"
+      - "--metrics.prometheus.entryPoint=metrics"
+      - "--metrics.prometheus.addRoutersLabels=true"
+      - "--certificatesresolvers.cloudflare.acme.email=${ACME_EMAIL:?ACME_EMAIL Not defined}"
+      - "--certificatesresolvers.cloudflare.acme.caServer=https://acme-v02.api.letsencrypt.org/directory"
+      - "--certificatesresolvers.cloudflare.acme.storage=/var/traefik/certs/acme.json"
+      - "--certificatesresolvers.cloudflare.acme.dnsChallenge.provider=cloudflare"
+      - "--certificatesresolvers.cloudflare.acme.dnsChallenge.resolvers=1.1.1.1:53,8.8.8.8:53"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedByDefault=false"
+      - "--providers.docker.network=traefik_network"
+      - "--providers.file.directory=/etc/traefik/dynamic"
+      - "--providers.file.watch=true"
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 1G
+    environment:
+      - TZ=${TZ:-UTC}
+      - CF_DNS_API_TOKEN=${CF_DNS_API_TOKEN:?CF_DNS_API_TOKEN Not defined}
+    networks:
+      - traefik_network
+      - monitoring_network
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ${DYNAMIC_PATH:?DYNAMIC_PATH Not defined}:/etc/traefik/dynamic:ro
+      - traefik_certs:/var/traefik/certs/:rw
+    healthcheck:
+      test: ["CMD", "traefik", "healthcheck", "--ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+networks:
+  traefik_network:
+    external: true
+  monitoring_network:
+    external: true
+
+volumes:
+  traefik_certs:
+    name: traefik-certs
+    driver: local

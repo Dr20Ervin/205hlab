@@ -1,0 +1,85 @@
+---
+services:
+  scrutiny:
+    image: ghcr.io/analogj/scrutiny:master-omnibus
+    restart: unless-stopped
+    container_name: scrutiny
+    cap_add:
+      - SYS_RAWIO
+      - SYS_ADMIN
+    devices:
+      - /dev/sda:/dev/sda
+      - /dev/sdb:/dev/sdb
+      - /dev/sdc:/dev/sdc
+      - /dev/sdd:/dev/sdd
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+    environment:
+      - TZ=${TZ:-UTC}
+    networks:
+      - traefik_network
+      - monitoring_network
+    volumes:
+      - scrutiny_config:/opt/scrutiny/config
+      - scrutiny_influxdb:/opt/scrutiny/influxdb
+      - /run/udev:/run/udev:ro
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/api/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=traefik_network
+      - traefik.http.services.scrutiny_web.loadBalancer.server.port=8080
+      - traefik.http.routers.scrutiny_http.service=scrutiny_web
+      - traefik.http.routers.scrutiny_http.rule=Host(`scrutiny.${FQDN}`)
+      - traefik.http.routers.scrutiny_http.entrypoints=web
+      - traefik.http.routers.scrutiny_https.service=scrutiny_web
+      - traefik.http.routers.scrutiny_https.rule=Host(`scrutiny.${FQDN}`)
+      - traefik.http.routers.scrutiny_https.entrypoints=websecure
+      - traefik.http.routers.scrutiny_https.tls=true
+      - traefik.http.routers.scrutiny_https.tls.certresolver=cloudflare
+
+  scrutiny-exporter:
+    image: ghcr.io/jianyun8023/scrutiny-exporter:latest
+    restart: unless-stopped
+    container_name: scrutiny-exporter
+    deploy:
+      resources:
+        limits:
+          cpus: '0.2'
+          memory: 128M
+    environment:
+      - SCRUTINY_API_URL=http://scrutiny:8080
+      - EXPORTER_PORT=9900
+      - CACHE_DURATION=60
+      - LOG_LEVEL=INFO
+    networks:
+      - monitoring_network
+    depends_on:
+      - scrutiny
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:9900/metrics || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+networks:
+  monitoring_network:
+    external: true
+  traefik_network:
+    external: true
+
+volumes:
+  scrutiny_config:
+    name: scrutiny-config
+    driver: local
+  scrutiny_influxdb:
+    name: scrutiny-influxdb
+    driver: local

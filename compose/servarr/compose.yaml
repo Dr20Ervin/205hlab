@@ -1,0 +1,356 @@
+---
+services:
+  prowlarr:
+    image: lscr.io/linuxserver/prowlarr:latest
+    restart: unless-stopped
+    container_name: prowlarr
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TZ:-UTC}
+      - PROWLARR__POSTGRES__HOST=${POSTGRES_HOST:?POSTGRES_HOST Not defined}
+      - PROWLARR__POSTGRES__PORT=${POSTGRES_PORT:-5432}
+      - PROWLARR__POSTGRES__USER=${PROWLARR_DB_USER:-prowlarr_app}
+      - PROWLARR__POSTGRES__PASSWORD=${PROWLARR_DB_PASSWORD:?PROWLARR_DB_PASSWORD Not defined}
+      - PROWLARR__POSTGRES__MAINDB=prowlarr-main
+      - PROWLARR__POSTGRES__LOGDB=prowlarr-log
+      - PROWLARR__AUTH__METHOD=External
+    networks:
+      - servarr_backend
+      - traefik_network
+      - postgres_network
+    volumes:
+      - prowlarr_data:/config
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9696/ping || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=traefik_network
+      - traefik.http.services.prowlarr_web.loadBalancer.server.port=9696
+      - traefik.http.routers.prowlarr_http.service=prowlarr_web
+      - traefik.http.routers.prowlarr_http.rule=Host(`prowlarr.${FQDN}`)
+      - traefik.http.routers.prowlarr_http.entrypoints=web
+      - traefik.http.routers.prowlarr_https.service=prowlarr_web
+      - traefik.http.routers.prowlarr_https.rule=Host(`prowlarr.${FQDN}`)
+      - traefik.http.routers.prowlarr_https.entrypoints=websecure
+      - traefik.http.routers.prowlarr_https.tls=true
+      - traefik.http.routers.prowlarr_https.tls.certresolver=cloudflare
+      - traefik.http.routers.prowlarr_https.middlewares=authentik@docker
+
+  flaresolverr:
+    image: ghcr.io/flaresolverr/flaresolverr:latest
+    restart: unless-stopped
+    container_name: flaresolverr
+    deploy:
+      resources:
+        limits:
+          cpus: '1.25'
+          memory: 2G
+    environment:
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      - LOG_FILE=${LOG_FILE:-none}
+      - LOG_HTML=${LOG_HTML:-false}
+      - CAPTCHA_SOLVER=${CAPTCHA_SOLVER:-none}
+      - TZ=${TZ:-UTC}
+    networks:
+      - servarr_backend
+    volumes:
+      - flaresolverr_data:/config
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8191/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+  bazarr:
+    image: lscr.io/linuxserver/bazarr:latest
+    restart: unless-stopped
+    container_name: bazarr
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TZ:-UTC}
+    networks:
+      - servarr_backend
+      - traefik_network
+      - postgres_network
+    volumes:
+      - bazarr_data:/config
+      - ${MEDIA_DIR:?MEDIA_DIR Not defined}/movies:/movies
+      - ${MEDIA_DIR:?MEDIA_DIR Not defined}/shows:/tv
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:6767/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=traefik_network
+      - traefik.http.services.bazarr_web.loadBalancer.server.port=6767
+      - traefik.http.routers.bazarr_http.service=bazarr_web
+      - traefik.http.routers.bazarr_http.rule=Host(`bazarr.${FQDN}`)
+      - traefik.http.routers.bazarr_http.entrypoints=web
+      - traefik.http.routers.bazarr_https.service=bazarr_web
+      - traefik.http.routers.bazarr_https.rule=Host(`bazarr.${FQDN}`)
+      - traefik.http.routers.bazarr_https.entrypoints=websecure
+      - traefik.http.routers.bazarr_https.tls=true
+      - traefik.http.routers.bazarr_https.tls.certresolver=cloudflare
+      - traefik.http.routers.bazarr_https.middlewares=authentik@docker
+
+  radarr:
+    image: lscr.io/linuxserver/radarr:latest
+    restart: unless-stopped
+    container_name: radarr
+    deploy:
+      resources:
+        limits:
+          cpus: '1.75'
+          memory: 2G
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TZ:-UTC}
+      - RADARR__POSTGRES__HOST=${POSTGRES_HOST:?POSTGRES_HOST Not defined}
+      - RADARR__POSTGRES__PORT=${POSTGRES_PORT:-5432}
+      - RADARR__POSTGRES__USER=${RADARR_DB_USER:-radarr_app}
+      - RADARR__POSTGRES__PASSWORD=${RADARR_DB_PASSWORD:?RADARR_DB_PASSWORD Not defined}
+      - RADARR__POSTGRES__MAINDB=radarr-main
+      - RADARR__POSTGRES__LOGDB=radarr-log
+      - RADARR__AUTH__METHOD=External
+    networks:
+      - servarr_backend
+      - traefik_network
+      - postgres_network
+    volumes:
+      - radarr_data:/config
+      - ${MEDIA_DIR:?MEDIA_DIR Not defined}/movies:/movies
+      - ${DOWNLOADS_DIR:?DOWNLOADS_DIR Not defined}:/downloads
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:7878/ping || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=traefik_network
+      - traefik.http.services.radarr_web.loadBalancer.server.port=7878
+      - traefik.http.routers.radarr_http.service=radarr_web
+      - traefik.http.routers.radarr_http.rule=Host(`radarr.${FQDN}`)
+      - traefik.http.routers.radarr_http.entrypoints=web
+      - traefik.http.routers.radarr_https.service=radarr_web
+      - traefik.http.routers.radarr_https.rule=Host(`radarr.${FQDN}`)
+      - traefik.http.routers.radarr_https.entrypoints=websecure
+      - traefik.http.routers.radarr_https.tls=true
+      - traefik.http.routers.radarr_https.tls.certresolver=cloudflare
+      - traefik.http.routers.radarr_https.middlewares=authentik@docker
+
+  sonarr:
+    image: lscr.io/linuxserver/sonarr:latest
+    restart: unless-stopped
+    container_name: sonarr
+    deploy:
+      resources:
+        limits:
+          cpus: '1.75'
+          memory: 2G
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TZ:-UTC}
+      - SONARR__POSTGRES__HOST=${POSTGRES_HOST:?POSTGRES_HOST Not defined}
+      - SONARR__POSTGRES__PORT=${POSTGRES_PORT:-5432}
+      - SONARR__POSTGRES__USER=${SONARR_DB_USER:-sonarr_app}
+      - SONARR__POSTGRES__PASSWORD=${SONARR_DB_PASSWORD:?SONARR_DB_PASSWORD Not defined}
+      - SONARR__POSTGRES__MAINDB=sonarr-main
+      - SONARR__POSTGRES__LOGDB=sonarr-log
+      - SONARR__AUTH__METHOD=External
+    networks:
+      - servarr_backend
+      - traefik_network
+      - postgres_network
+    volumes:
+      - sonarr_data:/config
+      - ${MEDIA_DIR:?MEDIA_DIR Not defined}/shows:/tv
+      - ${DOWNLOADS_DIR:?DOWNLOADS_DIR Not defined}:/downloads
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8989/ping || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=traefik_network
+      - traefik.http.services.sonarr_web.loadBalancer.server.port=8989
+      - traefik.http.routers.sonarr_http.service=sonarr_web
+      - traefik.http.routers.sonarr_http.rule=Host(`sonarr.${FQDN}`)
+      - traefik.http.routers.sonarr_http.entrypoints=web
+      - traefik.http.routers.sonarr_https.service=sonarr_web
+      - traefik.http.routers.sonarr_https.rule=Host(`sonarr.${FQDN}`)
+      - traefik.http.routers.sonarr_https.entrypoints=websecure
+      - traefik.http.routers.sonarr_https.tls=true
+      - traefik.http.routers.sonarr_https.tls.certresolver=cloudflare
+      - traefik.http.routers.sonarr_https.middlewares=authentik@docker
+
+  lidarr:
+    image: lscr.io/linuxserver/lidarr:latest
+    restart: unless-stopped
+    container_name: lidarr
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1.5G
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TZ:-UTC}
+      - LIDARR__POSTGRES__HOST=${POSTGRES_HOST:?POSTGRES_HOST Not defined}
+      - LIDARR__POSTGRES__PORT=${POSTGRES_PORT:-5432}
+      - LIDARR__POSTGRES__USER=${LIDARR_DB_USER:-lidarr_app}
+      - LIDARR__POSTGRES__PASSWORD=${LIDARR_DB_PASSWORD:?LIDARR_DB_PASSWORD Not defined}
+      - LIDARR__POSTGRES__MAINDB=lidarr-main
+      - LIDARR__POSTGRES__LOGDB=lidarr-log
+      - LIDARR__AUTH__METHOD=External
+    networks:
+      - servarr_backend
+      - traefik_network
+      - postgres_network
+    volumes:
+      - lidarr_data:/config
+      - ${MEDIA_DIR:?MEDIA_DIR Not defined}/music:/music
+      - ${DOWNLOADS_DIR:?DOWNLOADS_DIR Not defined}:/downloads
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8686/ping || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=traefik_network
+      - traefik.http.services.lidarr_web.loadBalancer.server.port=8686
+      - traefik.http.routers.lidarr_http.service=lidarr_web
+      - traefik.http.routers.lidarr_http.rule=Host(`lidarr.${FQDN}`)
+      - traefik.http.routers.lidarr_http.entrypoints=web
+      - traefik.http.routers.lidarr_https.service=lidarr_web
+      - traefik.http.routers.lidarr_https.rule=Host(`lidarr.${FQDN}`)
+      - traefik.http.routers.lidarr_https.entrypoints=websecure
+      - traefik.http.routers.lidarr_https.tls=true
+      - traefik.http.routers.lidarr_https.tls.certresolver=cloudflare
+      - traefik.http.routers.lidarr_https.middlewares=authentik@docker
+
+  profilarr:
+    image: ghcr.io/dictionarry-hub/profilarr:latest
+    restart: unless-stopped
+    container_name: profilarr
+    deploy:
+      resources:
+        limits:
+          cpus: '0.75'
+          memory: 512M
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TZ:-UTC}
+      - AUTH=oidc
+      - OIDC_DISCOVERY_URL=https://authentik.${FQDN:?FQDN Not defined}/application/o/profilarr/.well-known/openid-configuration
+      - OIDC_CLIENT_ID=${PROFILARR_OIDC_CLIENT_ID:?PROFILARR_OIDC_CLIENT_ID Not defined}
+      - OIDC_CLIENT_SECRET=${PROFILARR_OIDC_CLIENT_SECRET:?PROFILARR_OIDC_CLIENT_SECRET Not defined}
+      - ORIGIN=https://profilarr.${FQDN:?FQDN Not defined}
+      - PARSER_HOST=parser
+      - PARSER_PORT=5000
+      - PROFILARR_API_KEY=${PROFILARR_API_KEY:?PROFILARR_API_KEY Not defined}
+    networks:
+      - servarr_backend
+      - traefik_network
+    volumes:
+      - profilarr_config:/config
+    depends_on:
+      parser:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:6868/api/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=traefik_network
+      - traefik.http.services.profilarr_web.loadBalancer.server.port=6868
+      - traefik.http.routers.profilarr_http.service=profilarr_web
+      - traefik.http.routers.profilarr_http.rule=Host(`profilarr.${FQDN}`)
+      - traefik.http.routers.profilarr_http.entrypoints=web
+      - traefik.http.routers.profilarr_https.service=profilarr_web
+      - traefik.http.routers.profilarr_https.rule=Host(`profilarr.${FQDN}`)
+      - traefik.http.routers.profilarr_https.entrypoints=websecure
+      - traefik.http.routers.profilarr_https.tls=true
+      - traefik.http.routers.profilarr_https.tls.certresolver=cloudflare
+
+  parser:
+    image: ghcr.io/dictionarry-hub/profilarr-parser:latest
+    restart: unless-stopped
+    container_name: profilarr-parser
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+    networks:
+      - servarr_backend
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:5000/ || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+networks:
+  servarr_backend:
+    name: servarr_backend
+    driver: bridge
+  traefik_network:
+    external: true
+  postgres_network:
+    external: true
+
+volumes:
+  prowlarr_data:
+    name: prowlarr-data
+    driver: local
+  radarr_data:
+    name: radarr-data
+    driver: local
+  sonarr_data:
+    name: sonarr-data
+    driver: local
+  flaresolverr_data:
+    name: flaresolverr-data
+    driver: local
+  lidarr_data:
+    name: lidarr-data
+    driver: local
+  profilarr_config:
+    name: profilarr-config
+    driver: local
+  bazarr_data:
+    name: bazarr-data
+    driver: local

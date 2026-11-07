@@ -1,0 +1,143 @@
+---
+services:
+  broker:
+    image: docker.io/valkey/valkey:9-alpine
+    restart: unless-stopped
+    container_name: paperless-valkey
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+    networks:
+      - paperless_network
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  gotenberg:
+    image: docker.io/gotenberg/gotenberg:8.37
+    restart: unless-stopped
+    container_name: paperless-gotenberg
+    command:
+      - "gotenberg"
+      - "--chromium-disable-javascript=true"
+      - "--chromium-allow-list=file:///tmp/.*"
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+    networks:
+      - paperless_network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fs -S --max-time 2 http://localhost:3000/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
+  tika:
+    image: docker.io/apache/tika:3.3.1.0
+    restart: unless-stopped
+    container_name: paperless-tika
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+    networks:
+      - paperless_network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fs -S --max-time 2 http://localhost:9998/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+  webserver:
+    image: ghcr.io/paperless-ngx/paperless-ngx:latest
+    restart: unless-stopped
+    container_name: paperless-server
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 3G
+    environment:
+      - PAPERLESS_REDIS=redis://paperless-valkey:6379
+      - PAPERLESS_DBENGINE=postgresql
+      - PAPERLESS_DBHOST=${POSTGRES_HOST:?POSTGRES_HOST Not defined}
+      - PAPERLESS_DBPORT=${POSTGRES_PORT:-5432}
+      - PAPERLESS_DBNAME=${POSTGRES_DB:-paperless}
+      - PAPERLESS_DBUSER=${POSTGRES_USER:-paperless_app}
+      - PAPERLESS_DBPASS=${POSTGRES_PASSWORD:?POSTGRES_PASSWORD Not defined}
+      - PAPERLESS_TIKA_ENABLED=1
+      - PAPERLESS_TIKA_GOTENBERG_ENDPOINT=http://gotenberg:3000
+      - PAPERLESS_TIKA_ENDPOINT=http://tika:9998
+      - PAPERLESS_SECRET_KEY=${PAPERLESS_SECRET_KEY:?PAPERLESS_SECRET_KEY Not defined}
+      - PAPERLESS_URL=https://paperless.${FQDN:?FQDN Not defined}
+      - PAPERLESS_APPS=allauth.socialaccount.providers.openid_connect
+      - >-
+        PAPERLESS_SOCIALACCOUNT_PROVIDERS={"openid_connect":{"OAUTH_PKCE_ENABLED":true,"APPS":[{"provider_id":"authentik","name":"authentik","client_id":"${AUTHENTIK_CLIENT_ID:?AUTHENTIK_CLIENT_ID Not defined}","secret":"${AUTHENTIK_CLIENT_SECRET:?AUTHENTIK_CLIENT_SECRET Not defined}","settings":{"server_url":"https://authentik.${FQDN:?FQDN Not defined}/application/o/paperless-ngx/.well-known/openid-configuration","fetch_userinfo":true}}],"SCOPE":["openid","profile","email"]}}
+      - PAPERLESS_LOGOUT_REDIRECT_URL=https://authentik.${FQDN:?FQDN Not defined}/application/o/paperless-ngx/end-session/
+      - PAPERLESS_SOCIAL_AUTO_SIGNUP=true
+      - PAPERLESS_SOCIALACCOUNT_ALLOW_SIGNUPS=true
+      - PAPERLESS_SOCIAL_ACCOUNT_SYNC_SUPERUSER_GROUP=paperless_admins
+      - PAPERLESS_SOCIAL_ACCOUNT_SYNC_STAFF_GROUP=paperless_staff
+    networks:
+      - traefik_network
+      - paperless_network
+      - postgres_network
+    volumes:
+      - paperless_data:/usr/src/paperless/data
+      - ${DOCS_PATH:?DOCS_PATH Not defined}/media:/usr/src/paperless/media
+      - ${DOCS_PATH:?DOCS_PATH Not defined}/trash:/usr/src/paperless/trash
+      - ${DOCS_PATH:?DOCS_PATH Not defined}/export:/usr/src/paperless/export
+      - paperless_consume:/usr/src/paperless/consume
+    depends_on:
+      - broker
+      - gotenberg
+      - tika
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fs -S --max-time 2 http://localhost:8000/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=traefik_network
+      - traefik.http.services.paperless_web.loadBalancer.server.port=8000
+      - traefik.http.routers.paperless_http.service=paperless_web
+      - traefik.http.routers.paperless_http.rule=Host(`paperless.${FQDN}`)
+      - traefik.http.routers.paperless_http.entrypoints=web
+      - traefik.http.routers.paperless_https.service=paperless_web
+      - traefik.http.routers.paperless_https.rule=Host(`paperless.${FQDN}`)
+      - traefik.http.routers.paperless_https.entrypoints=websecure
+      - traefik.http.routers.paperless_https.tls=true
+      - traefik.http.routers.paperless_https.tls.certresolver=cloudflare
+
+networks:
+  paperless_network:
+    name: paperless_network
+    driver: bridge
+  traefik_network:
+    external: true
+  postgres_network:
+    external: true
+
+volumes:
+  paperless_data:
+    name: paperless-data
+    driver: local
+  paperless_consume:
+    name: paperless-consume
+    driver: local
+  redis_data:
+    name: paperless-redis-data
+    driver: local
