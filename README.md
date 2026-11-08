@@ -27,6 +27,12 @@
 
 ---
 
+> [!NOTE]
+> **On AI-Assisted Documentation**
+> All code, configurations, and infrastructure design in this repository were **written and engineered by me**. AI tooling was used exclusively for repetitive, non-creative tasks — such as standardizing formatting across compose files, cross-checking for missing environment variables, and drafting documentation from my own notes and descriptions. Every architectural decision, service selection, security design, and line of configuration reflects my own work and understanding. This README and accompanying docs were written with AI assistance to accelerate documentation — the production infrastructure itself was not.
+
+---
+
 ## 📌 About This Repository
 
 This repository serves a **dual purpose**:
