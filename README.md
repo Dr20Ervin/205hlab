@@ -205,6 +205,7 @@ flowchart TD
             Mealie["Mealie\nmealie.205hlab.com"]
             FreshRSS["FreshRSS\nfreshrss.205hlab.com"]
             ReactiveResume["Reactive Resume\nresume.205hlab.com"]
+            SearXNG["SearXNG\nsearch.205hlab.com"]
             Grafana["Grafana 13\ngrafana.205hlab.com"]
         end
 
@@ -283,6 +284,7 @@ A key design decision in this homelab is the **split between internal-only and e
 | `qui.205hlab.com` | qui qBittorrent UI | OIDC (native) | [`downloaderr`](compose/downloaderr/) |
 | `radarr.205hlab.com` | Radarr movies | ForwardAuth | [`servarr`](compose/servarr/) |
 | `resume.205hlab.com` | Reactive Resume | OIDC (native) | [`reactive-resume`](compose/reactive-resume/) |
+| `search.205hlab.com` | SearXNG metasearch | ForwardAuth | [`searxng`](compose/searxng/) |
 | `seer.205hlab.com` | Seerr requests | ForwardAuth | [`jelly`](compose/jelly/) |
 | `sonarr.205hlab.com` | Sonarr TV | ForwardAuth | [`servarr`](compose/servarr/) |
 | `tracearr.205hlab.com` | Tracearr analytics | ForwardAuth | [`tracearr`](compose/tracearr/) |
@@ -346,6 +348,7 @@ The homelab runs **two Technitium DNS servers** providing redundancy and split-h
 | [`tracearr`](compose/tracearr/) | `timescale/timescaledb-ha:pg18.4-ts2.29.1` | Dedicated TimescaleDB time-series cluster for Tracearr analytics. Custom `max_locks_per_transaction`, `max_connections`, and telemetry-off configuration. Paired with Redis 8 for task queuing. |
 | [`paperless`](compose/paperless/) | `valkey/valkey:9-alpine` | Valkey (open-source Redis fork v9) broker powering Paperless-ngx background task and document processing queues. |
 | [`reactive-resume`](compose/reactive-resume/) | `valkey/valkey:9-alpine` | Dedicated Valkey (open-source Redis fork v9) broker powering Reactive Resume live resume subscriptions, shared rate limits, and state resilience. |
+| [`searxng`](compose/searxng/) | `valkey/valkey:9-alpine` | Dedicated Valkey (open-source Redis fork v9) broker powering SearXNG metasearch query caching and engine rate-limiting over loopback. |
 
 ### 🏗️ Infrastructure & Management (Internal)
 
@@ -379,9 +382,12 @@ The homelab runs **two Technitium DNS servers** providing redundancy and split-h
 | [`mealie`](compose/mealie/) | `mealie-recipes/mealie:latest` | `mealie.205hlab.com` | OIDC native |
 | [`freshrss`](compose/freshrss/) | `freshrss/freshrss:1.30.4` | `freshrss.205hlab.com` | OIDC native |
 | [`reactive-resume`](compose/reactive-resume/) | `amruthpillai/reactive-resume:latest` + `valkey:9-alpine` | `resume.205hlab.com` | OIDC native |
+| [`searxng`](compose/searxng/) | `searxng:latest` + `gluetun:v3.41.3` + `valkey:9-alpine` | `search.205hlab.com` | ForwardAuth |
 | [`changedetection`](compose/changedetection/) | `changedetection.io` + `sockpuppetbrowser` | `changedetection.internal.205hlab.com` | LAN-only |
 
 > **Paperless-ngx** runs a full document processing pipeline: Apache Tika extracts text from Office/PDF files, Gotenberg handles PDF rendering with sandboxed Chromium, and Valkey queues all background OCR and classification tasks.
+
+> **SearXNG** is a privacy-respecting metasearch engine. Outbound scraping exits through a dedicated **Gluetun WireGuard VPN** tunnel (`network_mode: service:gluetun-search`, AirVPN provider) to eliminate residential IP rate-limits and CAPTCHAs, with query caching and engine rate limits backed by a local **Valkey 9** instance over loopback.
 
 ### 🎬 Media Automation & Delivery
 
@@ -470,6 +476,7 @@ Security is **engineered into every layer** — not bolted on after the fact.
 │   ├── prometheus/                       # Prometheus TSDB monitoring engine
 │   ├── reactive-resume/                  # Reactive Resume v6 + Valkey
 │   ├── scrutiny/                         # S.M.A.R.T. disk health + Prometheus exporter
+│   ├── searxng/                          # SearXNG + Gluetun VPN + Valkey
 │   ├── servarr/                          # Sonarr · Radarr · Lidarr · Bazarr
 │   │                                     # Prowlarr · FlareSolverr · Profilarr
 │   ├── technitium/                       # Technitium DNS server (Primary)
@@ -545,10 +552,11 @@ docker compose up -d
 11. freshrss         → RSS reader
 12. reactive-resume  → Resume builder (needs postgres + valkey + authentik)
 13. changedetection  → Change monitoring
-14. jelly            → Jellyfin + Seerr
-15. servarr          → Automation suite (Sonarr, Radarr, Lidarr, etc.)
-16. downloaderr      → Gluetun VPN + qBittorrent + qui
-17. tracearr         → Media analytics (needs TimescaleDB)
+14. searxng          → Privacy metasearch (Gluetun VPN + Valkey)
+15. jelly            → Jellyfin + Seerr
+16. servarr          → Automation suite (Sonarr, Radarr, Lidarr, etc.)
+17. downloaderr      → Gluetun VPN + qBittorrent + qui
+18. tracearr         → Media analytics (needs TimescaleDB)
 ```
 
 ---
