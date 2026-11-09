@@ -1,0 +1,6 @@
+# -----------------------------------------------------------------------------
+# SearXNG Bot Detection / Limiter Configuration
+# -----------------------------------------------------------------------------
+[botdetection.ip_limit]
+# Filter link local addresses
+link_token = false

@@ -1,0 +1,109 @@
+---
+services:
+  gluetun-search:
+    image: ghcr.io/qdm12/gluetun:v3.41.3
+    restart: unless-stopped
+    container_name: gluetun-search
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+    environment:
+      - VPN_SERVICE_PROVIDER=${AIRVPN_SERVICE_PROVIDER:-airvpn}
+      - VPN_TYPE=wireguard
+      - WIREGUARD_PRIVATE_KEY=${AIRVPN_WIREGUARD_PRIVATE_KEY:?AIRVPN_WIREGUARD_PRIVATE_KEY Not defined}
+      - WIREGUARD_PRESHARED_KEY=${AIRVPN_WIREGUARD_PRESHARED_KEY:-}
+      - WIREGUARD_ADDRESSES=${AIRVPN_WIREGUARD_ADDRESSES:?AIRVPN_WIREGUARD_ADDRESSES Not defined}
+      - SERVER_COUNTRIES=${AIRVPN_SERVER_COUNTRIES:-Switzerland}
+      - DOT=off
+    networks:
+      - traefik_network
+    healthcheck:
+      test: ["CMD", "/gluetun-entrypoint", "healthcheck"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=traefik_network
+      - traefik.http.services.searxng_web.loadBalancer.server.port=8080
+      - traefik.http.routers.searxng_http.service=searxng_web
+      - traefik.http.routers.searxng_http.rule=Host(`search.${FQDN:?FQDN Not defined}`)
+      - traefik.http.routers.searxng_http.entrypoints=web
+      - traefik.http.routers.searxng_https.service=searxng_web
+      - traefik.http.routers.searxng_https.rule=Host(`search.${FQDN}`)
+      - traefik.http.routers.searxng_https.entrypoints=websecure
+      - traefik.http.routers.searxng_https.tls=true
+      - traefik.http.routers.searxng_https.tls.certresolver=cloudflare
+      - traefik.http.routers.searxng_https.middlewares=authentik@docker
+
+  valkey:
+    image: docker.io/valkey/valkey:9-alpine
+    container_name: searxng-valkey
+    restart: unless-stopped
+    network_mode: "service:gluetun-search"
+    command: valkey-server --save "" --appendonly no --loglevel warning
+    deploy:
+      resources:
+        limits:
+          cpus: '0.3'
+          memory: 128M
+    volumes:
+      - valkey-data:/data/
+    depends_on:
+      gluetun-search:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 2s
+
+  searxng:
+    image: docker.io/searxng/searxng:latest
+    restart: unless-stopped
+    container_name: searxng-core
+    network_mode: "service:gluetun-search"
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+    environment:
+      - SEARXNG_PORT=${SEARXNG_PORT:-8080}
+      - SEARXNG_HOST=${SEARXNG_HOST:-0.0.0.0}
+      - SEARXNG_SECRET=${SEARXNG_SECRET:?SEARXNG_SECRET Not defined}
+      - SEARXNG_BASE_URL=${SEARXNG_BASE_URL:-https://search.${FQDN:?FQDN Not defined}/}
+      - SEARXNG_VALKEY_URL=valkey://127.0.0.1:6379/0
+      - FORCE_OWNERSHIP=${FORCE_OWNERSHIP:-true}
+    volumes:
+      - ${SEARXNG_CONFIG_DIR:-./core-config}:/etc/searxng/:Z
+      - core-data:/var/cache/searxng/
+    depends_on:
+      gluetun-search:
+        condition: service_healthy
+      valkey:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://127.0.0.1:8080/ || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+networks:
+  traefik_network:
+    external: true
+
+volumes:
+  core-data:
+    name: searxng-core-data
+  valkey-data:
+    name: searxng-valkey-data
