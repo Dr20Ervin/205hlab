@@ -122,7 +122,7 @@ Declarative, multi-stack **Docker Compose** configurations governed by least-pri
 | Component | Specification |
 | :--- | :--- |
 | **Case & Form Factor** | Fujitsu ESPRIMO P710 (Tower) |
-| **CPU** | Intel Core i7-3470 (4C/8T, 3.2 GHz base / 3.6 GHz boost) |
+| **CPU** | Intel Core i7-3770 (4C/8T, 3.2 GHz base / 3.6 GHz boost) |
 | **RAM** | 32 GB DDR3 |
 | **OS Drive** | 1× 240 GB Kingston A400 SSD (Ubuntu Server LTS) |
 | **Data Drive** | 1× 480 GB ADATA SU630 SSD (`/srv` — Docker volumes & app data) |
