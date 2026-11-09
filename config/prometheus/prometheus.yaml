@@ -1,0 +1,79 @@
+---
+global:
+  scrape_interval: 30s  # By default, scrape targets every 15 seconds.
+scrape_configs:
+  - job_name: 'prometheus'
+    scrape_interval: 30s
+    static_configs:
+      - targets: ['localhost:9090']
+
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['node-exporter:9100']
+
+  - job_name: 'cadvisor'
+    static_configs:
+      - targets: ['cadvisor:8080']
+
+  - job_name: technitium
+    static_configs:
+      - targets:
+          - technitium-exporter:9105
+
+  - job_name: dockhand
+    metrics_path: /metrics
+    static_configs:
+      - targets: ['dockhand:3000']
+    authorization:
+      type: Bearer
+      credentials: <YOUR_DOCKHAND_API_KEY>
+
+  - job_name: "hass"
+    scrape_interval: 60s
+    metrics_path: /api/prometheus
+    authorization:
+      credentials: "<YOUR_HOME_ASSISTANT_API_TOKEN>"
+    scheme: http # Use https if your local Home Assistant uses SSL
+    static_configs:
+      - targets: ['x540sa.mngt.205hlab.com:8123']
+
+  - job_name: 'haos_node-exporter'
+    static_configs:
+      - targets: ['x540sa.mngt.205hlab.com:9100']
+    basic_auth:
+      username: '<YOUR_USERNAME>'
+      password: '<YOUR_PASSWORD>'
+
+  - job_name: 'openwrt'
+    static_configs:
+      - targets: ['openwrt.mngt.205hlab.com:9100']
+
+  - job_name: 'postgres-exporter'
+    static_configs:
+      - targets: ['postgres-exporter:9187']
+
+  - job_name: 'scrutiny'
+    scrape_interval: 60s
+    scrape_timeout: 10s
+    static_configs:
+      - targets: ['scrutiny-exporter:9900']
+
+  - job_name: 'authentik'
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+    static_configs:
+      - targets: 
+        - 'authentik-server:9300'
+        - 'authentik-worker:9300'
+
+  - job_name: qui
+    static_configs:
+      - targets: ["qui:9074"]
+    metrics_path: /metrics
+    scrape_interval: 30s
+
+  - job_name: 'traefik'
+    static_configs:
+      - targets: ['traefik:9090']
+    metrics_path: /metrics
+    scrape_interval: 30s
