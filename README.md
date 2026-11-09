@@ -219,6 +219,7 @@ flowchart TD
             Prowlarr["Prowlarr\nprowlarr.205hlab.com"]
             Profilarr["Profilarr\nprofilarr.205hlab.com"]
             Qui["qui\nqui.205hlab.com"]
+            MeTube["MeTube\nmetube.205hlab.com"]
             Tracearr["Tracearr\ntracearr.205hlab.com"]
         end
     end
@@ -278,6 +279,7 @@ A key design decision in this homelab is the **split between internal-only and e
 | `jellyfin.205hlab.com` | Jellyfin media server | Traefik route TLS | [`jelly`](compose/jelly/) |
 | `lidarr.205hlab.com` | Lidarr music | ForwardAuth | [`servarr`](compose/servarr/) |
 | `mealie.205hlab.com` | Mealie recipes | OIDC (native) | [`mealie`](compose/mealie/) |
+| `metube.205hlab.com` | MeTube downloader | ForwardAuth | [`downloaderr`](compose/downloaderr/) |
 | `paperless.205hlab.com` | Paperless-ngx docs | ForwardAuth | [`paperless`](compose/paperless/) |
 | `profilarr.205hlab.com` | Profilarr profiles | OIDC (native) | [`servarr`](compose/servarr/) |
 | `prowlarr.205hlab.com` | Prowlarr indexers | ForwardAuth | [`servarr`](compose/servarr/) |
@@ -401,6 +403,7 @@ The homelab runs **two Technitium DNS servers** providing redundancy and split-h
 | [`servarr`](compose/servarr/) | `linuxserver/bazarr:latest` | `bazarr.205hlab.com` | ForwardAuth |
 | [`servarr`](compose/servarr/) | `linuxserver/prowlarr:latest` | `prowlarr.205hlab.com` | ForwardAuth |
 | [`servarr`](compose/servarr/) | `dictionarry-hub/profilarr:latest` | `profilarr.205hlab.com` | OIDC native |
+| [`downloaderr`](compose/downloaderr/) | `alexta69/metube:latest` | `metube.205hlab.com` | ForwardAuth |
 | [`downloaderr`](compose/downloaderr/) | `autobrr/qui:latest` | `qui.205hlab.com` | OIDC native |
 | [`downloaderr`](compose/downloaderr/) | `linuxserver/qbittorrent:latest` + `qdm12/gluetun:v3.41.3` | — (VPN-only) | — |
 | [`tracearr`](compose/tracearr/) | `tracearr:latest` | `tracearr.205hlab.com` | ForwardAuth |

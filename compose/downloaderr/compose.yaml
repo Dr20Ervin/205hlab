@@ -25,12 +25,37 @@ services:
       - FIREWALL_VPN_INPUT_PORTS=${TORRENTING_PORT:?TORRENTING_PORT Not defined}
     networks:
       - servarr_backend
+      - traefik_network
     healthcheck:
       test: ["CMD", "/gluetun-entrypoint", "healthcheck"]
       interval: 10s
       timeout: 5s
       retries: 3
       start_period: 10s
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=traefik_network
+      # qBittorrent
+      - traefik.http.services.qbittorrent_web.loadBalancer.server.port=${QBITTORRENT_WEBUI_PORT:-8080}
+      - traefik.http.routers.qbittorrent_http.service=qbittorrent_web
+      - traefik.http.routers.qbittorrent_http.rule=Host(`qbittorrent.internal.${FQDN:?FQDN Not defined}`)
+      - traefik.http.routers.qbittorrent_http.entrypoints=web
+      - traefik.http.routers.qbittorrent_https.service=qbittorrent_web
+      - traefik.http.routers.qbittorrent_https.rule=Host(`qbittorrent.${FQDN}`)
+      - traefik.http.routers.qbittorrent_https.entrypoints=websecure
+      - traefik.http.routers.qbittorrent_https.tls=true
+      - traefik.http.routers.qbittorrent_https.tls.certresolver=cloudflare
+      # Metube
+      - traefik.http.services.metube_web.loadBalancer.server.port=8081
+      - traefik.http.routers.metube_http.service=metube_web
+      - traefik.http.routers.metube_http.rule=Host(`metube.${FQDN}`)
+      - traefik.http.routers.metube_http.entrypoints=web
+      - traefik.http.routers.metube_https.service=metube_web
+      - traefik.http.routers.metube_https.rule=Host(`metube.${FQDN}`)
+      - traefik.http.routers.metube_https.entrypoints=websecure
+      - traefik.http.routers.metube_https.tls=true
+      - traefik.http.routers.metube_https.tls.certresolver=cloudflare
+      - traefik.http.routers.metube_https.middlewares=authentik@docker
 
   qbittorrent:
     image: lscr.io/linuxserver/qbittorrent:latest
@@ -58,6 +83,51 @@ services:
       test: ["CMD-SHELL", "curl -f http://localhost:${QBITTORRENT_WEBUI_PORT:-8080}/ || exit 1"]
       interval: 30s
       timeout: 10s
+      retries: 3
+      start_period: 20s
+
+
+  metube:
+    image: ghcr.io/alexta69/metube:latest
+    container_name: metube
+    restart: unless-stopped
+    network_mode: "service:gluetun"
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - UMASK=022
+      - LOGLEVEL=${METUBE_LOGLEVEL:-info}
+      - ENABLE_ACCESSLOG=${METUBE_ENABLE_ACCESSLOG:-false}
+      - DEFAULT_THEME=${METUBE_DEFAULT_THEME:-dark}
+      - MAX_CONCURRENT_DOWNLOADS=${METUBE_MAX_CONCURRENT_DOWNLOADS:-3}
+      - MAX_DOWNLOAD_SPEED=${METUBE_MAX_DOWNLOAD_SPEED:-0}
+      - CLEAR_COMPLETED_AFTER=${METUBE_CLEAR_COMPLETED_AFTER:-0}
+      - DELETE_FILE_ON_TRASHCAN=${METUBE_DELETE_FILE_ON_TRASHCAN:-false}
+      - SUBSCRIPTION_DEFAULT_CHECK_INTERVAL=${METUBE_SUBSCRIPTION_DEFAULT_CHECK_INTERVAL:-60}
+      - SUBSCRIPTION_SCAN_PLAYLIST_END=${METUBE_SUBSCRIPTION_SCAN_PLAYLIST_END:-50}
+      - SUBSCRIPTION_MAX_SEEN_IDS=${METUBE_SUBSCRIPTION_MAX_SEEN_IDS:-50000}
+      - DOWNLOAD_DIR=/downloads/videos
+      - AUDIO_DOWNLOAD_DIR=/downloads/audio
+      - TEMP_DIR=/downloads/temp
+      - STATE_DIR=/downloads/state
+      - PUBLIC_HOST_URL=https://metube.${FQDN}/download/
+      - PUBLIC_HOST_AUDIO_URL=https://metube.${FQDN}/audio_download/
+    volumes:
+      - ${METUBE_DOWNLOADS_DIR:?METUBE_DOWNLOADS_DIR Not defined}:/downloads
+      - metube_temp:/downloads/temp
+      - metube_state:/downloads/state
+    depends_on:
+      gluetun:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://127.0.0.1:8081/ || exit 1"]
+      interval: 30s
+      timeout: 5s
       retries: 3
       start_period: 20s
 
@@ -130,4 +200,10 @@ volumes:
     driver: local
   qbittorrent_config:
     name: qbittorrent-config
+    driver: local
+  metube_temp:
+    name: metube-temp
+    driver: local
+  metube_state:
+    name: metube-state
     driver: local
