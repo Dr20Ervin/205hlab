@@ -1,0 +1,101 @@
+---
+services:
+  valkey:
+    image: docker.io/valkey/valkey:9-alpine
+    restart: unless-stopped
+    container_name: reactive-resume-valkey
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+    networks:
+      - reactive-resume_backend
+    volumes:
+      - valkey_data:/data
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  reactive-resume:
+    image: amruthpillai/reactive-resume:latest
+    restart: unless-stopped
+    container_name: reactive-resume
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+    environment:
+      - APP_URL=https://resume.${FQDN:?FQDN Not defined}
+      - PORT=3000
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-reactive-resume_app}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD Not defined}@${POSTGRES_HOST:?POSTGRES_HOST Not defined}:${POSTGRES_PORT:-5432}/${POSTGRES_DB:-reactive-resume}
+      - AUTH_SECRET=${AUTH_SECRET:?AUTH_SECRET Not defined}
+      - REDIS_URL=redis://reactive-resume-valkey:6379
+      - STORAGE_BACKEND=local
+      - LOCAL_STORAGE_PATH=/app/data
+      - TRUSTED_PROXIES=${TRUSTED_PROXIES:-172.16.0.0/12,10.0.0.0/8,192.168.0.0/16}
+      # Authentik OIDC Settings
+      - OAUTH_PROVIDER_NAME=${OAUTH_PROVIDER_NAME:-Authentik}
+      - OAUTH_CLIENT_ID=${OAUTH_CLIENT_ID:?OAUTH_CLIENT_ID Not defined}
+      - OAUTH_CLIENT_SECRET=${OAUTH_CLIENT_SECRET:?OAUTH_CLIENT_SECRET Not defined}
+      - OAUTH_DISCOVERY_URL=https://authentik.${FQDN:?FQDN Not defined}/application/o/${AUTHENTIK_SLUG:-reactive-resume}/.well-known/openid-configuration
+      - OAUTH_SCOPES=${OAUTH_SCOPES:-openid profile email}
+      # Feature Flags
+      - FLAG_DISABLE_SIGNUPS=${FLAG_DISABLE_SIGNUPS:-false}
+      - FLAG_DISABLE_EMAIL_AUTH=${FLAG_DISABLE_EMAIL_AUTH:-false}
+      - FLAG_ENABLE_GUEST_LOGIN=${FLAG_ENABLE_GUEST_LOGIN:-false}
+      # SMTP Email Settings
+      - SMTP_HOST=${SMTP_HOST:?SMTP_HOST Not defined}
+      - SMTP_PORT=${SMTP_PORT:-587}
+      - SMTP_USER=${SMTP_USER:?SMTP_USER Not defined}
+      - SMTP_PASS=${SMTP_PASSWORD:?SMTP_PASSWORD Not defined}
+      - SMTP_FROM=noreply-resume@${FQDN:?FQDN Not defined}}
+      - SMTP_SECURE=${SMTP_SECURE:-true}
+      # AI & Assistant Settings (optional)
+      # - ENCRYPTION_SECRET=${ENCRYPTION_SECRET:-}
+      # - AI_PROVIDER=${AI_PROVIDER:-}
+      # - AI_MODEL=${AI_MODEL:-}
+      # - AI_API_KEY=${AI_API_KEY:-}
+      # - AI_BASE_URL=${AI_BASE_URL:-}
+    networks:
+      - traefik_network
+      - postgres_network
+      - reactive-resume_backend
+    volumes:
+      - reactive-resume_data:/app/data
+    depends_on:
+      valkey:
+        condition: service_healthy
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=traefik_network
+      - traefik.http.services.reactive_resume_web.loadBalancer.server.port=3000
+      - traefik.http.routers.reactive_resume_http.service=reactive_resume_web
+      - traefik.http.routers.reactive_resume_http.rule=Host(`resume.${FQDN}`)
+      - traefik.http.routers.reactive_resume_http.entrypoints=web
+      - traefik.http.routers.reactive_resume_https.service=reactive_resume_web
+      - traefik.http.routers.reactive_resume_https.rule=Host(`resume.${FQDN}`)
+      - traefik.http.routers.reactive_resume_https.entrypoints=websecure
+      - traefik.http.routers.reactive_resume_https.tls=true
+      - traefik.http.routers.reactive_resume_https.tls.certresolver=cloudflare
+
+networks:
+  reactive-resume_backend:
+    name: reactive-resume_backend
+    driver: bridge
+  traefik_network:
+    external: true
+  postgres_network:
+    external: true
+
+volumes:
+  reactive-resume_data:
+    name: reactive-resume-data
+    driver: local
+  valkey_data:
+    name: reactive-resume-valkey-data
+    driver: local
