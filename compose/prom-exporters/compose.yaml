@@ -10,7 +10,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.2'
+          cpus: '0.5'
           memory: 128M
     networks:
       - monitoring_network
@@ -35,8 +35,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.5'
-          memory: 1G
+          cpus: '1.5'
+          memory: 2G
     networks:
       - monitoring_network
     volumes:
