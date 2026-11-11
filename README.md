@@ -211,6 +211,7 @@ flowchart TD
 
         subgraph Media["🎬 Media — 205hlab.com (Authentik protected)"]
             Jellyfin["Jellyfin\njellyfin.205hlab.com"]
+            Kavita["Kavita\nkavita.205hlab.com"]
             Seerr["Seerr\nseer.205hlab.com"]
             Sonarr["Sonarr\nsonarr.205hlab.com"]
             Radarr["Radarr\nradarr.205hlab.com"]
@@ -279,6 +280,7 @@ A key design decision in this homelab is the **split between internal-only and e
 | `freshrss.205hlab.com` | FreshRSS reader | OIDC (native) | [`freshrss`](compose/freshrss/) |
 | `grafana.205hlab.com` | Grafana dashboards | OIDC (native) | [`grafana`](compose/grafana/) |
 | `jellyfin.205hlab.com` | Jellyfin media server | Traefik route TLS | [`jelly`](compose/jelly/) |
+| `kavita.205hlab.com` | Kavita digital library & reader | OIDC (native) | [`kavita`](compose/kavita/) |
 | `lidarr.205hlab.com` | Lidarr music | ForwardAuth | [`servarr`](compose/servarr/) |
 | `mealie.205hlab.com` | Mealie recipes | OIDC (native) | [`mealie`](compose/mealie/) |
 | `metube.205hlab.com` | MeTube downloader | ForwardAuth | [`downloaderr`](compose/downloaderr/) |
@@ -399,6 +401,7 @@ The homelab runs **two Technitium DNS servers** providing redundancy and split-h
 | :--- | :--- | :--- | :--- |
 | [`jelly`](compose/jelly/) | `linuxserver/jellyfin:latest` | `jellyfin.205hlab.com` | Traefik TLS |
 | [`jelly`](compose/jelly/) | `seerr-team/seerr:latest` | `seer.205hlab.com` | ForwardAuth |
+| [`kavita`](compose/kavita/) | `linuxserver/kavita:latest` | `kavita.205hlab.com` | OIDC native |
 | [`servarr`](compose/servarr/) | `linuxserver/sonarr:latest` | `sonarr.205hlab.com` | ForwardAuth |
 | [`servarr`](compose/servarr/) | `linuxserver/radarr:latest` | `radarr.205hlab.com` | ForwardAuth |
 | [`servarr`](compose/servarr/) | `linuxserver/lidarr:latest` | `lidarr.205hlab.com` | ForwardAuth |
@@ -475,6 +478,7 @@ Security is **engineered into every layer** — not bolted on after the fact.
 │   ├── freshrss/                         # FreshRSS feed aggregator
 │   ├── grafana/                          # Grafana 13 (Authentik OIDC)
 │   ├── jelly/                            # Jellyfin (HW transcode) + Seerr
+│   ├── kavita/                           # Kavita digital library & reader
 │   ├── mealie/                           # Mealie recipe manager
 │   ├── paperless/                        # Paperless-ngx + Gotenberg + Tika + Valkey
 │   ├── postgres/                         # PostgreSQL 18 + Adminer
@@ -560,9 +564,10 @@ docker compose up -d
 13. changedetection  → Change monitoring
 14. searxng          → Privacy metasearch (Gluetun VPN + Valkey)
 15. jelly            → Jellyfin + Seerr
-16. servarr          → Automation suite (Sonarr, Radarr, Lidarr, Chaptarr, etc.)
-17. downloaderr      → Gluetun VPN + qBittorrent + qui
-18. tracearr         → Media analytics (needs TimescaleDB)
+16. kavita           → Kavita digital library & reader (eBooks, comics, manga)
+17. servarr          → Automation suite (Sonarr, Radarr, Lidarr, Chaptarr, etc.)
+18. downloaderr      → Gluetun VPN + qBittorrent + qui
+19. tracearr         → Media analytics (needs TimescaleDB)
 ```
 
 ---

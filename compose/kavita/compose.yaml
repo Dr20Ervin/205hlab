@@ -1,0 +1,49 @@
+---
+services:
+  kavita:
+    image: lscr.io/linuxserver/kavita:latest
+    restart: unless-stopped
+    container_name: kavita
+    deploy:
+      resources:
+        limits:
+          cpus: '1.5'
+          memory: 1.5G
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TZ:-UTC}
+    networks:
+      - traefik_network
+    volumes:
+      - kavita_config:/config
+      - ${MEDIA_DIR:?MEDIA_DIR Not defined}/books/ebooks:/data/ebooks:ro
+      - ${MEDIA_DIR:?MEDIA_DIR Not defined}/books/comics:/data/comics:ro
+      - ${MEDIA_DIR:?MEDIA_DIR Not defined}/books/manga:/data/manga:ro
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:5000/api/Health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=traefik_network
+      - traefik.http.services.kavita_web.loadBalancer.server.port=5000
+      - traefik.http.routers.kavita_http.service=kavita_web
+      - traefik.http.routers.kavita_http.rule=Host(`kavita.${FQDN}`)
+      - traefik.http.routers.kavita_http.entrypoints=web
+      - traefik.http.routers.kavita_https.service=kavita_web
+      - traefik.http.routers.kavita_https.rule=Host(`kavita.${FQDN}`)
+      - traefik.http.routers.kavita_https.entrypoints=websecure
+      - traefik.http.routers.kavita_https.tls=true
+      - traefik.http.routers.kavita_https.tls.certresolver=cloudflare
+
+networks:
+  traefik_network:
+    external: true
+
+volumes:
+  kavita_config:
+    name: kavita_config
+    driver: local
