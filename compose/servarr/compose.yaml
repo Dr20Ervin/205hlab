@@ -287,6 +287,8 @@ services:
       - chaptarr_data:/config
       - ${MEDIA_DIR:?MEDIA_DIR Not defined}/books/audiobooks:/audiobooks
       - ${MEDIA_DIR:?MEDIA_DIR Not defined}/books/ebooks:/ebooks
+      - ${MEDIA_DIR:?MEDIA_DIR Not defined}/books/comics:/comics
+      - ${MEDIA_DIR:?MEDIA_DIR Not defined}/books/manga:/manga
       - ${DOWNLOADS_DIR:?DOWNLOADS_DIR Not defined}:/downloads
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:8789/ping || exit 1"]
