@@ -27,3 +27,12 @@ CREATE DATABASE "lidarr-main" OWNER lidarr_app;
 CREATE DATABASE "lidarr-log" OWNER lidarr_app;
 GRANT ALL PRIVILEGES ON DATABASE "lidarr-main" TO lidarr_app;
 GRANT ALL PRIVILEGES ON DATABASE "lidarr-log" TO lidarr_app;
+
+-- Chaptarr
+CREATE USER chaptarr_app WITH PASSWORD 'your_chaptarr_password' CREATEDB;
+CREATE DATABASE "chaptarr-main" OWNER chaptarr_app;
+CREATE DATABASE "chaptarr-log" OWNER chaptarr_app;
+CREATE DATABASE "chaptarr-cache" OWNER chaptarr_app;
+GRANT ALL PRIVILEGES ON DATABASE "chaptarr-main" TO chaptarr_app;
+GRANT ALL PRIVILEGES ON DATABASE "chaptarr-log" TO chaptarr_app;
+GRANT ALL PRIVILEGES ON DATABASE "chaptarr-cache" TO chaptarr_app;

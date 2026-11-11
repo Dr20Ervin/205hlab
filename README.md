@@ -215,6 +215,7 @@ flowchart TD
             Sonarr["Sonarr\nsonarr.205hlab.com"]
             Radarr["Radarr\nradarr.205hlab.com"]
             Lidarr["Lidarr\nlidarr.205hlab.com"]
+            Chaptarr["Chaptarr\nchaptarr.205hlab.com"]
             Bazarr["Bazarr\nbazarr.205hlab.com"]
             Prowlarr["Prowlarr\nprowlarr.205hlab.com"]
             Profilarr["Profilarr\nprofilarr.205hlab.com"]
@@ -274,6 +275,7 @@ A key design decision in this homelab is the **split between internal-only and e
 | :--- | :--- | :--- | :--- |
 | `authentik.205hlab.com` | Authentik SSO | — (is the IdP) | [`authentik`](compose/authentik/) |
 | `bazarr.205hlab.com` | Bazarr subtitles | ForwardAuth | [`servarr`](compose/servarr/) |
+| `chaptarr.205hlab.com` | Chaptarr books & audiobooks | ForwardAuth | [`servarr`](compose/servarr/) |
 | `freshrss.205hlab.com` | FreshRSS reader | OIDC (native) | [`freshrss`](compose/freshrss/) |
 | `grafana.205hlab.com` | Grafana dashboards | OIDC (native) | [`grafana`](compose/grafana/) |
 | `jellyfin.205hlab.com` | Jellyfin media server | Traefik route TLS | [`jelly`](compose/jelly/) |
@@ -345,7 +347,7 @@ The homelab runs **two Technitium DNS servers** providing redundancy and split-h
 
 | Stack | Image | Description |
 | :--- | :--- | :--- |
-| [`postgres`](compose/postgres/) | `postgres:18.3` | Central relational database with `--data-checksums` for silent corruption detection. Each application gets an isolated database user provisioned via `db-init.sql`. Shared by: Authentik, Mealie, Paperless, FreshRSS, Servarr (\*arr suite), qui, Tracearr, Reactive Resume. |
+| [`postgres`](compose/postgres/) | `postgres:18.3` | Central relational database with `--data-checksums` for silent corruption detection. Each application gets an isolated database user provisioned via `db-init.sql`. Shared by: Authentik, Mealie, Paperless, FreshRSS, Servarr (\*arr suite incl. Chaptarr), qui, Tracearr, Reactive Resume. |
 | [`postgres`](compose/postgres/) | `adminer:latest` | Web-based DB admin UI at `adminer.internal.205hlab.com` — LAN-only access. |
 | [`tracearr`](compose/tracearr/) | `timescale/timescaledb-ha:pg18.4-ts2.29.1` | Dedicated TimescaleDB time-series cluster for Tracearr analytics. Custom `max_locks_per_transaction`, `max_connections`, and telemetry-off configuration. Paired with Redis 8 for task queuing. |
 | [`paperless`](compose/paperless/) | `valkey/valkey:9-alpine` | Valkey (open-source Redis fork v9) broker powering Paperless-ngx background task and document processing queues. |
@@ -400,6 +402,7 @@ The homelab runs **two Technitium DNS servers** providing redundancy and split-h
 | [`servarr`](compose/servarr/) | `linuxserver/sonarr:latest` | `sonarr.205hlab.com` | ForwardAuth |
 | [`servarr`](compose/servarr/) | `linuxserver/radarr:latest` | `radarr.205hlab.com` | ForwardAuth |
 | [`servarr`](compose/servarr/) | `linuxserver/lidarr:latest` | `lidarr.205hlab.com` | ForwardAuth |
+| [`servarr`](compose/servarr/) | `chaptarr/chaptarr:latest` | `chaptarr.205hlab.com` | ForwardAuth |
 | [`servarr`](compose/servarr/) | `linuxserver/bazarr:latest` | `bazarr.205hlab.com` | ForwardAuth |
 | [`servarr`](compose/servarr/) | `linuxserver/prowlarr:latest` | `prowlarr.205hlab.com` | ForwardAuth |
 | [`servarr`](compose/servarr/) | `dictionarry-hub/profilarr:latest` | `profilarr.205hlab.com` | OIDC native |
@@ -480,8 +483,8 @@ Security is **engineered into every layer** — not bolted on after the fact.
 │   ├── reactive-resume/                  # Reactive Resume v6 + Valkey
 │   ├── scrutiny/                         # S.M.A.R.T. disk health + Prometheus exporter
 │   ├── searxng/                          # SearXNG + Gluetun VPN + Valkey
-│   ├── servarr/                          # Sonarr · Radarr · Lidarr · Bazarr
-│   │                                     # Prowlarr · FlareSolverr · Profilarr
+│   ├── servarr/                          # Sonarr · Radarr · Lidarr · Chaptarr
+│   │                                     # Bazarr · Prowlarr · FlareSolverr · Profilarr
 │   ├── technitium/                       # Technitium DNS server (Primary)
 │   ├── tracearr/                         # Tracearr + TimescaleDB + Redis
 │   └── traefik/                          # Traefik v3 ingress proxy
@@ -557,7 +560,7 @@ docker compose up -d
 13. changedetection  → Change monitoring
 14. searxng          → Privacy metasearch (Gluetun VPN + Valkey)
 15. jelly            → Jellyfin + Seerr
-16. servarr          → Automation suite (Sonarr, Radarr, Lidarr, etc.)
+16. servarr          → Automation suite (Sonarr, Radarr, Lidarr, Chaptarr, etc.)
 17. downloaderr      → Gluetun VPN + qBittorrent + qui
 18. tracearr         → Media analytics (needs TimescaleDB)
 ```

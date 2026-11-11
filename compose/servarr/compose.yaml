@@ -257,6 +257,57 @@ services:
       - traefik.http.routers.lidarr_https.tls.certresolver=cloudflare
       - traefik.http.routers.lidarr_https.middlewares=authentik@docker
 
+  chaptarr:
+    image: chaptarr/chaptarr:latest
+    restart: unless-stopped
+    container_name: chaptarr
+    deploy:
+      resources:
+        limits:
+          cpus: '1.5'
+          memory: 1.5G
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - UMASK=002
+      - TZ=${TZ:-UTC}
+      - Chaptarr__Postgres__Host=${POSTGRES_HOST:?POSTGRES_HOST Not defined}
+      - Chaptarr__Postgres__Port=${POSTGRES_PORT:-5432}
+      - Chaptarr__Postgres__User=${CHAPTARR_DB_USER:-chaptarr_app}
+      - Chaptarr__Postgres__Password=${CHAPTARR_DB_PASSWORD:?CHAPTARR_DB_PASSWORD Not defined}
+      - Chaptarr__Postgres__MainDb=chaptarr-main
+      - Chaptarr__Postgres__LogDb=chaptarr-log
+      - Chaptarr__Postgres__CacheDb=chaptarr-cache
+      - Chaptarr__Auth__Method=External
+    networks:
+      - servarr_backend
+      - traefik_network
+      - postgres_network
+    volumes:
+      - chaptarr_data:/config
+      - ${MEDIA_DIR:?MEDIA_DIR Not defined}/books/audiobooks:/audiobooks
+      - ${MEDIA_DIR:?MEDIA_DIR Not defined}/books/ebooks:/ebooks
+      - ${DOWNLOADS_DIR:?DOWNLOADS_DIR Not defined}:/downloads
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8789/ping || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=traefik_network
+      - traefik.http.services.chaptarr_web.loadBalancer.server.port=8789
+      - traefik.http.routers.chaptarr_http.service=chaptarr_web
+      - traefik.http.routers.chaptarr_http.rule=Host(`chaptarr.${FQDN}`)
+      - traefik.http.routers.chaptarr_http.entrypoints=web
+      - traefik.http.routers.chaptarr_https.service=chaptarr_web
+      - traefik.http.routers.chaptarr_https.rule=Host(`chaptarr.${FQDN}`)
+      - traefik.http.routers.chaptarr_https.entrypoints=websecure
+      - traefik.http.routers.chaptarr_https.tls=true
+      - traefik.http.routers.chaptarr_https.tls.certresolver=cloudflare
+      - traefik.http.routers.chaptarr_https.middlewares=authentik@docker
+
   profilarr:
     image: ghcr.io/dictionarry-hub/profilarr:latest
     restart: unless-stopped
@@ -347,6 +398,9 @@ volumes:
     driver: local
   lidarr_data:
     name: lidarr-data
+    driver: local
+  chaptarr_data:
+    name: chaptarr-data
     driver: local
   profilarr_config:
     name: profilarr-config

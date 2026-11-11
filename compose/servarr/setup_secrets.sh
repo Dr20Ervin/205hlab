@@ -5,6 +5,7 @@ PROWLARR_PASS=$(openssl rand -hex 16)
 RADARR_PASS=$(openssl rand -hex 16)
 SONARR_PASS=$(openssl rand -hex 16)
 LIDARR_PASS=$(openssl rand -hex 16)
+CHAPTARR_PASS=$(openssl rand -hex 16)
 PROFILARR_KEY=$(openssl rand -hex 16)
 
 SQL_FILE="create_servarr_dbs.sql"
@@ -37,6 +38,15 @@ CREATE DATABASE "lidarr-main" OWNER lidarr_app;
 CREATE DATABASE "lidarr-log" OWNER lidarr_app;
 GRANT ALL PRIVILEGES ON DATABASE "lidarr-main" TO lidarr_app;
 GRANT ALL PRIVILEGES ON DATABASE "lidarr-log" TO lidarr_app;
+
+-- Chaptarr
+CREATE USER chaptarr_app WITH PASSWORD '$CHAPTARR_PASS' CREATEDB;
+CREATE DATABASE "chaptarr-main" OWNER chaptarr_app;
+CREATE DATABASE "chaptarr-log" OWNER chaptarr_app;
+CREATE DATABASE "chaptarr-cache" OWNER chaptarr_app;
+GRANT ALL PRIVILEGES ON DATABASE "chaptarr-main" TO chaptarr_app;
+GRANT ALL PRIVILEGES ON DATABASE "chaptarr-log" TO chaptarr_app;
+GRANT ALL PRIVILEGES ON DATABASE "chaptarr-cache" TO chaptarr_app;
 EOF
 
 echo "Successfully created: $SQL_FILE"
@@ -44,4 +54,5 @@ echo "PROWLARR_DB_PASSWORD: $PROWLARR_PASS"
 echo "RADARR_DB_PASSWORD:   $RADARR_PASS"
 echo "SONARR_DB_PASSWORD:   $SONARR_PASS"
 echo "LIDARR_DB_PASSWORD:   $LIDARR_PASS"
+echo "CHAPTARR_DB_PASSWORD: $CHAPTARR_PASS"
 echo "PROFILARR_API_KEY:    $PROFILARR_KEY"
