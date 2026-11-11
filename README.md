@@ -418,6 +418,8 @@ The homelab runs **two Technitium DNS servers** providing redundancy and split-h
 
 > **Jellyfin** uses Intel HD Graphics 4000 hardware acceleration via `/dev/dri` passthrough (VAAPI) for real-time transcoding of movies, TV shows, and music.
 
+> **Chaptarr & Kavita** power the digital reading pipeline: **Chaptarr** automates acquisition and library management for audiobooks, eBooks, comics, and manga (backed by PostgreSQL 18 and protected by Authentik ForwardAuth), while **Kavita** serves eBooks, comics, and manga from read-only library mounts with native Authentik OIDC SSO and OPDS support.
+
 ---
 
 ## 🔒 Security Posture
@@ -478,7 +480,7 @@ Security is **engineered into every layer** — not bolted on after the fact.
 │   ├── freshrss/                         # FreshRSS feed aggregator
 │   ├── grafana/                          # Grafana 13 (Authentik OIDC)
 │   ├── jelly/                            # Jellyfin (HW transcode) + Seerr
-│   ├── kavita/                           # Kavita digital library & reader
+│   ├── kavita/                           # Kavita digital library & reader (Authentik OIDC)
 │   ├── mealie/                           # Mealie recipe manager
 │   ├── paperless/                        # Paperless-ngx + Gotenberg + Tika + Valkey
 │   ├── postgres/                         # PostgreSQL 18 + Adminer
