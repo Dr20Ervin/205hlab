@@ -3,7 +3,7 @@
   "kind": "Dashboard",
   "metadata": {
     "name": "g7usvhZVk2",
-    "generation": 1,
+    "generation": 2,
     "creationTimestamp": "2026-11-12T14:14:35Z",
     "labels": {},
     "annotations": {}
@@ -15,7 +15,7 @@
         "spec": {
           "query": {
             "kind": "DataQuery",
-            "group": "datasource",
+            "group": "grafana",
             "version": "v0",
             "spec": {
               "limit": 100,
@@ -24,17 +24,14 @@
               "type": "dashboard"
             },
             "labels": {
-              "grafana.app/export-label": "datasource-1"
+              "grafana.app/export-label": "grafana-1"
             }
           },
           "enable": true,
           "hide": false,
           "iconColor": "rgba(0, 211, 255, 1)",
           "name": "Annotations & Alerts",
-          "builtIn": true,
-          "legacyOptions": {
-            "type": "dashboard"
-          }
+          "builtIn": true
         }
       }
     ],
@@ -83,9 +80,13 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "timeseries",
-            "version": "12.3.1",
+            "version": "13.0.1",
             "spec": {
               "options": {
+                "annotations": {
+                  "clustering": -1,
+                  "multiLane": false
+                },
                 "legend": {
                   "calcs": [
                     "last",
@@ -531,7 +532,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "table",
-            "version": "12.3.1",
+            "version": "13.0.1",
             "spec": {
               "options": {
                 "cellHeight": "sm",
@@ -1028,7 +1029,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "stat",
-            "version": "12.3.1",
+            "version": "13.0.1",
             "spec": {
               "options": {
                 "colorMode": "value",
@@ -1121,7 +1122,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "stat",
-            "version": "12.3.1",
+            "version": "13.0.1",
             "spec": {
               "options": {
                 "colorMode": "value",
@@ -1214,7 +1215,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "stat",
-            "version": "12.3.1",
+            "version": "13.0.1",
             "spec": {
               "options": {
                 "colorMode": "value",
@@ -1304,9 +1305,13 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "timeseries",
-            "version": "12.3.1",
+            "version": "13.0.1",
             "spec": {
               "options": {
+                "annotations": {
+                  "clustering": -1,
+                  "multiLane": false
+                },
                 "legend": {
                   "calcs": [
                     "last",
@@ -1696,7 +1701,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "table",
-            "version": "12.3.1",
+            "version": "13.0.1",
             "spec": {
               "options": {
                 "cellHeight": "sm",
@@ -2065,9 +2070,13 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "timeseries",
-            "version": "12.3.1",
+            "version": "13.0.1",
             "spec": {
               "options": {
+                "annotations": {
+                  "clustering": -1,
+                  "multiLane": false
+                },
                 "legend": {
                   "calcs": [
                     "last",
@@ -2273,7 +2282,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "stat",
-            "version": "12.3.1",
+            "version": "13.0.1",
             "spec": {
               "options": {
                 "colorMode": "value",
@@ -2386,7 +2395,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "stat",
-            "version": "12.3.1",
+            "version": "13.0.1",
             "spec": {
               "options": {
                 "colorMode": "value",
@@ -2476,9 +2485,13 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "timeseries",
-            "version": "12.3.1",
+            "version": "13.0.1",
             "spec": {
               "options": {
+                "annotations": {
+                  "clustering": -1,
+                  "multiLane": false
+                },
                 "legend": {
                   "calcs": [
                     "last",
@@ -2661,9 +2674,13 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "timeseries",
-            "version": "12.3.1",
+            "version": "13.0.1",
             "spec": {
               "options": {
+                "annotations": {
+                  "clustering": -1,
+                  "multiLane": false
+                },
                 "legend": {
                   "calcs": [
                     "last",
@@ -2846,7 +2863,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "stat",
-            "version": "12.3.1",
+            "version": "13.0.1",
             "spec": {
               "options": {
                 "colorMode": "value",
@@ -2916,7 +2933,7 @@
                         "x": 0,
                         "y": 0,
                         "width": 6,
-                        "height": 4,
+                        "height": 8,
                         "element": {
                           "kind": "ElementReference",
                           "name": "panel-116"
@@ -2929,7 +2946,7 @@
                         "x": 6,
                         "y": 0,
                         "width": 6,
-                        "height": 4,
+                        "height": 8,
                         "element": {
                           "kind": "ElementReference",
                           "name": "panel-117"
@@ -2941,7 +2958,7 @@
                       "spec": {
                         "x": 12,
                         "y": 0,
-                        "width": 4,
+                        "width": 6,
                         "height": 4,
                         "element": {
                           "kind": "ElementReference",
@@ -2952,22 +2969,9 @@
                     {
                       "kind": "GridLayoutItem",
                       "spec": {
-                        "x": 16,
+                        "x": 18,
                         "y": 0,
-                        "width": 4,
-                        "height": 4,
-                        "element": {
-                          "kind": "ElementReference",
-                          "name": "panel-124"
-                        }
-                      }
-                    },
-                    {
-                      "kind": "GridLayoutItem",
-                      "spec": {
-                        "x": 20,
-                        "y": 0,
-                        "width": 4,
+                        "width": 6,
                         "height": 4,
                         "element": {
                           "kind": "ElementReference",
@@ -2978,10 +2982,23 @@
                     {
                       "kind": "GridLayoutItem",
                       "spec": {
-                        "x": 10,
+                        "x": 12,
                         "y": 4,
-                        "width": 4,
-                        "height": 2,
+                        "width": 6,
+                        "height": 4,
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-124"
+                        }
+                      }
+                    },
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "x": 18,
+                        "y": 4,
+                        "width": 6,
+                        "height": 4,
                         "element": {
                           "kind": "ElementReference",
                           "name": "panel-130"
@@ -3185,6 +3202,7 @@
       "Prometheus"
     ],
     "timeSettings": {
+      "timezone": "browser",
       "from": "now-30d",
       "to": "now",
       "autoRefresh": "5m",
