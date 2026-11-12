@@ -390,7 +390,7 @@ The homelab runs **two Technitium DNS servers** providing redundancy and split-h
 
 | Stack | Image | URL | Auth | Description |
 | :--- | :--- | :--- | :--- | :--- |
-| [`network-mon`](compose/network-mon/) | `linuxserver/speedtest-tracker:latest` | `speedtest.205hlab.com` | ForwardAuth | Automated Ookla/Speedtest CLI runs, latency/jitter trend graphs, and Prometheus metric export. Off-peak scheduling (`0 1,4,7,11 * * *`) prevents ISP bandwidth saturation during streaming hours. Backed by PostgreSQL 18. |
+| [`network-mon`](compose/network-mon/) | `linuxserver/speedtest-tracker:latest` | `speedtest.205hlab.com` | ForwardAuth | Automated Ookla/Speedtest CLI runs, latency/jitter trend graphs, and Prometheus metric export. Optimal 3-hour scheduling (`23 */3 * * *`) captures 24h ISP performance trends without saturating streaming bandwidth. Backed by PostgreSQL 18. |
 | [`network-mon`](compose/network-mon/) | `openspeedtest/latest` | `openspeed.internal.205hlab.com` | LAN-only | Pure HTML5 in-LAN speed test server benchmarking raw gigabit switch and OpenWrt router throughput without consuming external WAN quota. Binds direct host ports on `${LAN_IP}:3000` and `${MNGT_IP}:3000` to bypass reverse proxy overhead when testing switches. |
 | [`network-mon`](compose/network-mon/) | `jason5ng32/myip:latest` | `myip.internal.205hlab.com` | ForwardAuth | Self-hosted IP, DNS, and WebRTC leak detection dashboard with direct access on `${MNGT_IP}:18966` for management VLAN diagnostics. |
 
