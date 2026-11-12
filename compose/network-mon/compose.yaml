@@ -1,0 +1,136 @@
+---
+services:
+  speedtest-tracker:
+    image: lscr.io/linuxserver/speedtest-tracker:latest
+    restart: unless-stopped
+    container_name: speedtest-tracker
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 1G
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TZ:-UTC}
+      - APP_KEY=${APP_KEY:?APP_KEY Not defined}
+      - APP_URL=https://speedtest.${FQDN:?FQDN Not defined}
+      - ASSET_URL=https://speedtest.${FQDN:?FQDN Not defined}
+      - APP_TIMEZONE=${TZ:-UTC}
+      - DISPLAY_TIMEZONE=${TZ:-UTC}
+      - DB_CONNECTION=pgsql
+      - DB_HOST=${POSTGRES_HOST:-postgres}
+      - DB_PORT=${POSTGRES_PORT:-5432}
+      - DB_DATABASE=${POSTGRES_DB:-speedtest_tracker}
+      - DB_USERNAME=${POSTGRES_USER:-speedtest_app}
+      - DB_PASSWORD=${POSTGRES_PASSWORD:?POSTGRES_PASSWORD Not defined}
+      - SPEEDTEST_SCHEDULE=${SPEEDTEST_SCHEDULE:-0 1,4,7,11 * * *}
+      - SPEEDTEST_SERVERS=${SPEEDTEST_SERVERS:-}
+      - PRUNE_RESULTS_OLDER_THAN=${PRUNE_RESULTS_OLDER_THAN:-90}
+    networks:
+      - traefik_network
+      - postgres_network
+      - monitoring_network
+    volumes:
+      - speedtest_config:/config
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://127.0.0.1:80/api/healthcheck || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=traefik_network
+      - traefik.http.services.speedtest_web.loadBalancer.server.port=80
+      - traefik.http.routers.speedtest_http.service=speedtest_web
+      - traefik.http.routers.speedtest_http.rule=Host(`speedtest.${FQDN}`)
+      - traefik.http.routers.speedtest_http.entrypoints=web
+      - traefik.http.routers.speedtest_https.service=speedtest_web
+      - traefik.http.routers.speedtest_https.rule=Host(`speedtest.${FQDN}`)
+      - traefik.http.routers.speedtest_https.entrypoints=websecure
+      - traefik.http.routers.speedtest_https.tls=true
+      - traefik.http.routers.speedtest_https.tls.certresolver=cloudflare
+      - traefik.http.routers.speedtest_https.middlewares=authentik@docker
+
+  openspeedtest:
+    image: docker.io/openspeedtest/latest
+    restart: unless-stopped
+    container_name: openspeedtest
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 512M
+    ports:
+      - ${LAN_IP:?LAN_IP Not defined}:${OPENSPEEDTEST_PORT:-3000}:3000
+      - ${MNGT_IP:?MNGT_IP Not defined}:${OPENSPEEDTEST_MNGT_PORT:-3000}:3000
+    networks:
+      - traefik_network
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://127.0.0.1:3000/ || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=traefik_network
+      - traefik.http.services.openspeed_web.loadBalancer.server.port=3000
+      - traefik.http.routers.openspeed_http.service=openspeed_web
+      - traefik.http.routers.openspeed_http.rule=Host(`openspeed.internal.${FQDN}`)
+      - traefik.http.routers.openspeed_http.entrypoints=web
+      - traefik.http.routers.openspeed_https.service=openspeed_web
+      - traefik.http.routers.openspeed_https.rule=Host(`openspeed.internal.${FQDN}`)
+      - traefik.http.routers.openspeed_https.entrypoints=websecure
+      - traefik.http.routers.openspeed_https.tls=true
+      - traefik.http.routers.openspeed_https.tls.certresolver=cloudflare
+
+  myip:
+    image: docker.io/jason5ng32/myip:latest
+    restart: unless-stopped
+    container_name: myip
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+    ports:
+      - ${MNGT_IP:?MNGT_IP Not defined}:${MYIP_PORT:-18966}:18966
+    environment:
+      - TZ=${TZ:-UTC}
+      - ALLOWED_DOMAINS=${MYIP_ALLOWED_DOMAINS:-myip.internal.${FQDN:?FQDN Not defined}},${MNGT_IP:-}
+    networks:
+      - traefik_network
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://127.0.0.1:18966/ || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=traefik_network
+      - traefik.http.services.myip_web.loadBalancer.server.port=18966
+      - traefik.http.routers.myip_http.service=myip_web
+      - traefik.http.routers.myip_http.rule=Host(`myip.internal.${FQDN}`)
+      - traefik.http.routers.myip_http.entrypoints=web
+      - traefik.http.routers.myip_https.service=myip_web
+      - traefik.http.routers.myip_https.rule=Host(`myip.internal.${FQDN}`)
+      - traefik.http.routers.myip_https.entrypoints=websecure
+      - traefik.http.routers.myip_https.tls=true
+      - traefik.http.routers.myip_https.tls.certresolver=cloudflare
+      - traefik.http.routers.myip_https.middlewares=authentik@docker
+
+networks:
+  traefik_network:
+    external: true
+  postgres_network:
+    external: true
+  monitoring_network:
+    external: true
+
+volumes:
+  speedtest_config:
+    name: speedtest-config
+    driver: local

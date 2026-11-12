@@ -77,3 +77,10 @@ scrape_configs:
       - targets: ['traefik:9090']
     metrics_path: /metrics
     scrape_interval: 30s
+
+  - job_name: 'speedtest-tracker'
+    scrape_interval: 60s
+    scrape_timeout: 10s
+    metrics_path: /prometheus
+    static_configs:
+      - targets: ['speedtest-tracker:80']
