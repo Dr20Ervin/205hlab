@@ -14,6 +14,7 @@ services:
       - PGID=${PGID:-1000}
       - TZ=${TZ:-UTC}
       - APP_KEY=${APP_KEY:?APP_KEY Not defined}
+      - APP_DEBUG=${APP_DEBUG:-false}
       - APP_URL=https://speedtest.${FQDN:?FQDN Not defined}
       - ASSET_URL=https://speedtest.${FQDN:?FQDN Not defined}
       - APP_TIMEZONE=${TZ:-UTC}

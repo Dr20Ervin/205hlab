@@ -2,7 +2,7 @@
 
 # Generate secure random secrets
 DB_PASSWORD=$(openssl rand -hex 16)
-APP_KEY="base64:$(openssl rand -base64 32)"
+APP_KEY=$(openssl rand -base64 32)
 
 SQL_FILE="create_speedtest_db.sql"
 
@@ -16,4 +16,4 @@ EOF
 # Output the results to the terminal
 echo "Successfully created: $SQL_FILE"
 echo "Your generated POSTGRES_PASSWORD is: $DB_PASSWORD"
-echo "Your generated APP_KEY is: $APP_KEY"
+echo "Your generated APP_KEY is: base64:$APP_KEY"
