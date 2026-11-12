@@ -198,6 +198,8 @@ flowchart TD
             Scrutiny["Scrutiny SMART\nscrutiny.internal.205hlab.com"]
             CDet["ChangeDetection.io\nchangedetection.internal.205hlab.com"]
             TechUI["Technitium UI\ntechnitium.internal.205hlab.com"]
+            OpenSpeed["OpenSpeedTest\nopenspeed.internal.205hlab.com"]
+            MyIP["MyIP\nmyip.internal.205hlab.com"]
         end
 
         subgraph ExternalApps["🌐 External Services — 205hlab.com (Authentik protected)"]
@@ -207,6 +209,7 @@ flowchart TD
             ReactiveResume["Reactive Resume\nresume.205hlab.com"]
             SearXNG["SearXNG\nsearch.205hlab.com"]
             Grafana["Grafana 13\ngrafana.205hlab.com"]
+            Speedtest["Speedtest Tracker\nspeedtest.205hlab.com"]
         end
 
         subgraph Media["🎬 Media — 205hlab.com (Authentik protected)"]
@@ -264,6 +267,8 @@ A key design decision in this homelab is the **split between internal-only and e
 | `changedetection.internal.205hlab.com` | Change monitoring | [`changedetection`](compose/changedetection/) |
 | `databasus.internal.205hlab.com` | Database management interface | — |
 | `dockhand.internal.205hlab.com` | Docker container management | — |
+| `myip.internal.205hlab.com` | IP & DNS leak diagnostics (ForwardAuth) | [`network-mon`](compose/network-mon/) |
+| `openspeed.internal.205hlab.com` | HTML5 LAN speed test server | [`network-mon`](compose/network-mon/) |
 | `prometheus.internal.205hlab.com` | Prometheus TSDB | [`prometheus`](compose/prometheus/) |
 | `scrutiny.internal.205hlab.com` | S.M.A.R.T. disk health | [`scrutiny`](compose/scrutiny/) |
 | `technitium.internal.205hlab.com` | Technitium DNS admin UI | [`technitium`](compose/technitium/) |
@@ -293,6 +298,7 @@ A key design decision in this homelab is the **split between internal-only and e
 | `search.205hlab.com` | SearXNG metasearch | ForwardAuth | [`searxng`](compose/searxng/) |
 | `seer.205hlab.com` | Seerr requests | ForwardAuth | [`jelly`](compose/jelly/) |
 | `sonarr.205hlab.com` | Sonarr TV | ForwardAuth | [`servarr`](compose/servarr/) |
+| `speedtest.205hlab.com` | Speedtest Tracker | ForwardAuth | [`network-mon`](compose/network-mon/) |
 | `tracearr.205hlab.com` | Tracearr analytics | ForwardAuth | [`tracearr`](compose/tracearr/) |
 
 ---
@@ -349,7 +355,7 @@ The homelab runs **two Technitium DNS servers** providing redundancy and split-h
 
 | Stack | Image | Description |
 | :--- | :--- | :--- |
-| [`postgres`](compose/postgres/) | `postgres:18.3` | Central relational database with `--data-checksums` for silent corruption detection. Each application gets an isolated database user provisioned via `db-init.sql`. Shared by: Authentik, Mealie, Paperless, FreshRSS, Servarr (\*arr suite incl. Chaptarr), qui, Tracearr, Reactive Resume. |
+| [`postgres`](compose/postgres/) | `postgres:18.3` | Central relational database with `--data-checksums` for silent corruption detection. Each application gets an isolated database user provisioned via `db-init.sql`. Shared by: Authentik, Mealie, Paperless, FreshRSS, Servarr (\*arr suite incl. Chaptarr), qui, Tracearr, Reactive Resume, Speedtest Tracker. |
 | [`postgres`](compose/postgres/) | `adminer:latest` | Web-based DB admin UI at `adminer.internal.205hlab.com` — LAN-only access. |
 | [`tracearr`](compose/tracearr/) | `timescale/timescaledb-ha:pg18.4-ts2.29.1` | Dedicated TimescaleDB time-series cluster for Tracearr analytics. Custom `max_locks_per_transaction`, `max_connections`, and telemetry-off configuration. Paired with Redis 8 for task queuing. |
 | [`paperless`](compose/paperless/) | `valkey/valkey:9-alpine` | Valkey (open-source Redis fork v9) broker powering Paperless-ngx background task and document processing queues. |
@@ -379,6 +385,14 @@ The homelab runs **two Technitium DNS servers** providing redundancy and split-h
 | [`core/`](grafana-dashboards/core/) | Authentik · cAdvisor (Containers) · PostgreSQL · Technitium DNS |
 | [`hardware/`](grafana-dashboards/hardware/) | Node Exporter (Full Host) · APC UPS · OpenWrt Router · Scrutiny S.M.A.R.T. |
 | [`saas/`](grafana-dashboards/saas/) | qui / qBittorrent torrent metrics |
+
+### 🌐 Network Performance & Diagnostics
+
+| Stack | Image | URL | Auth | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| [`network-mon`](compose/network-mon/) | `linuxserver/speedtest-tracker:latest` | `speedtest.205hlab.com` | ForwardAuth | Automated Ookla/Speedtest CLI runs, latency/jitter trend graphs, and Prometheus metric export. Off-peak scheduling (`0 1,4,7,11 * * *`) prevents ISP bandwidth saturation during streaming hours. Backed by PostgreSQL 18. |
+| [`network-mon`](compose/network-mon/) | `openspeedtest/latest` | `openspeed.internal.205hlab.com` | LAN-only | Pure HTML5 in-LAN speed test server benchmarking raw gigabit switch and OpenWrt router throughput without consuming external WAN quota. Binds direct host ports on `${LAN_IP}:3000` and `${MNGT_IP}:3000` to bypass reverse proxy overhead when testing switches. |
+| [`network-mon`](compose/network-mon/) | `jason5ng32/myip:latest` | `myip.internal.205hlab.com` | ForwardAuth | Self-hosted IP, DNS, and WebRTC leak detection dashboard with direct access on `${MNGT_IP}:18966` for management VLAN diagnostics. |
 
 ### 🏠 Household SaaS & Productivity
 
@@ -482,6 +496,11 @@ Security is **engineered into every layer** — not bolted on after the fact.
 │   ├── jelly/                            # Jellyfin (HW transcode) + Seerr
 │   ├── kavita/                           # Kavita digital library & reader (Authentik OIDC)
 │   ├── mealie/                           # Mealie recipe manager
+│   ├── network-mon/                      # Speedtest Tracker + OpenSpeedTest + MyIP
+│   │   ├── compose.yaml
+│   │   ├── db-init.sql                   # PostgreSQL schema init
+│   │   ├── example.env
+│   │   └── setup_secrets.sh
 │   ├── paperless/                        # Paperless-ngx + Gotenberg + Tika + Valkey
 │   ├── postgres/                         # PostgreSQL 18 + Adminer
 │   ├── prom-exporters/                   # Node, cAdvisor, PG, Technitium exporters
@@ -570,6 +589,7 @@ docker compose up -d
 17. servarr          → Automation suite (Sonarr, Radarr, Lidarr, Chaptarr, etc.)
 18. downloaderr      → Gluetun VPN + qBittorrent + qui
 19. tracearr         → Media analytics (needs TimescaleDB)
+20. network-mon      → Network performance auditing & diagnostics (needs postgres + authentik)
 ```
 
 ---
