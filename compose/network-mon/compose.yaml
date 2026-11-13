@@ -95,7 +95,7 @@ services:
       resources:
         limits:
           cpus: '0.5'
-          memory: 256M
+          memory: 512M
     ports:
       - ${MNGT_IP:?MNGT_IP Not defined}:${MYIP_PORT:-18966}:18966
     environment:
