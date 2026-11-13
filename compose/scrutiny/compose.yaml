@@ -37,10 +37,10 @@ services:
       - traefik.docker.network=traefik_network
       - traefik.http.services.scrutiny_web.loadBalancer.server.port=8080
       - traefik.http.routers.scrutiny_http.service=scrutiny_web
-      - traefik.http.routers.scrutiny_http.rule=Host(`scrutiny.${FQDN}`)
+      - traefik.http.routers.scrutiny_http.rule=Host(`scrutiny.internal.${FQDN}`)
       - traefik.http.routers.scrutiny_http.entrypoints=web
       - traefik.http.routers.scrutiny_https.service=scrutiny_web
-      - traefik.http.routers.scrutiny_https.rule=Host(`scrutiny.${FQDN}`)
+      - traefik.http.routers.scrutiny_https.rule=Host(`scrutiny.internal.${FQDN}`)
       - traefik.http.routers.scrutiny_https.entrypoints=websecure
       - traefik.http.routers.scrutiny_https.tls=true
       - traefik.http.routers.scrutiny_https.tls.certresolver=cloudflare

@@ -13,7 +13,7 @@ services:
       - PUID=${PUID:-1000}
       - PGID=${PGID:-1000}
       - TZ=${TZ:-UTC}
-      - BASE_URL=https://changedetection.${FQDN:?FQDN Not defined}
+      - BASE_URL=https://changedetection.internal.${FQDN:?FQDN Not defined}
       - PLAYWRIGHT_DRIVER_URL=ws://playwright-chrome:3000/?stealth=1&--disable-web-security=true
       - USE_X_SETTINGS=1
     networks:
@@ -32,10 +32,10 @@ services:
       - traefik.docker.network=traefik_network
       - traefik.http.services.changedetection_web.loadBalancer.server.port=5000
       - traefik.http.routers.changedetection_http.service=changedetection_web
-      - traefik.http.routers.changedetection_http.rule=Host(`changedetection.${FQDN}`)
+      - traefik.http.routers.changedetection_http.rule=Host(`changedetection.internal.${FQDN}`)
       - traefik.http.routers.changedetection_http.entrypoints=web
       - traefik.http.routers.changedetection_https.service=changedetection_web
-      - traefik.http.routers.changedetection_https.rule=Host(`changedetection.${FQDN}`)
+      - traefik.http.routers.changedetection_https.rule=Host(`changedetection.internal.${FQDN}`)
       - traefik.http.routers.changedetection_https.entrypoints=websecure
       - traefik.http.routers.changedetection_https.tls=true
       - traefik.http.routers.changedetection_https.tls.certresolver=cloudflare

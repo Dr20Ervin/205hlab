@@ -44,10 +44,10 @@ services:
       - traefik.docker.network=traefik_network
       - traefik.http.services.technitium_web.loadBalancer.server.port=5380
       - traefik.http.routers.technitium_http.service=technitium_web
-      - traefik.http.routers.technitium_http.rule=Host(`technitium.${FQDN}`)
+      - traefik.http.routers.technitium_http.rule=Host(`technitium.internal.${FQDN}`)
       - traefik.http.routers.technitium_http.entrypoints=web
       - traefik.http.routers.technitium_https.service=technitium_web
-      - traefik.http.routers.technitium_https.rule=Host(`technitium.${FQDN}`)
+      - traefik.http.routers.technitium_https.rule=Host(`technitium.internal.${FQDN}`)
       - traefik.http.routers.technitium_https.entrypoints=websecure
       - traefik.http.routers.technitium_https.tls=true
       - traefik.http.routers.technitium_https.tls.certresolver=cloudflare

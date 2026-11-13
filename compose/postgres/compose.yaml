@@ -57,10 +57,10 @@ services:
       - traefik.docker.network=traefik_network
       - traefik.http.services.adminer_web.loadBalancer.server.port=8080
       - traefik.http.routers.adminer_http.service=adminer_web
-      - traefik.http.routers.adminer_http.rule=Host(`adminer.${FQDN}`)
+      - traefik.http.routers.adminer_http.rule=Host(`adminer.internal.${FQDN}`)
       - traefik.http.routers.adminer_http.entrypoints=web
       - traefik.http.routers.adminer_https.service=adminer_web
-      - traefik.http.routers.adminer_https.rule=Host(`adminer.${FQDN}`)
+      - traefik.http.routers.adminer_https.rule=Host(`adminer.internal.${FQDN}`)
       - traefik.http.routers.adminer_https.entrypoints=websecure
       - traefik.http.routers.adminer_https.tls=true
       - traefik.http.routers.adminer_https.tls.certresolver=cloudflare
@@ -88,10 +88,10 @@ services:
       - traefik.docker.network=traefik_network
       - traefik.http.services.databasus_web.loadBalancer.server.port=4005
       - traefik.http.routers.databasus_http.service=databasus_web
-      - traefik.http.routers.databasus_http.rule=Host(`databasus.${FQDN}`)
+      - traefik.http.routers.databasus_http.rule=Host(`databasus.internal.${FQDN}`)
       - traefik.http.routers.databasus_http.entrypoints=web
       - traefik.http.routers.databasus_https.service=databasus_web
-      - traefik.http.routers.databasus_https.rule=Host(`databasus.${FQDN}`)
+      - traefik.http.routers.databasus_https.rule=Host(`databasus.internal.${FQDN}`)
       - traefik.http.routers.databasus_https.entrypoints=websecure
       - traefik.http.routers.databasus_https.tls=true
       - traefik.http.routers.databasus_https.tls.certresolver=cloudflare

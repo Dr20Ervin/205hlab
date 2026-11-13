@@ -10,7 +10,7 @@ services:
       - --config.file=/etc/prometheus/prometheus.yaml
       - --storage.tsdb.retention.time=${RETENTION_TIME:-30d}
       - --storage.tsdb.retention.size=${RETENTION_SIZE:-50GB}
-      - --web.external-url=https://prometheus.${FQDN:?FQDN Not defined}
+      - --web.external-url=https://prometheus.internal.${FQDN:?FQDN Not defined}
       - --web.enable-lifecycle
     deploy:
       resources:
@@ -34,10 +34,10 @@ services:
       - traefik.docker.network=traefik_network
       - traefik.http.services.prometheus_web.loadBalancer.server.port=9090
       - traefik.http.routers.prometheus_http.service=prometheus_web
-      - traefik.http.routers.prometheus_http.rule=Host(`prometheus.${FQDN}`)
+      - traefik.http.routers.prometheus_http.rule=Host(`prometheus.internal.${FQDN}`)
       - traefik.http.routers.prometheus_http.entrypoints=web
       - traefik.http.routers.prometheus_https.service=prometheus_web
-      - traefik.http.routers.prometheus_https.rule=Host(`prometheus.${FQDN}`)
+      - traefik.http.routers.prometheus_https.rule=Host(`prometheus.internal.${FQDN}`)
       - traefik.http.routers.prometheus_https.entrypoints=websecure
       - traefik.http.routers.prometheus_https.tls=true
       - traefik.http.routers.prometheus_https.tls.certresolver=cloudflare
