@@ -64,6 +64,7 @@ services:
       - traefik.http.routers.adminer_https.entrypoints=websecure
       - traefik.http.routers.adminer_https.tls=true
       - traefik.http.routers.adminer_https.tls.certresolver=cloudflare
+      - traefik.http.routers.adminer_https.middlewares=authentik@docker
 
   databasus:
     image: databasus/databasus:v3.65.0
@@ -95,6 +96,7 @@ services:
       - traefik.http.routers.databasus_https.entrypoints=websecure
       - traefik.http.routers.databasus_https.tls=true
       - traefik.http.routers.databasus_https.tls.certresolver=cloudflare
+      - traefik.http.routers.databasus_https.middlewares=authentik@docker
 
 networks:
   postgres_network:

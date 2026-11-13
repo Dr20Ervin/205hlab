@@ -51,6 +51,7 @@ services:
       - traefik.http.routers.technitium_https.entrypoints=websecure
       - traefik.http.routers.technitium_https.tls=true
       - traefik.http.routers.technitium_https.tls.certresolver=cloudflare
+      - traefik.http.routers.technitium_https.middlewares=authentik@docker
 
 networks:
   traefik_network:

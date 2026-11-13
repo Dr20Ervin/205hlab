@@ -41,6 +41,7 @@ services:
       - traefik.http.routers.prometheus_https.entrypoints=websecure
       - traefik.http.routers.prometheus_https.tls=true
       - traefik.http.routers.prometheus_https.tls.certresolver=cloudflare
+      - traefik.http.routers.prometheus_https.middlewares=authentik@docker
 
 networks:
   traefik_network:

@@ -40,7 +40,7 @@ services:
       - traefik.http.routers.changedetection_https.tls=true
       - traefik.http.routers.changedetection_https.tls.certresolver=cloudflare
       - traefik.http.middlewares.cd-headers.headers.customrequestheaders.X-Forwarded-Proto=https
-      - traefik.http.routers.changedetection_https.middlewares=cd-headers
+      - traefik.http.routers.changedetection_https.middlewares=cd-headers,authentik@docker
 
   playwright-chrome:
     image: dgtlmoon/sockpuppetbrowser:latest

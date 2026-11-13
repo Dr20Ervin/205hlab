@@ -44,6 +44,7 @@ services:
       - traefik.http.routers.scrutiny_https.entrypoints=websecure
       - traefik.http.routers.scrutiny_https.tls=true
       - traefik.http.routers.scrutiny_https.tls.certresolver=cloudflare
+      - traefik.http.routers.scrutiny_https.middlewares=authentik@docker
 
   scrutiny-exporter:
     image: ghcr.io/jianyun8023/scrutiny-exporter:latest
