@@ -543,6 +543,9 @@ Security is **engineered into every layer** — not bolted on after the fact.
 └── README.md
 ```
 
+> [!TIP]
+> Application icons and branding assets for Authentik and future dashboards are version-controlled in [`assets/`](assets/). If an image is not yet in the repository folder, you can find and download clean SVGs and PNGs at **[Dashboard Icons](https://dashboardicons.com/)** (`https://dashboardicons.com/`).
+
 ---
 
 ## 🚀 Deployment & Operations

@@ -87,3 +87,10 @@ sections:
 - **Format**: SVG (vector, sharp at all resolutions) or PNG with transparent background.
 - **Resolution**: 256×256 or 512×512 square ratio for raster images.
 - **Naming**: Use lowercase kebab-case (e.g., `it-tools.png`, `bentopdf.svg`, `authentik-bg.jpg`).
+
+---
+
+## 🔍 Finding Missing Icons
+
+If an icon for an application is not yet stored in [`assets/icons/`](icons/), you can find clean, high-quality homelab SVGs and PNGs here:
+- **[Dashboard Icons](https://dashboardicons.com/)** (`https://dashboardicons.com/`) — Extensive open-source directory of icons for self-hosted apps, homelab services, and developer tools.
