@@ -29,7 +29,7 @@ https://cdn.jsdelivr.net/gh/Dr20Ervin/205hlab@main/assets/images/<filename>
 
 *Example:*
 ```text
-https://cdn.jsdelivr.net/gh/Dr20Ervin/205hlab@main/assets/icons/bentopdf.png
+https://cdn.jsdelivr.net/gh/Dr20Ervin/205hlab@main/assets/icons/bentopdf.svg
 ```
 
 ### 2. GitHub Raw
@@ -42,7 +42,7 @@ https://raw.githubusercontent.com/Dr20Ervin/205hlab/main/assets/images/<filename
 
 *Example:*
 ```text
-https://raw.githubusercontent.com/Dr20Ervin/205hlab/main/assets/icons/bentopdf.png
+https://raw.githubusercontent.com/Dr20Ervin/205hlab/main/assets/icons/bentopdf.svg
 ```
 
 ---
@@ -52,7 +52,7 @@ https://raw.githubusercontent.com/Dr20Ervin/205hlab/main/assets/icons/bentopdf.p
 To set a custom icon for any application in Authentik:
 1. Navigate to **Authentik Admin Interface** → **Applications** → **Applications**.
 2. Select your application and click **Edit**.
-3. In the **Icon** field, paste either the jsDelivr CDN or GitHub Raw link (e.g. `https://cdn.jsdelivr.net/gh/Dr20Ervin/205hlab@main/assets/icons/bentopdf.png`).
+3. In the **Icon** field, paste either the jsDelivr CDN or GitHub Raw link (e.g. `https://cdn.jsdelivr.net/gh/Dr20Ervin/205hlab@main/assets/icons/bentopdf.svg`).
 4. Click **Update**.
 
 ---
@@ -65,7 +65,7 @@ Paste the direct CDN URL into your dashboard's YAML configuration or widget sett
 ```yaml
 - Tools:
     - BentoPDF:
-        icon: https://cdn.jsdelivr.net/gh/Dr20Ervin/205hlab@main/assets/icons/bentopdf.png
+        icon: https://cdn.jsdelivr.net/gh/Dr20Ervin/205hlab@main/assets/icons/bentopdf.svg
         href: https://pdf.205hlab.com/
         description: Client-side WASM PDF manipulation
 ```
@@ -76,7 +76,7 @@ sections:
   - name: Utilities
     items:
       - title: BentoPDF
-        icon: https://cdn.jsdelivr.net/gh/Dr20Ervin/205hlab@main/assets/icons/bentopdf.png
+        icon: https://cdn.jsdelivr.net/gh/Dr20Ervin/205hlab@main/assets/icons/bentopdf.svg
         url: https://pdf.205hlab.com/
 ```
 
@@ -86,7 +86,7 @@ sections:
 
 - **Format**: SVG (vector, sharp at all resolutions) or PNG with transparent background.
 - **Resolution**: 256×256 or 512×512 square ratio for raster images.
-- **Naming**: Use lowercase kebab-case (e.g., `it-tools.png`, `bentopdf.svg`, `authentik-bg.jpg`).
+- **Naming**: Use lowercase kebab-case (e.g., `it-tools.svg`, `bentopdf.svg`, `authentik-bg.jpg`).
 
 ---
 
