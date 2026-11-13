@@ -494,6 +494,11 @@ Security is **engineered into every layer** — not bolted on after the fact.
 │   │   └── feature_request.md            # Feature request template
 │   └── PULL_REQUEST_TEMPLATE.md          # PR checklist template
 │
+├── assets/                               # Static media, icons & dashboard assets
+│   ├── icons/                            # Application icons (SVG / PNG)
+│   ├── images/                           # Wallpapers, banners & branding assets
+│   └── README.md                         # Direct link & CDN usage guide
+│
 ├── compose/                              # Production Docker Compose stacks
 │   ├── authentik/                        # Authentik SSO server + worker
 │   │   ├── compose.yaml
