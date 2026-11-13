@@ -6,6 +6,8 @@ services:
     container_name: node-exporter
     pid: host
     command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
       - '--path.rootfs=/host'
       - '--collector.netdev.device-exclude=^(veth.*|br-.*|docker[0-9].*)$$'
       - '--collector.filesystem.mount-points-exclude=^/(dev|proc|sys|run|var/lib/docker/.+)($$|/)'
