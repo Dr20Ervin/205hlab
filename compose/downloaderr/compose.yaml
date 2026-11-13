@@ -38,13 +38,14 @@ services:
       # qBittorrent
       - traefik.http.services.qbittorrent_web.loadBalancer.server.port=${QBITTORRENT_WEBUI_PORT:-8080}
       - traefik.http.routers.qbittorrent_http.service=qbittorrent_web
-      - traefik.http.routers.qbittorrent_http.rule=Host(`qbittorrent.internal.${FQDN}`)
+      - traefik.http.routers.qbittorrent_http.rule=Host(`qbittorrent.${FQDN}`)
       - traefik.http.routers.qbittorrent_http.entrypoints=web
       - traefik.http.routers.qbittorrent_https.service=qbittorrent_web
-      - traefik.http.routers.qbittorrent_https.rule=Host(`qbittorrent.internal.${FQDN}`)
+      - traefik.http.routers.qbittorrent_https.rule=Host(`qbittorrent.${FQDN}`)
       - traefik.http.routers.qbittorrent_https.entrypoints=websecure
       - traefik.http.routers.qbittorrent_https.tls=true
       - traefik.http.routers.qbittorrent_https.tls.certresolver=cloudflare
+      - traefik.http.routers.qbittorrent_https.middlewares=authentik@docker
       # Metube
       - traefik.http.services.metube_web.loadBalancer.server.port=8081
       - traefik.http.routers.metube_http.service=metube_web
