@@ -1,0 +1,159 @@
+---
+services:
+  it-tools:
+    image: corentinth/it-tools:latest
+    restart: unless-stopped
+    container_name: it-tools
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=32m,mode=1777
+      - /var/cache/nginx:rw,noexec,nosuid,size=32m,mode=1777
+      - /var/run:rw,noexec,nosuid,size=16m,mode=1777
+    deploy:
+      resources:
+        limits:
+          cpus: '0.3'
+          memory: 128M
+    networks:
+      - traefik_network
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1:80/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=traefik_network
+      - traefik.http.services.it_tools_web.loadBalancer.server.port=80
+      - traefik.http.routers.it_tools_http.service=it_tools_web
+      - traefik.http.routers.it_tools_http.rule=Host(`it-tools.${FQDN}`)
+      - traefik.http.routers.it_tools_http.entrypoints=web
+      - traefik.http.routers.it_tools_https.service=it_tools_web
+      - traefik.http.routers.it_tools_https.rule=Host(`it-tools.${FQDN}`)
+      - traefik.http.routers.it_tools_https.entrypoints=websecure
+      - traefik.http.routers.it_tools_https.tls=true
+      - traefik.http.routers.it_tools_https.tls.certresolver=cloudflare
+      - traefik.http.routers.it_tools_https.middlewares=authentik@docker
+
+  omni-tools:
+    image: iib0011/omni-tools:latest
+    restart: unless-stopped
+    container_name: omni-tools
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=32m,mode=1777
+      - /var/cache/nginx:rw,noexec,nosuid,size=32m,mode=1777
+      - /var/run:rw,noexec,nosuid,size=16m,mode=1777
+    deploy:
+      resources:
+        limits:
+          cpus: '0.3'
+          memory: 128M
+    networks:
+      - traefik_network
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1:80/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=traefik_network
+      - traefik.http.services.omni_tools_web.loadBalancer.server.port=80
+      - traefik.http.routers.omni_tools_http.service=omni_tools_web
+      - traefik.http.routers.omni_tools_http.rule=Host(`omni.${FQDN}`)
+      - traefik.http.routers.omni_tools_http.entrypoints=web
+      - traefik.http.routers.omni_tools_https.service=omni_tools_web
+      - traefik.http.routers.omni_tools_https.rule=Host(`omni.${FQDN}`)
+      - traefik.http.routers.omni_tools_https.entrypoints=websecure
+      - traefik.http.routers.omni_tools_https.tls=true
+      - traefik.http.routers.omni_tools_https.tls.certresolver=cloudflare
+      - traefik.http.routers.omni_tools_https.middlewares=authentik@docker
+
+  drawio:
+    image: jgraph/drawio:latest
+    restart: unless-stopped
+    container_name: drawio
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=64m
+      - /usr/local/tomcat/temp:rw,noexec,nosuid,size=64m
+      - /usr/local/tomcat/logs:rw,noexec,nosuid,size=64m
+      - /usr/local/tomcat/webapps/draw/js:rw,nosuid,size=32m
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+    networks:
+      - traefik_network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:8080/ || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=traefik_network
+      - traefik.http.services.drawio_web.loadBalancer.server.port=8080
+      - traefik.http.routers.drawio_http.service=drawio_web
+      - traefik.http.routers.drawio_http.rule=Host(`draw.${FQDN}`)
+      - traefik.http.routers.drawio_http.entrypoints=web
+      - traefik.http.routers.drawio_https.service=drawio_web
+      - traefik.http.routers.drawio_https.rule=Host(`draw.${FQDN}`)
+      - traefik.http.routers.drawio_https.entrypoints=websecure
+      - traefik.http.routers.drawio_https.tls=true
+      - traefik.http.routers.drawio_https.tls.certresolver=cloudflare
+      - traefik.http.routers.drawio_https.middlewares=authentik@docker
+
+  bentopdf:
+    image: ghcr.io/alam00000/bentopdf-simple:latest
+    restart: unless-stopped
+    container_name: bentopdf
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=32m,mode=1777
+      - /var/cache/nginx:rw,noexec,nosuid,size=32m,uid=101,gid=101,mode=0777
+      - /var/run:rw,noexec,nosuid,size=16m,uid=101,gid=101,mode=0777
+      - /etc/nginx/tmp:rw,noexec,nosuid,size=16m,uid=101,gid=101,mode=0777
+    deploy:
+      resources:
+        limits:
+          cpus: '0.3'
+          memory: 128M
+    networks:
+      - traefik_network
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1:8080/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=traefik_network
+      - traefik.http.services.bentopdf_web.loadBalancer.server.port=8080
+      - traefik.http.routers.bentopdf_http.service=bentopdf_web
+      - traefik.http.routers.bentopdf_http.rule=Host(`pdf.${FQDN}`)
+      - traefik.http.routers.bentopdf_http.entrypoints=web
+      - traefik.http.routers.bentopdf_https.service=bentopdf_web
+      - traefik.http.routers.bentopdf_https.rule=Host(`pdf.${FQDN}`)
+      - traefik.http.routers.bentopdf_https.entrypoints=websecure
+      - traefik.http.routers.bentopdf_https.tls=true
+      - traefik.http.routers.bentopdf_https.tls.certresolver=cloudflare
+      - traefik.http.routers.bentopdf_https.middlewares=authentik@docker
+
+networks:
+  traefik_network:
+    external: true
