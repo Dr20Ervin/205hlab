@@ -99,6 +99,28 @@ services:
       retries: 3
       start_period: 15s
 
+  zfs-exporter:
+    image: ghcr.io/pdf/zfs_exporter:latest
+    restart: unless-stopped
+    container_name: zfs-exporter
+    hostname: 205hlab-zfs-exporter
+    read_only: true
+    cap_add:
+      - SYS_CHROOT
+      - SETUID
+      - SETGID
+    devices:
+      - /dev/zfs:/dev/zfs
+    volumes:
+      - /:/host:ro,rslave
+    deploy:
+      resources:
+        limits:
+          cpus: '0.2'
+          memory: 128M
+    networks:
+      - monitoring_network
+
 networks:
   monitoring_network:
     external: true
