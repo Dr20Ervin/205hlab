@@ -7,6 +7,8 @@ services:
     pid: host
     command:
       - '--path.rootfs=/host'
+      - '--collector.netdev.device-exclude=^(veth.*|br-.*|docker[0-9].*)$$'
+      - '--collector.filesystem.mount-points-exclude=^/(dev|proc|sys|run|var/lib/docker/.+)($$|/)'
     deploy:
       resources:
         limits:
@@ -29,21 +31,25 @@ services:
     container_name: cadvisor
     privileged: true
     command:
-      - --housekeeping_interval=30s
-      - --disable_metrics=disk,udp,percpu,sched,tcp,referenced_memory
       - --docker_only=true
+      - --enable_metrics=cpu,memory,network,diskIO,oom_event
+      - --store_container_labels=false
+      - --housekeeping_interval=30s
+      - --max_housekeeping_interval=60s
+      - --global_housekeeping_interval=2m
     deploy:
       resources:
         limits:
-          cpus: '1.5'
-          memory: 2G
+          cpus: '0.5'
+          memory: 512M
     networks:
       - monitoring_network
     volumes:
       - /:/rootfs:ro
-      - /var/run:/var/run:rw
+      - /var/run:/var/run:ro
       - /sys:/sys:ro
       - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
     healthcheck:
       test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8080/healthz || exit 1"]
       interval: 30s
