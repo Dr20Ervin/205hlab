@@ -1,7 +1,7 @@
 ---
 services:
   traefik:
-    image: docker.io/library/traefik:v3.7.14
+    image: docker.io/library/traefik:v3.7.18
     restart: unless-stopped
     container_name: traefik
     security_opt:
