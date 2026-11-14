@@ -369,7 +369,7 @@ The homelab runs **two Technitium DNS servers** providing redundancy and split-h
 
 | Service | URL | Description |
 | :--- | :--- | :--- |
-| **Dockhand** | `dockhand.internal.205hlab.com` | Docker container management UI — deploy, monitor, and manage containers with a web interface. Authentik ForwardAuth protected. Compose stack not yet published in this repo. |
+| **Dockhand** | `dockhand.internal.205hlab.com` | Central Docker management & GitOps CI/CD engine running on the primary Ubuntu Server. Periodically synchronizes `205hlab` from GitHub to automate stack deployments. Also monitors the auxiliary ASUS X540SA node (Home Assistant OS) via a **Hawser agent (standard v0.2.52)** for remote container observation and troubleshooting. Authentik ForwardAuth protected. |
 | **Databasus** | `databasus.internal.205hlab.com` | Database management interface for internal DB operations. LAN-only. |
 
 ### 📊 Observability, Telemetry & Health
@@ -571,6 +571,51 @@ docker network create servarr_backend
 ```
 
 ### Configure & Launch Each Stack
+
+#### 🔄 Production GitOps CI/CD Pipeline (Dockhand & Hawser Agent)
+
+In production, day-to-day stack deployments and updates are governed by a **GitOps continuous delivery model powered by Dockhand**:
+
+```mermaid
+flowchart TD
+    subgraph Git["Source Control"]
+        GH["GitHub Repository\n(Dr20Ervin/205hlab)"]
+    end
+
+    subgraph Node1["Primary Node: Ubuntu Server (Bare-Metal)"]
+        DH["Dockhand Server\n(dockhand.internal.205hlab.com)"]
+        SYNC["Scheduled Git Sync Engine"]
+        COMPOSE["20 Production Compose Stacks\n(Traefik, PG18, Authentik, etc.)"]
+        
+        GH -->|Scheduled Git Poll & Sync| SYNC
+        SYNC -->|Deploys / Updates| COMPOSE
+        DH -->|Local Docker Socket| COMPOSE
+    end
+
+    subgraph Node2["Auxiliary Node: ASUS X540SA (Home Assistant OS)"]
+        HAWSER["Hawser Agent (standard v0.2.52)"]
+        HA["Home Assistant Core & Add-ons\n(Native Lifecycle — No Git Sync)"]
+        AUX_DNS["Technitium DNS (Auxiliary)\nCatalog Zone Replica"]
+        
+        HAWSER -.->|Observes & Inspects| HA
+        HAWSER -.->|Observes & Inspects| AUX_DNS
+    end
+
+    DH <==|Remote Agent Link (Observation & Remediation Only)|==> HAWSER
+```
+
+- **GitOps on Ubuntu Server (Primary Node):**
+  - All infrastructure changes are authored and version-controlled in this repository.
+  - **Dockhand** running on the Ubuntu Server runs a scheduled job that automatically pulls the latest commits from GitHub.
+  - When new configurations or container images are detected, Dockhand reconciles the changes and triggers stack recreation without requiring manual SSH intervention.
+- **Remote Node Observability via Hawser Agent (ASUS X540SA / HAOS):**
+  - The auxiliary server runs **Home Assistant OS (HAOS)** and is connected to Dockhand via a **Hawser agent (standard v0.2.52)**.
+  - **Important Architectural Boundary:** The GitHub repository is **not** synced to or run on the HAOS server, as Home Assistant strictly manages its own operating system, core, and add-on lifecycles natively.
+  - The Hawser agent on the X540SA serves exclusively for **remote multi-node observability, container health monitoring, log inspection, and troubleshooting** directly from the centralized Dockhand management console.
+
+#### 🛠️ Manual CLI Deployment (Fallback / Disaster Recovery)
+
+If bootstrapping from scratch or performing off-grid emergency recovery:
 
 ```bash
 # Clone

@@ -171,7 +171,36 @@ All 20 compose stacks enforce standardized operational rules:
 
 ## 🚀 Standard Operating Procedures (SOP)
 
-### 1. Bootstrapping a New Stack
+### 1. Primary Lifecycle: Automated GitOps CI/CD via Dockhand
+
+In production on the Ubuntu Server, manual SSH commands are minimized in favor of a GitOps continuous delivery workflow:
+
+```
+[ Developer / Admin Workstation ]
+               │ git commit && git push
+               ▼
+[ GitHub Repository (Dr20Ervin/205hlab) ]
+               │ Scheduled Polling & Sync
+               ▼
+[ Dockhand (Primary Node: Ubuntu Server) ]
+   ├── Synchronizes compose configurations & templates
+   ├── Pulls updated container images
+   ├── Automates zero-downtime stack redeployments
+   └── Observes remote HAOS node via Hawser Agent (v0.2.52)
+```
+
+- **Ubuntu Server (Primary Node):** Dockhand monitors this Git repository on an automated schedule. When new commits are detected (e.g. updated image tags, tuned resource limits, or new environment variables), Dockhand reconciles the configuration and updates the containers.
+- **ASUS X540SA / Home Assistant OS (Auxiliary Node):** Connected to Dockhand via a **Hawser agent (standard v0.2.52)**. 
+  > [!IMPORTANT]
+  > The GitHub repository is **not** synced to or executed on the HAOS machine. Home Assistant strictly manages its own operating system and add-ons natively. Dockhand + Hawser on the X540SA is used exclusively for **remote multi-node container observation, resource monitoring, and administrative troubleshooting/fixing**.
+
+---
+
+### 2. Manual CLI Operations (Emergency Fallback & Initial Provisioning)
+
+If bootstrapping a brand new server or conducting offline maintenance:
+
+#### A. Initial Stack Bootstrapping
 
 ```bash
 cd compose/<stack-name>
@@ -196,7 +225,7 @@ docker compose ps
 docker compose logs -f
 ```
 
-### 2. Upgrading a Stack Safely
+#### B. Safe Manual Stack Upgrade
 
 ```bash
 cd compose/<stack-name>
@@ -211,7 +240,7 @@ docker compose up -d --remove-orphans
 docker image prune -f
 ```
 
-### 3. Graceful Stack Teardown
+#### C. Graceful Stack Teardown
 
 ```bash
 # Stop containers while preserving all data volumes

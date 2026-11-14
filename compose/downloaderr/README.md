@@ -100,6 +100,11 @@ Both `metube.205hlab.com` and `qbittorrent.205hlab.com` are gated at Traefik wit
 
 ## 🚀 Deployment & Operations
 
+> [!TIP]
+> **Production GitOps CI/CD via Dockhand:**  
+> In daily operations, this stack is deployed and maintained via **Dockhand** on the Ubuntu Server. Commits pushed to this repository are pulled automatically on a scheduled interval by Dockhand, triggering zero-downtime stack updates. (The auxiliary ASUS X540SA node running Home Assistant OS is connected via a **Hawser agent standard v0.2.52** for health observation and troubleshooting only).
+
+
 1. **Provision PostgreSQL Database**:
    Execute `db-init.sql` against the central PostgreSQL instance:
    ```bash
