@@ -8,6 +8,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-0d1117?style=for-the-badge&labelColor=1f6feb&color=1f6feb)](LICENSE)
 [![Host OS](https://img.shields.io/badge/Ubuntu%20Server%20LTS-E95420?style=for-the-badge&logo=ubuntu&logoColor=white)](https://ubuntu.com)
 [![Docker Compose](https://img.shields.io/badge/Docker%20Compose%20v2-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://docs.docker.com/compose/)
+[![CI: Validate Compose](https://github.com/Dr20Ervin/205hlab/actions/workflows/validate-compose.yml/badge.svg)](https://github.com/Dr20Ervin/205hlab/actions/workflows/validate-compose.yml)
 [![Traefik v3](https://img.shields.io/badge/Traefik%20v3-24A1C1?style=for-the-badge&logo=traefikproxy&logoColor=white)](https://traefik.io)
 [![Authentik SSO](https://img.shields.io/badge/Authentik%20SSO-fd4b2d?style=for-the-badge)](https://goauthentik.io)
 [![Cloudflare](https://img.shields.io/badge/Cloudflare%20Proxy-F38020?style=for-the-badge&logo=cloudflare&logoColor=white)](https://www.cloudflare.com)
@@ -518,6 +519,8 @@ Security and credential lifecycle management follow strict enterprise zero-trust
 ```text
 205hlab/
 ├── .github/
+│   ├── workflows/
+│   │   └── validate-compose.yml          # GitHub Actions CI: Automated Compose syntax & env linter
 │   ├── ISSUE_TEMPLATE/
 │   │   ├── bug_report.md                 # Structured bug report template
 │   │   └── feature_request.md            # Feature request template
@@ -602,24 +605,34 @@ docker network create servarr_backend
 
 ### Configure & Launch Each Stack
 
-#### 🔄 Production GitOps CI/CD Pipeline (Dockhand & Hawser Agent)
+#### 🔄 Production CI/CD Pipeline (GitHub Actions & Dockhand GitOps)
 
-In production, day-to-day stack deployments and updates are governed by a **GitOps continuous delivery model powered by Dockhand**:
+In production, day-to-day stack deployments and updates follow a strict two-stage continuous integration and GitOps delivery model:
 
 ```mermaid
 flowchart TD
-    subgraph Git["Source Control"]
+    subgraph Stage1["Stage 1: Continuous Integration (CI Gate)"]
+        Dev["Developer Commit & Push"]
         GH["GitHub Repository\n(Dr20Ervin/205hlab)"]
+        GHA["GitHub Actions CI Runner\n(.github/workflows/validate-compose.yml)"]
+        DISCOVER["Dynamic Stack Discovery\n(Finds all compose/*/ stacks)"]
+        LINT["Docker Compose Config Linter\n(Validates YAML, Schemas, & example.env)"]
+        SUMMARY["Step Summary Report\n(Pass / Fail Table)"]
+        
+        Dev --> GH
+        GH -->|Triggers on push/PR| GHA
+        GHA --> DISCOVER --> LINT --> SUMMARY
     end
 
-    subgraph Node1["Primary Node: Ubuntu Server (Bare-Metal)"]
-        DH["Dockhand Server\n(dockhand.internal.205hlab.com)"]
-        SYNC["Scheduled Git Sync Engine"]
-        COMPOSE["20 Production Compose Stacks\n(Traefik, PG18, Authentik, etc.)"]
+    subgraph Stage2["Stage 2: Continuous Deployment (CD / GitOps)"]
+        DH["Dockhand Server\n(Primary Node: Ubuntu Server)"]
+        SYNC["Scheduled Git Pull & Sync Engine"]
+        VAULT["Dockhand Encrypted Secrets Vault\n(Injected at deploy time)"]
+        COMPOSE["Production Compose Stacks\n(Traefik, PG18, Authentik, etc.)"]
         
-        GH -->|Scheduled Git Poll & Sync| SYNC
-        SYNC -->|Deploys / Updates| COMPOSE
-        DH -->|Local Docker Socket| COMPOSE
+        SUMMARY -->|On Merge to main| SYNC
+        SYNC --> DH
+        DH --> VAULT --> COMPOSE
     end
 
     subgraph Node2["Auxiliary Node: ASUS X540SA (Home Assistant OS)"]
@@ -634,14 +647,18 @@ flowchart TD
     DH <==|Remote Agent Link (Observation & Remediation Only)|==> HAWSER
 ```
 
-- **GitOps on Ubuntu Server (Primary Node):**
-  - All infrastructure changes are authored and version-controlled in this repository.
-  - **Dockhand** running on the Ubuntu Server runs a scheduled job that automatically pulls the latest commits from GitHub.
-  - When new configurations or container images are detected, Dockhand reconciles the changes and triggers stack recreation without requiring manual SSH intervention.
-- **Remote Node Observability via Hawser Agent (ASUS X540SA / HAOS):**
+- **Stage 1: Automated CI Validation via GitHub Actions:**
+  - Every commit or Pull Request modifying files under `compose/**` automatically triggers [`.github/workflows/validate-compose.yml`](.github/workflows/validate-compose.yml).
+  - **Dynamic Stack Discovery:** The runner dynamically discovers all stack directories in `compose/` at runtime rather than relying on a rigid, hardcoded list.
+  - **Pre-Deployment Linting:** Evaluates each stack's compose file against its `example.env` template using `docker compose config --quiet` to catch YAML syntax errors, broken schema declarations, and missing `${VAR:?error}` parameters.
+  - **Rich Status Reporting:** Compiles an executive Markdown summary table into `$GITHUB_STEP_SUMMARY`, preventing invalid configurations from ever merging into `main`.
+- **Stage 2: GitOps Continuous Delivery via Dockhand (Primary Node: Ubuntu Server):**
+  - Once validated code lands on `main`, **Dockhand** on the Ubuntu Server automatically syncs the repository on an automated schedule.
+  - Reconciles desired compose states with running containers, pulling updated images and executing zero-downtime container recreations.
+  - Injects production credentials directly from Dockhand's encrypted database at deploy time, ensuring zero plain-text `.env` files are stored on disk.
+- **Remote Node Observability via Hawser Agent (Auxiliary Node: ASUS X540SA / HAOS):**
   - The auxiliary server runs **Home Assistant OS (HAOS)** and is connected to Dockhand via a **Hawser agent (standard v0.2.52)**.
-  - **Important Architectural Boundary:** The GitHub repository is **not** synced to or run on the HAOS server, as Home Assistant strictly manages its own operating system, core, and add-on lifecycles natively.
-  - The Hawser agent on the X540SA serves exclusively for **remote multi-node observability, container health monitoring, log inspection, and troubleshooting** directly from the centralized Dockhand management console.
+  - **Important Architectural Boundary:** The Git repository is **not** synced to or run on the HAOS server (Home Assistant natively manages its own add-on lifecycles). The Hawser agent is strictly utilized for **remote multi-node observability, container health monitoring, log inspection, and troubleshooting** directly from the centralized Dockhand management console.
 
 #### 🛠️ Manual CLI Deployment (Fallback / Disaster Recovery)
 

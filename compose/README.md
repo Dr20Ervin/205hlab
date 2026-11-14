@@ -1,6 +1,7 @@
 # Docker Compose Stacks — Production Homelab Orchestration
 
 [![Docker Compose](https://img.shields.io/badge/Docker%20Compose-v2.30+-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://docs.docker.com/compose/)
+[![CI: Validate Compose](https://github.com/Dr20Ervin/205hlab/actions/workflows/validate-compose.yml/badge.svg)](https://github.com/Dr20Ervin/205hlab/actions/workflows/validate-compose.yml)
 [![Stacks](https://img.shields.io/badge/Production%20Stacks-20%20Active-007ACC?style=for-the-badge)](https://github.com/Dr20Ervin/205hlab/tree/main/compose)
 [![Network Isolation](https://img.shields.io/badge/Network-Microsegmented-2ea44f?style=for-the-badge&logo=wireguard&logoColor=white)](#-network-topology--microsegmentation)
 [![Resource Limits](https://img.shields.io/badge/Limits-Strict%20CPU%20%26%20RAM-9b51e0?style=for-the-badge)](#-production-engineering-standards)
@@ -171,28 +172,32 @@ All 20 compose stacks enforce standardized operational rules:
 
 ## 🚀 Standard Operating Procedures (SOP)
 
-### 1. Primary Lifecycle: Automated GitOps CI/CD via Dockhand
+### 1. Primary Lifecycle: Automated CI/CD (GitHub Actions + Dockhand GitOps)
 
-In production on the Ubuntu Server, manual SSH commands are minimized in favor of a GitOps continuous delivery workflow:
+In production on the Ubuntu Server, manual SSH commands are minimized in favor of a two-stage CI/CD pipeline:
 
 ```
 [ Developer / Admin Workstation ]
                │ git commit && git push
                ▼
 [ GitHub Repository (Dr20Ervin/205hlab) ]
-               │ Scheduled Polling & Sync
+               │
+               ▼
+   [ GitHub Actions CI Gate ] ──► Dynamically discovers & lints all compose stacks
+               │ (Pass)
                ▼
 [ Dockhand (Primary Node: Ubuntu Server) ]
-   ├── Synchronizes compose configurations & templates
-   ├── Pulls updated container images
+   ├── Scheduled Git pull & sync
+   ├── Injects encrypted secrets at deploy time (No .env on disk)
    ├── Automates zero-downtime stack redeployments
    └── Observes remote HAOS node via Hawser Agent (v0.2.52)
 ```
 
-- **Ubuntu Server (Primary Node):** Dockhand monitors this Git repository on an automated schedule. When new commits are detected (e.g. updated image tags, tuned resource limits, or new environment variables), Dockhand reconciles the configuration and updates the containers.
-- **ASUS X540SA / Home Assistant OS (Auxiliary Node):** Connected to Dockhand via a **Hawser agent (standard v0.2.52)**. 
-  > [!IMPORTANT]
-  > The GitHub repository is **not** synced to or executed on the HAOS machine. Home Assistant strictly manages its own operating system and add-ons natively. Dockhand + Hawser on the X540SA is used exclusively for **remote multi-node container observation, resource monitoring, and administrative troubleshooting/fixing**.
+1. **Continuous Integration (CI):** Every push or PR touching `compose/**` triggers [`.github/workflows/validate-compose.yml`](../.github/workflows/validate-compose.yml). GitHub Actions dynamically scans all stack directories at runtime, validating syntax and variable resolution against their `example.env` templates before code can be deployed.
+2. **Continuous Deployment (CD / GitOps):** Once validated on `main`, **Dockhand** on the Ubuntu Server periodically pulls repository updates, dynamically injects encrypted secrets from its vault, and redeploys containers.
+3. **Auxiliary Node Monitoring (ASUS X540SA / HAOS):** Connected to Dockhand via a **Hawser agent (standard v0.2.52)**.
+   > [!IMPORTANT]
+   > The GitHub repository is **not** synced to or executed on the HAOS machine. Home Assistant strictly manages its own operating system and add-ons natively. Dockhand + Hawser on the X540SA is used exclusively for **remote multi-node container observation, resource monitoring, and administrative troubleshooting/fixing**.
 
 ---
 

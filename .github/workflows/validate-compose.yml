@@ -1,0 +1,98 @@
+name: "Validate Docker Compose"
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - "compose/**"
+      - ".github/workflows/validate-compose.yml"
+  pull_request:
+    branches: [ "main" ]
+    paths:
+      - "compose/**"
+      - ".github/workflows/validate-compose.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: "Validate Compose Stacks"
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: "Checkout Repository"
+        uses: actions/checkout@v4
+
+      - name: "Set up Docker Buildx"
+        uses: docker/setup-buildx-action@v3
+
+      - name: "Bootstrap Mock External Networks"
+        run: |
+          docker network create traefik_network || true
+          docker network create postgres_network || true
+          docker network create monitoring_network || true
+          docker network create servarr_backend || true
+
+      - name: "Discover and Validate Compose Stacks"
+        run: |
+          echo "=========================================================="
+          echo "🔍 Discovering and validating Docker Compose stacks"
+          echo "=========================================================="
+          
+          FAILED=0
+          PASSED=0
+          TOTAL=0
+          
+          # Initialize GitHub Step Summary markdown report
+          echo "## 📊 Docker Compose Validation Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Stack | Compose File | Environment Template | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "| :--- | :--- | :--- | :--- |" >> $GITHUB_STEP_SUMMARY
+
+          # Dynamically iterate over all subdirectories in compose/
+          for dir in compose/*/; do
+            if [ -f "${dir}compose.yaml" ] || [ -f "${dir}compose.yml" ]; then
+              TOTAL=$((TOTAL + 1))
+              stack_name=$(basename "$dir")
+              compose_file="${dir}compose.yaml"
+              [ -f "$compose_file" ] || compose_file="${dir}compose.yml"
+              file_name=$(basename "$compose_file")
+
+              ENV_FLAG=""
+              has_env="None"
+              if [ -f "${dir}example.env" ]; then
+                ENV_FLAG="--env-file ${dir}example.env"
+                has_env="\`example.env\`"
+              fi
+
+              # Validate compose syntax, schema formatting, and variable resolution
+              if docker compose -f "$compose_file" $ENV_FLAG config --quiet 2>&1; then
+                echo "✅ [${stack_name}] configuration is valid."
+                PASSED=$((PASSED + 1))
+                echo "| **\`${stack_name}\`** | \`${file_name}\` | ${has_env} | ✅ Valid |" >> $GITHUB_STEP_SUMMARY
+              else
+                echo "❌ [${stack_name}] validation failed!"
+                FAILED=$((FAILED + 1))
+                echo "| **\`${stack_name}\`** | \`${file_name}\` | ${has_env} | ❌ Failed |" >> $GITHUB_STEP_SUMMARY
+                # Emit exact error to build log for fast debugging
+                docker compose -f "$compose_file" $ENV_FLAG config
+              fi
+            fi
+          done
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Summary:** ${PASSED}/${TOTAL} stacks valid (${FAILED} failed)." >> $GITHUB_STEP_SUMMARY
+
+          echo "=========================================================="
+          echo "📊 Results: Discovered ${TOTAL} stacks. Passed: ${PASSED}, Failed: ${FAILED}."
+          echo "=========================================================="
+
+          if [ $FAILED -ne 0 ]; then
+            echo "❌ Validation failed on $FAILED stack(s)!"
+            exit 1
+          fi
+
+          echo "🎉 All ${TOTAL} discovered Docker Compose stacks passed validation successfully!"
