@@ -4,7 +4,7 @@
 
 **Production Homelab Infrastructure & Engineering Portfolio**
 
-[![Release](https://img.shields.io/badge/Release-2026--11--08-0d1117?style=for-the-badge&labelColor=238636&color=238636)](https://github.com/Dr20Ervin/205hlab/releases)
+[![Release](https://img.shields.io/badge/Release-2026--11--14-0d1117?style=for-the-badge&labelColor=238636&color=238636)](https://github.com/Dr20Ervin/205hlab/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-0d1117?style=for-the-badge&labelColor=1f6feb&color=1f6feb)](LICENSE)
 [![Host OS](https://img.shields.io/badge/Ubuntu%20Server%20LTS-E95420?style=for-the-badge&logo=ubuntu&logoColor=white)](https://ubuntu.com)
 [![Docker Compose](https://img.shields.io/badge/Docker%20Compose%20v2-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://docs.docker.com/compose/)
@@ -21,7 +21,7 @@
 
 <br/>
 
-> *Snapshot Release `2026-11-08` — Production architecture baseline, actively running in my home 24/7.*
+> *Snapshot Release `2026-11-14` — Production architecture baseline, actively running in my home 24/7.*
 
 </div>
 
@@ -349,7 +349,7 @@ The homelab runs **two Technitium DNS servers** providing redundancy and split-h
 
 | Stack | Image | Description |
 | :--- | :--- | :--- |
-| [`traefik`](compose/traefik/) | `traefik:v3.7.14` | Core reverse proxy. All HTTPS termination, Cloudflare DNS-01 ACME certificates, automatic HTTP→HTTPS redirect, ForwardAuth middleware chaining across all protected routes, Prometheus metrics on `:9090`, and health probe on `:8082`. Trusted proxy CIDRs locked to Cloudflare IP blocks + internal subnet. |
+| [`traefik`](compose/traefik/) | `traefik:v3.7.18` | Core reverse proxy. All HTTPS termination, Cloudflare DNS-01 ACME certificates, automatic HTTP→HTTPS redirect, ForwardAuth middleware chaining across all protected routes, Prometheus metrics on `:9090`, and health probe on `:8082`. Trusted proxy CIDRs locked to Cloudflare IP blocks + internal subnet. |
 | [`authentik`](compose/authentik/) | `goauthentik/server:2026.8.5` | Centralized Identity Provider (IdP). **Every WAN-facing service routes through Authentik** — either as a Traefik ForwardAuth middleware gate or via native OIDC SSO integration. Provides OIDC discovery, OAuth2 authorization, email dispatch, and fine-grained entitlement/group RBAC. |
 | [`technitium`](compose/technitium/) | `technitium/dns-server:15.6.2` | **Primary** Technitium DNS server. Authoritative for 8 internal zones, split-horizon resolution, DNSSEC on `dns.205hlab.com`, ad/malware blocking, and Catalog-driven replication to the auxiliary instance on HAOS. |
 | HAOS (native) | `technitium/dns-server` | **Auxiliary** Technitium DNS server running natively on the ASUS X540SA HAOS appliance. Receives all zone replicas from the primary via the Catalog zone — provides DNS continuity during primary server maintenance windows. |
@@ -384,7 +384,7 @@ The homelab runs **two Technitium DNS servers** providing redundancy and split-h
 
 | Folder | Dashboards |
 | :--- | :--- |
-| [`core/`](grafana-dashboards/core/) | Authentik · cAdvisor (Containers) · PostgreSQL · Technitium DNS |
+| [`core/`](grafana-dashboards/core/) | Authentik · cAdvisor (Containers) · PostgreSQL · Technitium DNS · Traefik · Speedtest Tracker |
 | [`hardware/`](grafana-dashboards/hardware/) | Node Exporter (Full Host) · APC UPS · OpenWrt Router · OpenZFS / Storage |
 | [`saas/`](grafana-dashboards/saas/) | qui / qBittorrent torrent metrics |
 
