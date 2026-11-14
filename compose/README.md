@@ -17,7 +17,7 @@ This directory houses the **20 production Docker Compose stacks** powering the `
 | **[`authentik`](authentik/)** | IAM & Security | `https://authentik.205hlab.com` | **IdP Core** | PostgreSQL 18, Valkey 9 Cache | [Runbook](authentik/README.md) |
 | **[`traefik`](traefik/)** | Edge Routing & TLS | `https://*.205hlab.com` | **Edge Middleware** | Let's Encrypt DNS-01 (`acme.json`) | [Runbook](traefik/README.md) |
 | **[`technitium`](technitium/)** | DNS & Ad-Blocking | `https://technitium.internal.205hlab.com` | Method 1 (Native OIDC) | Authoritative Zones, Catalog Sync | [Runbook](technitium/README.md) |
-| **[`postgres`](postgres/)** | Relational Data Tier | `https://adminer.internal.205hlab.com` | Method 2 (ForwardAuth) | PostgreSQL 18 (`--data-checksums`) | [Runbook](postgres/README.md) |
+| **[`postgres`](postgres/)** | Relational Data Tier | `https://adminer.internal.205hlab.com` | Method 2 (ForwardAuth) | PostgreSQL 18 (`--data-checksums`), Databasus Backups | [Runbook](postgres/README.md) |
 | **[`prometheus`](prometheus/)** | Metrics TSDB | `https://prometheus.internal.205hlab.com` | Internal LAN Only | 30d TSDB Retention (50 GB cap) | [Runbook](prometheus/README.md) |
 | **[`prom-exporters`](prom-exporters/)** | Telemetry Scrapers | *(Internal Scrape Targets)* | Internal Scrape Network | Host `/proc`, `/sys`, `/dev/zfs`, S.M.A.R.T. | [Runbook](prom-exporters/README.md) |
 | **[`grafana`](grafana/)** | Observability UI | `https://grafana.205hlab.com` | Method 1 (Native OIDC) | Provisioned Dashboards, SQLite | [Runbook](grafana/README.md) |
@@ -160,12 +160,12 @@ All 20 compose stacks enforce standardized operational rules:
    Docker daemon and container definitions enforce log rollover (`max-size: 10m`, `max-file: 3`) to prevent host storage exhaustion during high-volume debug cycles.
 4. **Principle of Least Privilege**:  
    Services run with `security_opt: no-new-privileges:true`. Rootless container execution and read-only mounts (`:ro`) are enforced wherever possible (e.g., in Web Tools, Tika, Gotenberg, and media consumers).
-5. **Standardized Environment & Secrets Workflow**:  
-   Every stack folder contains:
+5. **Zero-Plaintext Secrets & Dockhand Injection**:  
+   In production, secrets are managed and injected at deploy time via **Dockhand's encrypted database**, ensuring that **no plain-text `.env` files containing production secrets exist on the host disk**. Secret values are masked (`***`) in the Dockhand UI and cannot be retrieved after saving. Every stack folder in this repository contains:
    - `compose.yaml`: Version-controlled service definitions using strict variable parameterization (`${VARIABLE:?error_message}`).
-   - `example.env`: Fully documented environment template.
-   - `setup_secrets.sh`: Executable script for generating cryptographically secure passwords and tokens via `openssl rand -hex`.
-   - `.env`: Local, Git-ignored production environment file.
+   - `example.env`: Fully documented non-sensitive environment template with parameter guards.
+   - `setup_secrets.sh`: Executable script for generating cryptographically secure test/bootstrap tokens via `openssl rand -hex`.
+   - `.env`: Git-ignored local file used exclusively during offline bootstrap or development testing.
 
 ---
 
@@ -249,3 +249,9 @@ docker compose down
 # Stop and remove internal networks (volumes remain untouched)
 docker compose down --remove-orphans
 ```
+
+#### D. Database & Data Backup Runbook
+
+- **PostgreSQL Databases:** Backed up automatically via **Databasus** (`databasus.internal.205hlab.com`), which schedules periodic `pg_dump` jobs directly into `${DATABASUS_BACKUP}`.
+- **Critical State & Configs:** High-value documents and custom configurations are backed up to secondary LAN devices and offline media as part of the intermediate data protection posture.
+- **Storage Roadmap:** Future expansion will introduce an upgraded OpenZFS pool and a fully automated 3-2-1 backup pipeline (local SSD $\rightarrow$ mechanical ZFS pool $\rightarrow$ encrypted offsite cloud storage).

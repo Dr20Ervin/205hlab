@@ -151,6 +151,17 @@ Declarative, multi-stack **Docker Compose** configurations governed by least-pri
 | **TP-Link 5-Port Gigabit Switch** | Unmanaged gigabit switching for wired LAN segments |
 | **Cloudflare** | Edge proxy, CDN, WAF, DNS, and ACME DNS-01 TLS certificate automation |
 
+### 📐 Hardware Philosophy & Sustainable Engineering
+
+- **Pragmatic Economics & Apartment Footprint Constraints:**  
+  In today's economic climate and within an apartment environment, deploying a high-draw, acoustic-heavy enterprise server rack is neither financially prudent nor spatially viable. The physical setup was intentionally engineered around strict living-space constraints: **low idle power consumption**, **whisper-quiet thermals**, and a **minimal physical footprint**.
+- **Transforming E-Waste into 24/7 Production Infrastructure:**  
+  Rather than purchasing costly enterprise appliances, this entire production cluster was built by rescuing and repurposing discarded leftover hardware. The Fujitsu ESPRIMO P710 tower (Intel Core i7-3770, 32 GB DDR3) and ASUS X540SA laptop were salvaged from what would otherwise be electronic waste (e-waste) and transformed into a resilient, production-grade 24/7 self-hosted backbone running with 99.9% uptime. The quad-core i7 processor delivers an optimal performance-per-watt ratio, while its integrated Intel HD 4000 iGPU provides dedicated VAAPI hardware video transcoding for Jellyfin without the heat, noise, and power draw of a discrete PCIe graphics card.
+- **Strict Separation: Production vs. Development/Testing:**  
+  The hardware documented here represents the **Production Environment** powering mission-critical household services (identity, document archival, networking, media). To maintain zero blast radius on daily household operations, all cutting-edge enterprise testing, staging, and research (such as experimenting with HashiCorp Vault, Kubernetes/K3s clusters, and automated CI pipelines) takes place in isolated Virtual Machines running on separate dev hardware.
+- **Architectural Scalability:**  
+  While this single-node bare-metal architecture is right-sized for the household's current compute requirements, the entire infrastructure was engineered with cloud-native principles from day one. Every stack is containerized, decoupled from the underlying hardware, parameter-driven, and synchronized via GitOps. This design guarantees seamless horizontal scaling to **multi-node high-availability clusters (such as Kubernetes / K3s)** and **10GbE+ SFP+ backplanes** whenever budget, space, and enterprise throughput demands warrant future hardware expansion.
+
 ---
 
 ## 🏗️ System Architecture
@@ -370,7 +381,7 @@ The homelab runs **two Technitium DNS servers** providing redundancy and split-h
 | Service | URL | Description |
 | :--- | :--- | :--- |
 | **Dockhand** | `dockhand.internal.205hlab.com` | Central Docker management & GitOps CI/CD engine running on the primary Ubuntu Server. Periodically synchronizes `205hlab` from GitHub to automate stack deployments. Also monitors the auxiliary ASUS X540SA node (Home Assistant OS) via a **Hawser agent (standard v0.2.52)** for remote container observation and troubleshooting. Authentik ForwardAuth protected. |
-| **Databasus** | `databasus.internal.205hlab.com` | Database management interface for internal DB operations. LAN-only. |
+| **Databasus** | `databasus.internal.205hlab.com` | Automated PostgreSQL database backup & management engine running in [`compose/postgres/`](compose/postgres/). Schedules periodic database snapshots with Authentik ForwardAuth protection. |
 
 ### 📊 Observability, Telemetry & Health
 
@@ -465,6 +476,8 @@ Security is **engineered into every layer** — not bolted on after the fact.
            ↓
 [ Docker bridge network segmentation ]
            ↓
+[ Dockhand Secrets: Encrypted DB → Injected at deploy time (No .env on disk) ]
+           ↓
 [ Container: no-new-privileges, non-root UID, read-only socket ]
 ```
 
@@ -479,7 +492,24 @@ Security is **engineered into every layer** — not bolted on after the fact.
 | **Container Hardening** | `no-new-privileges:true` · non-root `PUID`/`PGID` · read-only Docker socket (`:ro`) · no host networking except strictly required. |
 | **Resource Caps** | Every container defines `deploy.resources.limits` (CPU + RAM) preventing resource exhaustion or leaky processes from destabilizing host services. |
 | **Network Segmentation** | Docker bridge networks are purpose-scoped: `traefik_network`, `postgres_network`, `monitoring_network`, `servarr_backend`, `paperless_network`, etc. Database ports are never published to host interfaces. |
-| **Secret Management** | No secrets in `compose.yaml`. All sensitive values loaded from `.env` files (gitignored). `example.env` ships only placeholder keys. `setup_secrets.sh` helpers generate cryptographically random values via `openssl rand`. |
+| **Dockhand Secrets (Zero-Plaintext)** | Production secrets are stored encrypted in Dockhand's internal database and dynamically injected into Docker Compose at deploy time. **No secrets are ever written to `.env` files on disk**, preventing credential harvesting from host storage. Secret values are masked (`***`) in the UI and non-retrievable once saved. All `example.env` files in git are strictly dummy templates. |
+
+---
+
+### 🔐 Dockhand Secrets Management & Zero-Plaintext Architecture
+
+Security and credential lifecycle management follow strict enterprise zero-trust principles:
+
+- **Encrypted Database Storage & Runtime Injection:**  
+  In production on the Ubuntu Server, **Dockhand** serves as the central secrets manager. All production credentials (database passwords, Authentik encryption keys, API tokens, and OIDC client secrets) are stored encrypted in Dockhand’s internal database. At deploy time, Dockhand injects these values directly into the container processes.
+- **Zero-Plaintext on Disk (`.env`-less Production):**  
+  Unlike standard Docker Compose setups that leave sensitive credentials sitting in plain-text `.env` files on the host filesystem, Dockhand’s deploy-time injection means **no `.env` files containing production secrets exist on the host SSD**. Even with physical or shell host access, credentials cannot be harvested from flat configuration files.
+- **UI Masking & Immutable Secret Display:**  
+  All secret values are permanently masked (`***`) in the Dockhand web UI immediately upon saving. They cannot be revealed, copied, or inspected through the web interface; modifying a secret requires entering a completely new value.
+- **Template-Only Git Repositories:**  
+  All `example.env` files version-controlled in this repository are strictly structural templates with parameter-validation guards (`${VARIABLE:?error_message}`) and dummy values. Production secrets never enter Git history.
+- **Pragmatic Production vs. Dev Enterprise Testing:**  
+  While enterprise solutions like **HashiCorp Vault** and **Kubernetes Secrets** are actively evaluated and tested in separate development/staging virtual machines, Dockhand's native encrypted secrets engine provides the exact right-sized, zero-overhead security footprint needed for this production homelab without the operational complexity of managing external KMS clusters.
 
 ---
 
@@ -654,6 +684,46 @@ docker compose up -d
 19. network-mon      → Network performance auditing & diagnostics (needs postgres + authentik)
 20. web-tools        → Client-side utilities (IT-Tools, Omni-Tools, Draw.io, BentoPDF)
 ```
+
+---
+
+### 💾 Backup Strategy, Data Resilience & Storage Roadmap
+
+> [!NOTE]
+> **Engineering Transparency & Intermediate State:**  
+> The homelab currently operates in an acknowledged **intermediate backup state**. While a fully automated, immutable 3-2-1 backup pipeline is not yet fully in place, all critical, irreplaceable files and databases are actively protected through a combination of automated database dumping and manual multi-device redundancy.
+
+```mermaid
+flowchart LR
+    subgraph Current["Current State (Intermediate)"]
+        DB["PostgreSQL Databases"] -->|Automated Snapshots| Databasus["Databasus\n(Local Disk / Backups)"]
+        Files["Critical Documents & Configs"] -->|Manual Backups| Offline["Secondary Physical Devices\n(External Media / PCs)"]
+        CloudStaging["Cloud Storage Integration\n(In Progress)"]
+    end
+
+    subgraph Roadmap["Future Evolution (3-2-1 Architecture)"]
+        ZFS["Expanded OpenZFS Storage Pool\n(Higher Capacity & Auto-Snapshots)"]
+        AutoSync["Automated Backup Engine\n(3 Copies · 2 Media Types · 1 Offsite Cloud)"]
+        ZFS --> AutoSync
+    end
+```
+
+#### Current Protection Posture
+- **Automated Database Backups via Databasus:**  
+  All application relational databases hosted on PostgreSQL 18 (Authentik, Paperless-ngx, Mealie, FreshRSS, the Servarr suite, qui, Reactive Resume, and Speedtest Tracker) are backed up automatically using **Databasus** (`databasus.internal.205hlab.com`), which runs as a dedicated companion container in [`compose/postgres/`](compose/postgres/). Databasus automates structured `pg_dump` schedules and retains timestamped snapshots in `${DATABASUS_BACKUP}`.
+- **Manual Redundancy for Critical Data:**  
+  High-value, non-reproducible data—including archived documents from Paperless-ngx, identity certificates, and custom configurations—are manually backed up across secondary physical devices and workstations on the internal LAN.
+- **Offsite Cloud Storage Integration:**  
+  Encrypted offsite cloud storage integration is currently actively in progress to provide an initial remote safeguard for sensitive document archives and database dumps.
+
+#### Future Storage & Resilience Roadmap
+- **Dedicated Next-Gen OpenZFS Pool:**  
+  Planned hardware storage expansion to replace the current media pool with a larger-capacity, redundant OpenZFS pool featuring automated snapshot retention (`zfs-auto-snapshot`), continuous scrub schedules for silent bit rot prevention, and native dataset compression (`zstd`).
+- **Automated 3-2-1 Backup Implementation:**  
+  Implementation of a fully automated, schedule-driven enterprise backup tool (such as Restic, Borg, or Rclone) to enforce the gold-standard **3-2-1 rule**:
+  1. **3 Copies of Data:** Primary production storage, a dedicated local backup archive, and an offsite replica.
+  2. **2 Different Media Types:** Fast NVMe/SATA SSDs for production volumes and redundant mechanical OpenZFS disks for local backup retention.
+  3. **1 Offsite Replica:** Encrypted, immutable remote cloud backup (e.g., Backblaze B2, Cloudflare R2, or remote ZFS replication) immune to local disaster or physical hardware failure.
 
 ---
 
