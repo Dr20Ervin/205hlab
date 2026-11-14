@@ -97,6 +97,6 @@ Production delivery operates as a strict **Two-Stage CI/CD Pipeline** (documente
 
 ## Compliance & Verification (Fitness Functions)
 
-- **Template-Only Configuration in Git:** Every stack in [`compose/`](../../compose/) provides strictly an `example.env` template with `${VAR:?error}` parameter guards; zero production `.env` files are tracked in Git.
+- **Template-Only Configuration in Git:** Root [`.gitignore`](../../.gitignore) excludes `.env` / `*.env` files while keeping `example.env` templates tracked; every stack in [`compose/`](../../compose/) provides strictly an `example.env` template with `${VAR:?error}` parameter guards.
 - **Automated CI Gate:** [`.github/workflows/validate-compose.yml`](../../.github/workflows/validate-compose.yml) enforces schema integrity and required variable contracts on all `compose/*/` stacks before Dockhand syncs `main`.
 - **Internal Access Only:** `dockhand.internal.205hlab.com` exists solely in the internal Technitium zone ([ADR-003](ADR-003-split-horizon-technitium-dns.md)) and uses Authentik OIDC (`dockhand_admins`, [ADR-002](ADR-002-authentik-unified-iam.md)).

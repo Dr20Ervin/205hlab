@@ -382,7 +382,7 @@ The homelab runs **two Technitium DNS servers** providing redundancy and split-h
 
 | Stack | Image | Description |
 | :--- | :--- | :--- |
-| [`postgres`](compose/postgres/) | `postgres:18.3` | Central relational database with `--data-checksums` for silent corruption detection. Each application gets an isolated database user provisioned via `db-init.sql`. Shared by: Authentik, Mealie, Paperless, FreshRSS, Servarr (\*arr suite incl. Chaptarr), qui, Tracearr, Reactive Resume, Speedtest Tracker. |
+| [`postgres`](compose/postgres/) | `postgres:18.3` | Central relational database with `--data-checksums` for silent corruption detection. Each application gets an isolated database user provisioned via `db-init.sql`. Shared by: Authentik, Mealie, Paperless, FreshRSS, Servarr (\*arr suite incl. Chaptarr), qui, Reactive Resume, Speedtest Tracker. |
 | [`postgres`](compose/postgres/) | `adminer:latest` | Web-based DB admin UI at `adminer.internal.205hlab.com` — LAN-only access. |
 | [`tracearr`](compose/tracearr/) | `timescale/timescaledb-ha:pg18.4-ts2.29.1` | Dedicated TimescaleDB time-series cluster for Tracearr analytics. Custom `max_locks_per_transaction`, `max_connections`, and telemetry-off configuration. Paired with Redis 8 for task queuing. |
 | [`paperless`](compose/paperless/) | `valkey/valkey:9-alpine` | Valkey (open-source Redis fork v9) broker powering Paperless-ngx background task and document processing queues. |
@@ -589,6 +589,7 @@ Security and credential lifecycle management follow strict enterprise zero-trust
 │   ├── hardware/                         # Node Exporter · OpenWrt · APC UPS · OpenZFS
 │   └── saas/                             # qui / qBittorrent overview
 │
+├── .gitignore                            # Prevents accidental .env secret commits
 ├── CODE_OF_CONDUCT.md
 ├── CONTRIBUTING.md
 ├── LICENSE                               # MIT License — Vajda Ervin-Oliver

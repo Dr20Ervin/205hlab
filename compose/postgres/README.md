@@ -10,7 +10,8 @@
 > - **Adminer DB Client:** `https://adminer.internal.205hlab.com`  
 > - **Databasus Management:** `https://databasus.internal.205hlab.com`  
 > **Database Hostname (Internal Network):** `postgres:5432` / `205hlab-pgdb`  
-> **Category:** Core Data Infrastructure
+> **Category:** Core Data Infrastructure  
+> **Architecture Decision Record:** See [**ADR-001: Centralize Relational Application Data on a Hardened PostgreSQL 18 Instance**](../../docs/adr/ADR-001-centralized-postgresql-18.md) for the engineering trade-offs behind this stack.
 
 This stack provides high-performance, centralized relational persistence for the entire `205hlab` production homelab. Initialized with **hardware-level data checksums** (`--data-checksums`) to detect silent bit rot, it hosts isolated, per-application schemas and roles across all household, identity, and media automation stacks. Administrative interfaces (**Adminer** and **Databasus**) are restricted to internal LAN routing (`*.internal.205hlab.com`) and fortified with Authentik ForwardAuth.
 

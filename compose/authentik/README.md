@@ -6,7 +6,8 @@
 [![Database](https://img.shields.io/badge/Database-PostgreSQL%2018-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org)
 
 > **Identity & Access Management (IAM) Hub** for the `205hlab` production homelab.  
-> Authentik acts as the centralized single sign-on (SSO), OAuth2/OIDC identity provider (IdP), and Traefik ForwardAuth security perimeter for **all 31 homelab services**.
+> Authentik acts as the centralized single sign-on (SSO), OAuth2/OIDC identity provider (IdP), and Traefik ForwardAuth security perimeter for **all 31 homelab services**.  
+> **Architecture Decision Record:** See [**ADR-002: Enforce Unified Zero-Trust IAM with Authentik (Native OIDC & Traefik ForwardAuth)**](../../docs/adr/ADR-002-authentik-unified-iam.md) for the security rationale behind this stack.
 
 ---
 

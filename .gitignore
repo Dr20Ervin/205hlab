@@ -1,0 +1,25 @@
+# =============================================================================
+# 205hlab — Repository Git Ignore Rules (ADR-004 Zero-Plaintext Policy)
+# =============================================================================
+
+# Never commit production or local test environment secrets
+.env
+.env.*
+*.env
+
+# Explicitly allow version-controlled dummy environment templates
+!example.env
+!**/example.env
+
+# Local runtime data, logs, and temporary SQL dumps
+*.log
+*.sql.gz
+*.dump
+*.bak
+
+# OS & Editor metadata
+.DS_Store
+Thumbs.db
+Desktop.ini
+.vscode/
+.idea/

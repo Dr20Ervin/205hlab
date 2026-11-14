@@ -8,7 +8,8 @@
 > **Ingress URL:** `https://technitium.internal.205hlab.com` *(Internal LAN only)*  
 > **Direct Admin Ports:** `${MNGT_IP}:5380` (HTTP) / `${MNGT_IP}:53443` (HTTPS)  
 > **DNS Service Ports:** `53:53/udp`, `53:53/tcp`  
-> **Category:** Core Network Infrastructure
+> **Category:** Core Network Infrastructure  
+> **Architecture Decision Record:** See [**ADR-003: Deploy Split-Horizon Technitium DNS with RFC Catalog Zone HA Replication**](../../docs/adr/ADR-003-split-horizon-technitium-dns.md) for the split-horizon and HA replication rationale.
 
 Technitium DNS Server is the primary internal nameserver for the `205hlab` infrastructure. It provides split-horizon DNS resolution, ad and malware domain blocking, DNSSEC signing on internal records, recursive upstream forwarding with DNS-over-HTTPS fallback, and automated catalog-driven zone replication to an auxiliary Technitium DNS instance running on the secondary Home Assistant OS (HAOS) appliance.
 

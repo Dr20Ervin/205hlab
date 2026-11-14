@@ -6,6 +6,7 @@
 [![Network Isolation](https://img.shields.io/badge/Network-Microsegmented-2ea44f?style=for-the-badge&logo=wireguard&logoColor=white)](#-network-topology--microsegmentation)
 [![Resource Limits](https://img.shields.io/badge/Limits-Strict%20CPU%20%26%20RAM-9b51e0?style=for-the-badge)](#-production-engineering-standards)
 [![Central Database](https://img.shields.io/badge/Data%20Tier-PostgreSQL%2018%20%26%20TimescaleDB-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)](postgres/)
+[![ADRs](https://img.shields.io/badge/Architecture-ADRs%20001--005-blue?style=for-the-badge)](../docs/adr/README.md)
 
 This directory houses the **20 production Docker Compose stacks** powering the `205hlab` bare-metal infrastructure. Every stack is engineered as an autonomous, self-contained unit adhering to uniform DevOps standards: strict cgroup resource constraints, standardized healthchecks, isolated bridge networks, centralized persistence, and zero-trust edge authentication.
 
@@ -15,7 +16,7 @@ This directory houses the **20 production Docker Compose stacks** powering the `
 
 | Stack | Category | Primary Ingress URL | Auth Model | Data & Persistence | Dedicated Runbook |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **[`authentik`](authentik/)** | IAM & Security | `https://authentik.205hlab.com` | **IdP Core** | PostgreSQL 18, Valkey 9 Cache | [Runbook](authentik/README.md) |
+| **[`authentik`](authentik/)** | IAM & Security | `https://authentik.205hlab.com` | **IdP Core** | PostgreSQL 18 (DB & Worker Queue) | [Runbook](authentik/README.md) |
 | **[`traefik`](traefik/)** | Edge Routing & TLS | `https://*.205hlab.com` | **Edge Middleware** | Let's Encrypt DNS-01 (`acme.json`) | [Runbook](traefik/README.md) |
 | **[`technitium`](technitium/)** | DNS & Ad-Blocking | `https://technitium.internal.205hlab.com` | Method 1 (Native OIDC) | Authoritative Zones, Catalog Sync | [Runbook](technitium/README.md) |
 | **[`postgres`](postgres/)** | Relational Data Tier | `https://adminer.internal.205hlab.com` | Method 2 (ForwardAuth) | PostgreSQL 18 (`--data-checksums`), Databasus Backups | [Runbook](postgres/README.md) |
@@ -174,7 +175,7 @@ All 20 compose stacks enforce standardized operational rules:
 
 ### 1. Primary Lifecycle: Automated CI/CD (GitHub Actions + Dockhand GitOps)
 
-In production on the Ubuntu Server, manual SSH commands are minimized in favor of a two-stage CI/CD pipeline:
+In production on the Ubuntu Server, manual SSH commands are minimized in favor of a two-stage CI/CD pipeline (architectural rationale documented in [**ADR-004**](../docs/adr/ADR-004-dockhand-gitops-continuous-deployment.md)):
 
 ```
 [ Developer / Admin Workstation ]
