@@ -498,7 +498,7 @@ Security is **engineered into every layer** — not bolted on after the fact.
 │   ├── images/                           # Wallpapers, banners & branding assets
 │   └── README.md                         # Direct link & CDN usage guide
 │
-├── compose/                              # Production Docker Compose stacks
+├── [compose/](compose/)                  # 20 Production Docker Compose stacks (see compose/README.md)
 │   ├── authentik/                        # Authentik SSO server + worker
 │   │   ├── compose.yaml
 │   │   ├── db-init.sql                   # PostgreSQL schema init
