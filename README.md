@@ -285,13 +285,13 @@ A key design decision in this homelab is the **split between internal-only and e
 | `freshrss.205hlab.com` | FreshRSS reader | OIDC (native) | [`freshrss`](compose/freshrss/) |
 | `grafana.205hlab.com` | Grafana dashboards | OIDC (native) | [`grafana`](compose/grafana/) |
 | `it-tools.205hlab.com` | IT-Tools developer utilities | ForwardAuth | [`web-tools`](compose/web-tools/) |
-| `jellyfin.205hlab.com` | Jellyfin media server | Traefik route TLS | [`jelly`](compose/jelly/) |
+| `jellyfin.205hlab.com` | Jellyfin media server | OIDC (SSO Plugin) | [`jelly`](compose/jelly/) |
 | `kavita.205hlab.com` | Kavita digital library & reader | OIDC (native) | [`kavita`](compose/kavita/) |
 | `lidarr.205hlab.com` | Lidarr music | ForwardAuth | [`servarr`](compose/servarr/) |
 | `mealie.205hlab.com` | Mealie recipes | OIDC (native) | [`mealie`](compose/mealie/) |
 | `metube.205hlab.com` | MeTube downloader | ForwardAuth | [`downloaderr`](compose/downloaderr/) |
 | `omni.205hlab.com` | Omni-Tools Swiss Army utilities | ForwardAuth | [`web-tools`](compose/web-tools/) |
-| `paperless.205hlab.com` | Paperless-ngx docs | ForwardAuth | [`paperless`](compose/paperless/) |
+| `paperless.205hlab.com` | Paperless-ngx docs | OIDC (native) | [`paperless`](compose/paperless/) |
 | `pdf.205hlab.com` | BentoPDF client-side WASM toolkit | ForwardAuth | [`web-tools`](compose/web-tools/) |
 | `profilarr.205hlab.com` | Profilarr profiles | OIDC (native) | [`servarr`](compose/servarr/) |
 | `prowlarr.205hlab.com` | Prowlarr indexers | ForwardAuth | [`servarr`](compose/servarr/) |
@@ -400,7 +400,7 @@ The homelab runs **two Technitium DNS servers** providing redundancy and split-h
 
 | Stack | Image | URL | Auth |
 | :--- | :--- | :--- | :--- |
-| [`paperless`](compose/paperless/) | `paperless-ngx` + `gotenberg:8.37` + `tika:3.3.1.0` | `paperless.205hlab.com` | ForwardAuth |
+| [`paperless`](compose/paperless/) | `paperless-ngx` + `gotenberg:8.37` + `tika:3.3.1.0` | `paperless.205hlab.com` | OIDC native |
 | [`mealie`](compose/mealie/) | `mealie-recipes/mealie:latest` | `mealie.205hlab.com` | OIDC native |
 | [`freshrss`](compose/freshrss/) | `freshrss/freshrss:1.30.4` | `freshrss.205hlab.com` | OIDC native |
 | [`reactive-resume`](compose/reactive-resume/) | `amruthpillai/reactive-resume:latest` + `valkey:9-alpine` | `resume.205hlab.com` | OIDC native |
@@ -413,6 +413,8 @@ The homelab runs **two Technitium DNS servers** providing redundancy and split-h
 
 > **Paperless-ngx** runs a full document processing pipeline: Apache Tika extracts text from Office/PDF files, Gotenberg handles PDF rendering with sandboxed Chromium, and Valkey queues all background OCR and classification tasks.
 
+> **FreshRSS** serves a dual role: personal news aggregator and the homelab's **Infrastructure Release Sentinel**. It tracks upstream GitHub release feeds across all 20+ container stacks via a version-controlled **Dynamic OPML** architecture ([`compose/freshrss/rss-feeds/`](compose/freshrss/rss-feeds/)), providing an early-warning radar for security patches, feature changes, and breaking configurations before triggering container updates in **Dockhand** or running manual infrastructure migrations.
+
 > **SearXNG** is a privacy-respecting metasearch engine. Outbound scraping exits through a dedicated **Gluetun WireGuard VPN** tunnel (`network_mode: service:gluetun-search`, AirVPN provider) to eliminate residential IP rate-limits and CAPTCHAs, with query caching and engine rate limits backed by a local **Valkey 9** instance over loopback.
 
 > **Web Tools** hosts purely client-side, zero-state engineering and document utilities (**IT-Tools**, **Omni-Tools**, **Draw.io**, and **BentoPDF**). All processing (regex parsing, token decoding, diagramming, and PDF manipulation) executes locally in the browser via JavaScript/WebAssembly with `read_only: true` root filesystems, `no-new-privileges:true`, and Authentik ForwardAuth protection to prevent query/context leakage to public SaaS providers.
@@ -421,7 +423,7 @@ The homelab runs **two Technitium DNS servers** providing redundancy and split-h
 
 | Stack | Image | URL | Auth |
 | :--- | :--- | :--- | :--- |
-| [`jelly`](compose/jelly/) | `linuxserver/jellyfin:latest` | `jellyfin.205hlab.com` | Traefik TLS |
+| [`jelly`](compose/jelly/) | `linuxserver/jellyfin:latest` | `jellyfin.205hlab.com` | OIDC (SSO Plugin) |
 | [`jelly`](compose/jelly/) | `seerr-team/seerr:latest` | `seer.205hlab.com` | ForwardAuth |
 | [`kavita`](compose/kavita/) | `linuxserver/kavita:latest` | `kavita.205hlab.com` | OIDC native |
 | [`servarr`](compose/servarr/) | `linuxserver/sonarr:latest` | `sonarr.205hlab.com` | ForwardAuth |
