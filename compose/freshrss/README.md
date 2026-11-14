@@ -77,6 +77,106 @@ environment:
 
 ---
 
+## 📡 Upstream Release Sentinel & OPML Feed Architecture
+
+In `205hlab`, FreshRSS serves a dual purpose: beyond aggregating personal articles and technical blogs, it functions as an **Infrastructure Release Sentinel**. It continuously monitors upstream GitHub releases across all containers deployed in the homelab, acting as the primary early-warning system for application updates, security advisories, and breaking changes.
+
+```mermaid
+flowchart TD
+    subgraph Upstream["Upstream Repositories"]
+        GH[GitHub Releases & Tags]
+        ATOM["releases.atom Feeds"]
+        GH --> ATOM
+    end
+
+    subgraph Sentinel["FreshRSS (Release Sentinel)"]
+        DYN["dynamic-subscriptions.opml\n(Git-Synced Dynamic OPML)"]
+        AUTO["github-automatic-releases.opml\n(SaaS, Exporters, Media)"]
+        MAN["github-manual-releases.opml\n(PostgreSQL, Authentik, Traefik)"]
+        CRON["Cron Poller (CRON_MIN=1,31)"]
+        
+        DYN --> AUTO
+        DYN --> MAN
+        CRON -->|Polls every 30m| ATOM
+    end
+
+    subgraph Operations["Administrator Triage"]
+        ALERT{New Release Alert}
+        REVIEW[Review Changelog & CVEs]
+        SENTINEL_VIEW["FreshRSS Dashboard\n& Mobile Push (NetNewsWire)"]
+    end
+
+    subgraph Execution["Deployment Execution"]
+        DOCKHAND["Dockhand Dashboard\n(Auto-detected image update)\n→ Admin clicks Trigger to Update"]
+        MANUAL_RUN["Manual Compose Deployment\n(DB Snapshots, Schema Migration,\nRunbook verification)"]
+    end
+
+    ATOM --> SENTINEL_VIEW
+    SENTINEL_VIEW --> ALERT
+    ALERT --> REVIEW
+
+    REVIEW -->|Standard Apps| DOCKHAND
+    REVIEW -->|Critical Core Infra| MANUAL_RUN
+```
+
+### 1. Feed Structure (`compose/freshrss/rss-feeds/`)
+
+All release feeds are version-controlled in the repository under `compose/freshrss/rss-feeds/`:
+
+| File | Purpose | Management Tier | Target Workloads |
+| :--- | :--- | :--- | :--- |
+| **`dynamic-subscriptions.opml`** | Master Dynamic OPML index | Git-Driven Dynamic Feed | Root feed referencing the automated and manual OPML files via `frss:opmlUrl`. |
+| **`github-automatic-releases.opml`** | Routine & standard service updates | Dockhand / Automated Notification | Media automation (Radarr, Sonarr, Bazarr, Jellyfin), utilities (BentoPDF, Draw.io, IT-Tools, Mealie, Paperless-ngx), Prometheus exporters. |
+| **`github-manual-releases.opml`** | Mission-critical infrastructure | Manual Runbook & Verification | Database engines (PostgreSQL 18, TimescaleDB, Redis, Valkey), IAM (Authentik), Ingress (Traefik v3), DNS (Technitium), Core Monitoring (Prometheus, Grafana), VPN (Gluetun). |
+
+> [!TIP]
+> **CDN Brand Icons:** Each feed outline in the OPML files references its official brand SVG icon located in `assets/icons/` via the jsDelivr CDN (`https://cdn.jsdelivr.net/gh/Dr20Ervin/205hlab@main/assets/icons/<app>.svg`). This gives instant visual recognition in both the FreshRSS web interface and native mobile clients (e.g., NetNewsWire, Reeder).
+
+### 2. Dynamic OPML Synchronization
+
+FreshRSS features native support for **Dynamic OPML** outlines (`xmlns:frss="https://freshrss.org/opml"`). Rather than manually adding or editing feeds inside the FreshRSS web interface:
+
+1. The root `dynamic-subscriptions.opml` links to the raw GitHub URLs of `github-automatic-releases.opml` and `github-manual-releases.opml`.
+2. Whenever a new container or tool is added to `205hlab`, its `.atom` release feed is committed to the relevant OPML file in git.
+3. FreshRSS automatically pulls the updated OPML outlines from GitHub on its scheduled refresh interval, seamlessly importing new feeds without administrative overhead.
+
+### 3. Update Lifecycle: Dockhand vs. Manual Intervention
+
+When FreshRSS detects a new upstream release, the update is handled according to its risk tier:
+
+1. **Automated Detection & Dockhand-Assisted Updates (`github-automatic-releases.opml`):**
+   - Upstream image updates are automatically detected by **Dockhand** (or container monitoring).
+   - FreshRSS alerts the administrator with the full markdown changelog.
+   - The administrator inspects the changelog to confirm no environment variable syntax or volume layout has changed.
+   - The administrator logs into **Dockhand** and clicks the manual trigger button to pull the new image and redeploy the container with zero CLI friction.
+
+2. **Critical Core Infrastructure Updates (`github-manual-releases.opml`):**
+   - Core infrastructure components (PostgreSQL, Authentik, Traefik, Technitium DNS) can cause cascading homelab outages if upgraded blindly.
+   - The administrator reads the release notes in FreshRSS, checking for database schema migrations, deprecated configuration directives, or authentication flow changes.
+   - The administrator creates a manual database snapshot / backup.
+   - The upgrade is executed manually via the terminal:
+     ```bash
+     cd compose/<service>
+     docker compose pull
+     docker compose up -d
+     docker compose logs -f
+     ```
+
+### 4. How to Import the Dynamic Feeds
+
+To link your FreshRSS instance to the repository release feeds:
+
+1. Log into FreshRSS at `https://freshrss.205hlab.com`.
+2. Go to **Subscription Management** (cog icon > *Subscription Management*).
+3. Select **Import / Export** > **Import**.
+4. In the **Dynamic OPML URL** field, enter:
+   ```text
+   https://raw.githubusercontent.com/Dr20Ervin/205hlab/main/compose/freshrss/rss-feeds/dynamic-subscriptions.opml
+   ```
+5. Click **Import**. FreshRSS will automatically create two synchronized folders: `205hlab - Updates` and `205hlab - Manual Updates`.
+
+---
+
 ## ⚙️ Environment Configuration
 
 | Variable | Description | Default / Example |
