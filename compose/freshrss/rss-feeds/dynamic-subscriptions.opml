@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<opml xmlns:frss="https://freshrss.org/opml" version="2.0">
+  <head>
+    <title>205hlab Dynamic Subscriptions</title>
+  </head>
+  <body>
+    <outline text="205hlab - Updates" frss:opmlUrl="https://raw.githubusercontent.com/Dr20Ervin/205hlab/main/compose/freshrss/rss-feeds/github-automatic-releases.opml" />
+    <outline text="205hlab - Manual Updates" frss:opmlUrl="https://raw.githubusercontent.com/Dr20Ervin/205hlab/main/compose/freshrss/rss-feeds/github-manual-releases.opml" />
+  </body>
+</opml>
