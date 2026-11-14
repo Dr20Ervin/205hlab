@@ -380,13 +380,13 @@ The homelab runs **two Technitium DNS servers** providing redundancy and split-h
 | [`grafana`](compose/grafana/) | `grafana/grafana:13.0.1` | `grafana.205hlab.com` | Visualization platform. Authentik OAuth2/OIDC login with entitlement-based RBAC (`Grafana Admins`, `Grafana Editors`, `Viewer`). |
 | [`prom-exporters`](compose/prom-exporters/) | node-exporter · cadvisor · postgres-exporter · technitium-exporter · zfs-exporter · smartctl-exporter | internal | Host hardware telemetry, container cgroup metrics, PostgreSQL stats, DNS query rates, OpenWrt router stats, APC UPS metrics, ZFS pool states, and physical drive S.M.A.R.T. health. |
 
-**Pre-provisioned Grafana dashboards** in [`grafana-dashboards/`](grafana-dashboards/):
+**Version-controlled Grafana dashboards** in [`grafana-dashboards/`](grafana-dashboards/) (organized in folders `205hlab - Core`, `205hlab - Hardware`, and `205hlab - SaaS`):
 
-| Folder | Dashboards |
+| Grafana Folder | Dashboards |
 | :--- | :--- |
-| [`core/`](grafana-dashboards/core/) | Authentik · cAdvisor (Containers) · PostgreSQL · Technitium DNS · Traefik · Speedtest Tracker |
-| [`hardware/`](grafana-dashboards/hardware/) | Node Exporter (Full Host) · APC UPS · OpenWrt Router · OpenZFS / Storage |
-| [`saas/`](grafana-dashboards/saas/) | qui / qBittorrent torrent metrics |
+| `📁 205hlab - Core` | `authentik` · `PostgreSQL Database` · `Speedtest Tracker` · `Technitium DNS Exporter` · `Traefik Standalone Dashboard` · `y0nei's cAdvisor dashboard` |
+| `📁 205hlab - Hardware` | `APC UPS Dashboard` · `Node Exporter Full` · `OpenWRT` · `ZFS / Overview` |
+| `📁 205hlab - SaaS` | `Qui overview` |
 
 ### 🌐 Network Performance & Diagnostics
 
@@ -529,7 +529,7 @@ Security is **engineered into every layer** — not bolted on after the fact.
 │   ├── traefik/                          # Traefik v3 ingress proxy
 │   └── web-tools/                        # IT-Tools · Omni-Tools · Draw.io · BentoPDF
 │
-├── grafana-dashboards/                   # Version-controlled Grafana JSON dashboards
+├── [grafana-dashboards/](grafana-dashboards/)       # 11 Declarative Grafana dashboards (see grafana-dashboards/README.md)
 │   ├── core/                             # Authentik · cAdvisor · PostgreSQL · Technitium
 │   ├── hardware/                         # Node Exporter · OpenWrt · APC UPS · OpenZFS
 │   └── saas/                             # qui / qBittorrent overview

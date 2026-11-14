@@ -33,7 +33,7 @@ Grafana is the operational dashboard and visualization platform for the `205hlab
   - `monitoring_network` (external bridge): Direct communication with the Prometheus TSDB and internal exporters.
 - **Resource Constraints:** Governed with `limits: cpus: '1.0'`, `memory: 2G`.
 - **Storage:** Named volume `grafana_data` mapped to `/var/lib/grafana` for SQLite configuration state, users, and installed plugins.
-- **Provisioned Dashboards:** Version-controlled JSON dashboards are located in the repository root at [`grafana-dashboards/`](../../grafana-dashboards/).
+- **Dashboard Backups & Version Control:** Version-controlled JSON dashboard exports organized by folder (`205hlab - Core`, `205hlab - Hardware`, `205hlab - SaaS`) are maintained in the repository root at [`grafana-dashboards/`](../../grafana-dashboards/).
 
 ---
 
