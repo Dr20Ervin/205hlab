@@ -52,12 +52,6 @@ scrape_configs:
     static_configs:
       - targets: ['postgres-exporter:9187']
 
-  - job_name: 'scrutiny'
-    scrape_interval: 60s
-    scrape_timeout: 10s
-    static_configs:
-      - targets: ['scrutiny-exporter:9900']
-
   - job_name: 'authentik'
     metrics_path: '/metrics'
     scrape_interval: 30s

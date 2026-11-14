@@ -195,7 +195,6 @@ flowchart TD
             Databasus["Databasus\ndatabasus.internal.205hlab.com"]
             Dockhand["Dockhand\ndockhand.internal.205hlab.com"]
             Prom["Prometheus v3\nprometheus.internal.205hlab.com"]
-            Scrutiny["Scrutiny SMART\nscrutiny.internal.205hlab.com"]
             CDet["ChangeDetection.io\nchangedetection.internal.205hlab.com"]
             TechUI["Technitium UI\ntechnitium.internal.205hlab.com"]
             OpenSpeed["OpenSpeedTest\nopenspeed.internal.205hlab.com"]
@@ -271,7 +270,6 @@ A key design decision in this homelab is the **split between internal-only and e
 | `myip.internal.205hlab.com` | IP & DNS leak diagnostics (ForwardAuth) | [`network-mon`](compose/network-mon/) |
 | `openspeed.internal.205hlab.com` | HTML5 LAN speed test server | [`network-mon`](compose/network-mon/) |
 | `prometheus.internal.205hlab.com` | Prometheus TSDB | [`prometheus`](compose/prometheus/) |
-| `scrutiny.internal.205hlab.com` | S.M.A.R.T. disk health | [`scrutiny`](compose/scrutiny/) |
 | `technitium.internal.205hlab.com` | Technitium DNS admin UI | [`technitium`](compose/technitium/) |
 
 #### 🌐 External Services (`*.205hlab.com`) — All Protected by Authentik
@@ -380,15 +378,14 @@ The homelab runs **two Technitium DNS servers** providing redundancy and split-h
 | :--- | :--- | :--- | :--- |
 | [`prometheus`](compose/prometheus/) | `prom/prometheus:v3.11.3` | `prometheus.internal.205hlab.com` | Central time-series monitoring engine. 30-day retention, 50 GB storage cap. Internal-only access. |
 | [`grafana`](compose/grafana/) | `grafana/grafana:13.0.1` | `grafana.205hlab.com` | Visualization platform. Authentik OAuth2/OIDC login with entitlement-based RBAC (`Grafana Admins`, `Grafana Editors`, `Viewer`). |
-| [`prom-exporters`](compose/prom-exporters/) | node-exporter · cadvisor · postgres-exporter · technitium-exporter | internal | Host hardware telemetry, container cgroup metrics, PostgreSQL stats, DNS query rates, OpenWrt router stats, and APC UPS metrics. |
-| [`scrutiny`](compose/scrutiny/) | `analogj/scrutiny:master-omnibus` | `scrutiny.internal.205hlab.com` | Real-time S.M.A.R.T. disk health monitoring across all 4 physical drives (`/dev/sda`–`/dev/sdd`). Paired with Prometheus exporter. Internal-only. |
+| [`prom-exporters`](compose/prom-exporters/) | node-exporter · cadvisor · postgres-exporter · technitium-exporter · zfs-exporter · smartctl-exporter | internal | Host hardware telemetry, container cgroup metrics, PostgreSQL stats, DNS query rates, OpenWrt router stats, APC UPS metrics, ZFS pool states, and physical drive S.M.A.R.T. health. |
 
 **Pre-provisioned Grafana dashboards** in [`grafana-dashboards/`](grafana-dashboards/):
 
 | Folder | Dashboards |
 | :--- | :--- |
 | [`core/`](grafana-dashboards/core/) | Authentik · cAdvisor (Containers) · PostgreSQL · Technitium DNS |
-| [`hardware/`](grafana-dashboards/hardware/) | Node Exporter (Full Host) · APC UPS · OpenWrt Router · Scrutiny S.M.A.R.T. |
+| [`hardware/`](grafana-dashboards/hardware/) | Node Exporter (Full Host) · APC UPS · OpenWrt Router · OpenZFS / Storage |
 | [`saas/`](grafana-dashboards/saas/) | qui / qBittorrent torrent metrics |
 
 ### 🌐 Network Performance & Diagnostics
@@ -519,10 +516,9 @@ Security is **engineered into every layer** — not bolted on after the fact.
 │   │   └── setup_secrets.sh
 │   ├── paperless/                        # Paperless-ngx + Gotenberg + Tika + Valkey
 │   ├── postgres/                         # PostgreSQL 18 + Adminer
-│   ├── prom-exporters/                   # Node, cAdvisor, PG, Technitium exporters
+│   ├── prom-exporters/                   # Node, cAdvisor, PG, Technitium, ZFS, Smartctl exporters
 │   ├── prometheus/                       # Prometheus TSDB monitoring engine
 │   ├── reactive-resume/                  # Reactive Resume v6 + Valkey
-│   ├── scrutiny/                         # S.M.A.R.T. disk health + Prometheus exporter
 │   ├── searxng/                          # SearXNG + Gluetun VPN + Valkey
 │   ├── servarr/                          # Sonarr · Radarr · Lidarr · Chaptarr
 │   │                                     # Bazarr · Prowlarr · FlareSolverr · Profilarr
@@ -533,7 +529,7 @@ Security is **engineered into every layer** — not bolted on after the fact.
 │
 ├── grafana-dashboards/                   # Version-controlled Grafana JSON dashboards
 │   ├── core/                             # Authentik · cAdvisor · PostgreSQL · Technitium
-│   ├── hardware/                         # Node Exporter · OpenWrt · APC UPS · Scrutiny
+│   ├── hardware/                         # Node Exporter · OpenWrt · APC UPS · OpenZFS
 │   └── saas/                             # qui / qBittorrent overview
 │
 ├── CODE_OF_CONDUCT.md
@@ -597,20 +593,19 @@ docker compose up -d
 5.  prometheus       → Metrics storage
 6.  prom-exporters   → Metric scrapers
 7.  grafana          → Dashboards (needs prometheus + authentik)
-8.  scrutiny         → Disk SMART monitoring
-9.  paperless        → Document archive
-10. mealie           → Recipe manager
-11. freshrss         → RSS reader
-12. reactive-resume  → Resume builder (needs postgres + valkey + authentik)
-13. changedetection  → Change monitoring
-14. searxng          → Privacy metasearch (Gluetun VPN + Valkey)
-15. jelly            → Jellyfin + Seerr
-16. kavita           → Kavita digital library & reader (eBooks, comics, manga)
-17. servarr          → Automation suite (Sonarr, Radarr, Lidarr, Chaptarr, etc.)
-18. downloaderr      → Gluetun VPN + qBittorrent + qui
-19. tracearr         → Media analytics (needs TimescaleDB)
-20. network-mon      → Network performance auditing & diagnostics (needs postgres + authentik)
-21. web-tools        → Client-side utilities (IT-Tools, Omni-Tools, Draw.io, BentoPDF)
+8.  paperless        → Document archive
+9.  mealie           → Recipe manager
+10. freshrss         → RSS reader
+11. reactive-resume  → Resume builder (needs postgres + valkey + authentik)
+12. changedetection  → Change monitoring
+13. searxng          → Privacy metasearch (Gluetun VPN + Valkey)
+14. jelly            → Jellyfin + Seerr
+15. kavita           → Kavita digital library & reader (eBooks, comics, manga)
+16. servarr          → Automation suite (Sonarr, Radarr, Lidarr, Chaptarr, etc.)
+17. downloaderr      → Gluetun VPN + qBittorrent + qui
+18. tracearr         → Media analytics (needs TimescaleDB)
+19. network-mon      → Network performance auditing & diagnostics (needs postgres + authentik)
+20. web-tools        → Client-side utilities (IT-Tools, Omni-Tools, Draw.io, BentoPDF)
 ```
 
 ---
