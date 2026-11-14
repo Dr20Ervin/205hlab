@@ -6,11 +6,13 @@ on:
     paths:
       - "compose/**"
       - ".github/workflows/validate-compose.yml"
+      - ".github/scripts/prepare-test-env.py"
   pull_request:
     branches: [ "main" ]
     paths:
       - "compose/**"
       - ".github/workflows/validate-compose.yml"
+      - ".github/scripts/prepare-test-env.py"
   workflow_dispatch:
 
 concurrency:
@@ -63,9 +65,12 @@ jobs:
 
               ENV_FLAG=""
               has_env="None"
+              ci_env="${dir}.env.ci"
+
               if [ -f "${dir}example.env" ]; then
-                ENV_FLAG="--env-file ${dir}example.env"
                 has_env="\`example.env\`"
+                python3 .github/scripts/prepare-test-env.py "${dir}example.env" "${ci_env}"
+                ENV_FLAG="--env-file ${ci_env}"
               fi
 
               # Validate compose syntax, schema formatting, and variable resolution
@@ -80,6 +85,9 @@ jobs:
                 # Emit exact error to build log for fast debugging
                 docker compose -f "$compose_file" $ENV_FLAG config
               fi
+
+              # Clean up temporary test environment
+              [ -f "$ci_env" ] && rm -f "$ci_env"
             fi
           done
 

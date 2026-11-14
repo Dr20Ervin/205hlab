@@ -519,8 +519,10 @@ Security and credential lifecycle management follow strict enterprise zero-trust
 ```text
 205hlab/
 ├── .github/
+│   ├── scripts/
+│   │   └── prepare-test-env.py           # CI helper: mocks empty template variables for linting
 │   ├── workflows/
-│   │   └── validate-compose.yml          # GitHub Actions CI: Automated Compose syntax & env linter
+│   │   └── validate-compose.yml          # GitHub Actions CI: Dynamic Compose syntax & env linter
 │   ├── ISSUE_TEMPLATE/
 │   │   ├── bug_report.md                 # Structured bug report template
 │   │   └── feature_request.md            # Feature request template
