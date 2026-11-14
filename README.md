@@ -18,7 +18,7 @@
 
 <br/>
 
-**[📖 Architecture](#-system-architecture) · [🌐 Routing & DNS](#-routing--dns-design) · [📦 Services](#-service-catalog) · [🔒 Security](#-security-posture) · [📁 Structure](#-repository-structure) · [🚀 Deployment](#-deployment--operations)**
+**[📖 Architecture](#-system-architecture) · [📜 ADRs](docs/adr/README.md) · [🌐 Routing & DNS](#-routing--dns-design) · [📦 Services](#-service-catalog) · [🔒 Security](#-security-posture) · [📁 Structure](#-repository-structure) · [🚀 Deployment](#-deployment--operations)**
 
 <br/>
 
@@ -70,15 +70,15 @@ Designing and operating high-integrity ZFS storage pools on **TrueNAS (Core & SC
 <summary><strong>🔐 Identity & Access Management (IAM)</strong></summary>
 <br/>
 
-Enterprise foundation built on **Windows Server Active Directory Domain Services (AD DS)** (GPO, DNS, DHCP, Kerberos, Group Policy) and Red Hat-ecosystem **FreeIPA** (LDAP directory, Kerberos KDC, integrated CA/PKI, host-based access control). Currently evolved into a cloud-native, zero-trust SSO architecture driven by **Authentik** — providing OIDC, OAuth2, ForwardAuth middleware integration, custom group/entitlement RBAC, and automated user lifecycle management for all homelab services.
+Multi-generation directory and identity progression: starting with **Windows Server Active Directory Domain Services (AD DS)** in a VM (GPO, DNS, DHCP, Kerberos), migrating to **OpenLDAP**, and adopting Red Hat-ecosystem **FreeIPA** primarily for centralized POSIX user/group permissions across **OpenZFS datasets and NFS shares** (intentionally omitted from single-node bare-metal production and ready to re-implement when scaling to a multi-node cluster). Web authentication evolved from selective SSO into a mandatory, zero-trust architecture driven by **Authentik** across all 31 services — providing OIDC, OAuth2, ForwardAuth middleware, and group/entitlement RBAC.
 
 </details>
 
 <details>
-<summary><strong>🌐 Reverse Proxy, TLS & Traffic Engineering</strong></summary>
+<summary><strong>🌐 Reverse Proxy, TLS, DNS & Traffic Engineering</strong></summary>
 <br/>
 
-Advanced ingress routing with **Traefik Proxy v3** — dynamic configuration via Docker and file providers, middleware chaining (ForwardAuth, headers, rate limiting), automated Let's Encrypt certificate lifecycle via **Cloudflare DNS-01 ACME challenges** (no port 80 exposure required), Prometheus metrics export, and robust health endpoint monitoring.
+Ingress evolved from early internal **Nginx Proxy Manager (NPM)** + **Cloudflare Tunnels (`cloudflared`)** setups into an enterprise-style edge powered by **Traefik Proxy v3** — dynamic Docker/file providers, middleware chaining (ForwardAuth, security headers, rate limiting), automated Let's Encrypt **Cloudflare DNS-01 ACME** TLS (no port 80 exposure), and Prometheus metrics export. On the DNS layer, progression across **Pi-hole** (with multi-node sync), **AdGuard Home** (with sync), and **ISC BIND9** culminated in dual-node **Technitium DNS** using native RFC Catalog Zone replication and DNSSEC.
 
 </details>
 
@@ -102,15 +102,15 @@ Custom-compiled **OpenWrt** flashed on a **Xiaomi Redmi Router AX6S** — handli
 <summary><strong>🏠 Smart Home & Automation Infrastructure</strong></summary>
 <br/>
 
-Home automation decoupled from the main compute host onto a dedicated, isolated appliance running **Home Assistant OS (HAOS)**. This design ensures that IoT integrations, Zigbee/Z-Wave mesh management, and local automations are resilient and do not share blast radius with server maintenance. The HAOS server also hosts the **auxiliary Technitium DNS instance** (see [DNS Design](#-routing--dns-design)), providing redundancy for internal name resolution across the network.
+After operating Home Assistant inside a main-server **Virtual Machine** for years, smart-home infrastructure was intentionally decoupled onto a dedicated, isolated bare-metal **ASUS X540SA** appliance running **Home Assistant OS (HAOS)**. This guarantees zero IoT/Zigbee blast radius during primary server maintenance and provides dedicated physical hardware for the **auxiliary Technitium DNS replica** (following earlier Pi-hole sync and AdGuard Home sync setups — see [DNS Design](#-routing--dns-design)).
 
 </details>
 
 <details>
-<summary><strong>🐳 Container Systems Engineering</strong></summary>
+<summary><strong>🐳 Container Systems & Observability Engineering</strong></summary>
 <br/>
 
-Declarative, multi-stack **Docker Compose** configurations governed by least-privilege security principles: non-root `PUID`/`PGID` user namespace mappings, `no-new-privileges:true` security options, read-only Docker socket mounts, deterministic CPU/RAM resource caps, isolated bridge networks per domain, and comprehensive Docker healthchecks on every service.
+Orchestration progressed through **plain terminal CLI**, **Portainer**, and **Dockge & Unraid** (alongside **Beszel**) before returning to bare-metal **Ubuntu Server LTS** with **Dockhand GitOps** for full Linux systems administration control, encrypted deploy-time secrets injection, non-root `PUID`/`PGID` hardening, `no-new-privileges:true`, deterministic CPU/RAM caps, and isolated bridge networks. Telemetry and monitoring experience spans **InfluxDB + Telegraf**, **Uptime Kuma**, **Grafana Loki**, and **Grafana Alloy** (evaluated and deliberately deferred until multi-node expansion), currently standardized on **Prometheus v3** and **Grafana 13**.
 
 </details>
 
@@ -253,6 +253,18 @@ flowchart TD
     Media --> TSB
     DNS -.->|Catalog replication| AuxDNS
 ```
+
+### 📜 Architecture Decision Records (ADRs)
+
+Major systems design choices, rejected alternatives, and operational trade-offs are formally documented as immutable records in [`docs/adr/`](docs/adr/README.md):
+
+| ADR | Decision | Focus |
+| :--- | :--- | :--- |
+| **[ADR-001](docs/adr/ADR-001-centralized-postgresql-18.md)** | Centralized PostgreSQL 18 (`--data-checksums`) | Memory efficiency, `db-init.sql` isolation, Databasus backups (Tracearr TimescaleDB exception) |
+| **[ADR-002](docs/adr/ADR-002-authentik-unified-iam.md)** | Authentik Unified Zero-Trust IAM | Two-tier OIDC + Traefik `authentik@docker` ForwardAuth across all 31 services |
+| **[ADR-003](docs/adr/ADR-003-split-horizon-technitium-dns.md)** | Split-Horizon Technitium DNS + Catalog HA | Internal zone isolation (`*.internal.205hlab.com`), DNSSEC, automatic AUX replication |
+| **[ADR-004](docs/adr/ADR-004-dockhand-gitops-continuous-deployment.md)** | Dockhand GitOps & Zero-Plaintext Secrets | Scheduled sync, encrypted deploy-time injection (no `.env` on disk), Hawser boundary |
+| **[ADR-005](docs/adr/ADR-005-decouple-smart-home-haos-appliance.md)** | Decoupled HAOS Appliance (ASUS X540SA) | Fault & power isolation for Zigbee, APC UPS telemetry, and auxiliary DNS |
 
 ---
 
@@ -563,6 +575,14 @@ Security and credential lifecycle management follow strict enterprise zero-trust
 │   ├── tracearr/                         # Tracearr + TimescaleDB + Redis
 │   ├── traefik/                          # Traefik v3 ingress proxy
 │   └── web-tools/                        # IT-Tools · Omni-Tools · Draw.io · BentoPDF
+│
+├── [docs/adr/](docs/adr/)                # Architecture Decision Records (ADR-001 .. ADR-005)
+│   ├── README.md                         # ADR index, lifecycle & template
+│   ├── ADR-001-centralized-postgresql-18.md
+│   ├── ADR-002-authentik-unified-iam.md
+│   ├── ADR-003-split-horizon-technitium-dns.md
+│   ├── ADR-004-dockhand-gitops-continuous-deployment.md
+│   └── ADR-005-decouple-smart-home-haos-appliance.md
 │
 ├── [grafana-dashboards/](grafana-dashboards/)       # 11 Declarative Grafana dashboards (see grafana-dashboards/README.md)
 │   ├── core/                             # Authentik · cAdvisor · PostgreSQL · Technitium
