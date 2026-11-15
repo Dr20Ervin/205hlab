@@ -1,0 +1,109 @@
+---
+services:
+  databasus:
+    image: databasus/databasus:v3.65.0
+    restart: unless-stopped
+    container_name: databasus
+    hostname: 205hlab-databasus
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+    environment:
+      - TZ=${TZ:-UTC}
+    networks:
+      - postgres_network
+      - traefik_network
+      - databasus_internal
+    volumes:
+      - databasus_data:/databasus-data
+      - ${DATABASUS_BACKUP:?DATABASUS_BACKUP Not defined}:/databasus-data/backups
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:4005/ || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=traefik_network
+      - traefik.http.services.databasus_web.loadBalancer.server.port=4005
+      - traefik.http.routers.databasus_http.service=databasus_web
+      - traefik.http.routers.databasus_http.rule=Host(`databasus.internal.${FQDN}`)
+      - traefik.http.routers.databasus_http.entrypoints=web
+      - traefik.http.routers.databasus_https.service=databasus_web
+      - traefik.http.routers.databasus_https.rule=Host(`databasus.internal.${FQDN}`)
+      - traefik.http.routers.databasus_https.entrypoints=websecure
+      - traefik.http.routers.databasus_https.tls=true
+      - traefik.http.routers.databasus_https.tls.certresolver=cloudflare
+      - traefik.http.routers.databasus_https.middlewares=authentik@docker
+
+  databasus-verifier:
+    image: docker.io/library/docker:27-cli
+    restart: unless-stopped
+    container_name: databasus-verifier
+    hostname: 205hlab-databasus-verifier
+    depends_on:
+      databasus:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+    environment:
+      - TZ=${TZ:-UTC}
+      - DATABASUS_AGENT_ID=${DATABASUS_AGENT_ID:?DATABASUS_AGENT_ID Not defined}
+      - DATABASUS_AGENT_TOKEN=${DATABASUS_AGENT_TOKEN:?DATABASUS_AGENT_TOKEN Not defined}
+      - DATABASUS_MAX_CPU=${DATABASUS_MAX_CPU:-2}
+      - DATABASUS_MAX_RAM_MB=${DATABASUS_MAX_RAM_MB:-2048}
+      - DATABASUS_MAX_DISK_GB=${DATABASUS_MAX_DISK_GB:-25}
+      - DATABASUS_MAX_CONCURRENT_JOBS=${DATABASUS_MAX_CONCURRENT_JOBS:-1}
+    working_dir: /data
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        until wget -q -O /tmp/verification-agent "http://databasus:4005/api/v1/system/verification-agent?arch=amd64"; do
+          echo "Waiting for Databasus API to serve verification-agent binary..."
+          sleep 5
+        done
+        chmod +x /tmp/verification-agent
+        exec /tmp/verification-agent run \
+          --databasus-host=http://databasus:4005 \
+          --allow-insecure-http \
+          --agent-id="$${DATABASUS_AGENT_ID}" \
+          --token="$${DATABASUS_AGENT_TOKEN}" \
+          --max-cpu="$${DATABASUS_MAX_CPU}" \
+          --max-ram-mb="$${DATABASUS_MAX_RAM_MB}" \
+          --max-disk-gb="$${DATABASUS_MAX_DISK_GB}" \
+          --max-concurrent-jobs="$${DATABASUS_MAX_CONCURRENT_JOBS}"
+    networks:
+      - databasus_internal
+      - postgres_network
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - databasus_verifier_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "ps | grep -q '[v]erification-agent run' || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+networks:
+  databasus_internal:
+    name: databasus_internal
+    driver: bridge
+  postgres_network:
+    external: true
+  traefik_network:
+    external: true
+
+volumes:
+  databasus_data:
+    name: databasus-data
+    driver: local
+  databasus_verifier_data:
+    name: databasus-verifier-data
+    driver: local

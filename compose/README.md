@@ -2,13 +2,14 @@
 
 [![Docker Compose](https://img.shields.io/badge/Docker%20Compose-v2.30+-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://docs.docker.com/compose/)
 [![CI: Validate Compose](https://github.com/Dr20Ervin/205hlab/actions/workflows/validate-compose.yml/badge.svg)](https://github.com/Dr20Ervin/205hlab/actions/workflows/validate-compose.yml)
-[![Stacks](https://img.shields.io/badge/Production%20Stacks-20%20Active-007ACC?style=for-the-badge)](https://github.com/Dr20Ervin/205hlab/tree/main/compose)
+[![Stacks](https://img.shields.io/badge/Production%20Stacks-21%20Active-007ACC?style=for-the-badge)](https://github.com/Dr20Ervin/205hlab/tree/main/compose)
 [![Network Isolation](https://img.shields.io/badge/Network-Microsegmented-2ea44f?style=for-the-badge&logo=wireguard&logoColor=white)](#-network-topology--microsegmentation)
 [![Resource Limits](https://img.shields.io/badge/Limits-Strict%20CPU%20%26%20RAM-9b51e0?style=for-the-badge)](#-production-engineering-standards)
 [![Central Database](https://img.shields.io/badge/Data%20Tier-PostgreSQL%2018%20%26%20TimescaleDB-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)](postgres/)
 [![ADRs](https://img.shields.io/badge/Architecture-ADRs%20001--005-blue?style=for-the-badge)](../docs/adr/README.md)
+[![Runbooks](https://img.shields.io/badge/Operations-5%20Runbooks-238636?style=for-the-badge)](../docs/runbooks/README.md)
 
-This directory houses the **20 production Docker Compose stacks** powering the `205hlab` bare-metal infrastructure. Every stack is engineered as an autonomous, self-contained unit adhering to uniform DevOps standards: strict cgroup resource constraints, standardized healthchecks, isolated bridge networks, centralized persistence, and zero-trust edge authentication.
+This directory houses the **21 production Docker Compose stacks** powering the `205hlab` bare-metal infrastructure. Every stack is engineered as an autonomous, self-contained unit adhering to uniform DevOps standards: strict cgroup resource constraints, standardized healthchecks, isolated bridge networks, centralized persistence, and zero-trust edge authentication.
 
 ---
 
@@ -19,7 +20,8 @@ This directory houses the **20 production Docker Compose stacks** powering the `
 | **[`authentik`](authentik/)** | IAM & Security | `https://authentik.205hlab.com` | **IdP Core** | PostgreSQL 18 (DB & Worker Queue) | [Runbook](authentik/README.md) |
 | **[`traefik`](traefik/)** | Edge Routing & TLS | `https://*.205hlab.com` | **Edge Middleware** | Let's Encrypt DNS-01 (`acme.json`) | [Runbook](traefik/README.md) |
 | **[`technitium`](technitium/)** | DNS & Ad-Blocking | `https://technitium.internal.205hlab.com` | Method 1 (Native OIDC) | Authoritative Zones, Catalog Sync | [Runbook](technitium/README.md) |
-| **[`postgres`](postgres/)** | Relational Data Tier | `https://adminer.internal.205hlab.com` | Method 2 (ForwardAuth) | PostgreSQL 18 (`--data-checksums`), Databasus Backups | [Runbook](postgres/README.md) |
+| **[`postgres`](postgres/)** | Relational Data Tier | `https://adminer.internal.205hlab.com` | Method 2 (ForwardAuth) | PostgreSQL 18 (`--data-checksums`), Adminer | [Runbook](postgres/README.md) |
+| **[`databasus`](databasus/)** | Backup & Verification | `https://databasus.internal.205hlab.com` | Method 2 (ForwardAuth) | Automated `pg_dump`, `databasus-verifier` Agent | [Runbook](databasus/README.md) |
 | **[`prometheus`](prometheus/)** | Metrics TSDB | `https://prometheus.internal.205hlab.com` | Internal LAN Only | 30d TSDB Retention (50 GB cap) | [Runbook](prometheus/README.md) |
 | **[`prom-exporters`](prom-exporters/)** | Telemetry Scrapers | *(Internal Scrape Targets)* | Internal Scrape Network | Host `/proc`, `/sys`, `/dev/zfs`, S.M.A.R.T. | [Runbook](prom-exporters/README.md) |
 | **[`grafana`](grafana/)** | Observability UI | `https://grafana.205hlab.com` | Method 1 (Native OIDC) | Provisioned Dashboards, SQLite | [Runbook](grafana/README.md) |
@@ -53,7 +55,9 @@ flowchart TD
     subgraph Layer1["Tier 1: Identity & Centralized State"]
         Authentik["authentik (2026.8.5)\nCentralized OIDC & ForwardAuth"]
         Postgres["postgres (18.3)\nCentralized DB with Checksums"]
+        Databasus["databasus (v3.65.0)\nBackups & databasus-verifier Agent"]
         Timescale["tracearr-timescaledb\nTimescaleDB HA Cluster"]
+        Postgres -.->|Daily Backups| Databasus
     end
 
     subgraph Layer2["Tier 2: Observability & Telemetry"]
@@ -145,7 +149,7 @@ Containers never share a single flat Docker bridge network. Instead, external br
 
 ## 🛡️ Production Engineering Standards
 
-All 20 compose stacks enforce standardized operational rules:
+All 21 compose stacks enforce standardized operational rules:
 
 1. **Strict Resource Constraints**:  
    Every container defines explicit cgroup limits preventing rogue processes or memory leaks from destabilizing the host:
@@ -258,6 +262,6 @@ docker compose down --remove-orphans
 
 #### D. Database & Data Backup Runbook
 
-- **PostgreSQL Databases:** Backed up automatically via **Databasus** (`databasus.internal.205hlab.com`), which schedules periodic `pg_dump` jobs directly into `${DATABASUS_BACKUP}`.
+- **PostgreSQL Databases & Automated Restore Verification:** Backed up automatically via **Databasus** (`databasus.internal.205hlab.com`) in [`compose/databasus/`](databasus/), which schedules daily `pg_dump` jobs into `${DATABASUS_BACKUP}` alongside an official containerized **`databasus-verifier`** agent (`./verification-agent run`) that validates restores into ephemeral containers after each backup (**RPO:** `24h` · **Target RTO:** `< 15m` single DB / `< 30m` full cluster). See [**`docs/runbooks/disaster-recovery.md`**](../docs/runbooks/disaster-recovery.md) for verification checks, single-DB rollbacks, and cold bare-metal recovery procedures.
 - **Critical State & Configs:** High-value documents and custom configurations are backed up to secondary LAN devices and offline media as part of the intermediate data protection posture.
 - **Storage Roadmap:** Future expansion will introduce an upgraded OpenZFS pool and a fully automated 3-2-1 backup pipeline (local SSD $\rightarrow$ mechanical ZFS pool $\rightarrow$ encrypted offsite cloud storage).

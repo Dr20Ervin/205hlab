@@ -66,38 +66,6 @@ services:
       - traefik.http.routers.adminer_https.tls.certresolver=cloudflare
       - traefik.http.routers.adminer_https.middlewares=authentik@docker
 
-  databasus:
-    image: databasus/databasus:v3.65.0
-    restart: unless-stopped
-    container_name: databasus
-    deploy:
-      resources:
-        limits:
-          cpus: '1'
-          memory: 1G
-    networks:
-      - postgres_network
-      - traefik_network
-    volumes:
-      - databasus_data:/databasus-data
-      - ${DATABASUS_BACKUP:?DATABASUS_BACKUP Not defined}:/databasus-data/backups
-    depends_on:
-      postgres:
-        condition: service_healthy
-    labels:
-      - traefik.enable=true
-      - traefik.docker.network=traefik_network
-      - traefik.http.services.databasus_web.loadBalancer.server.port=4005
-      - traefik.http.routers.databasus_http.service=databasus_web
-      - traefik.http.routers.databasus_http.rule=Host(`databasus.internal.${FQDN}`)
-      - traefik.http.routers.databasus_http.entrypoints=web
-      - traefik.http.routers.databasus_https.service=databasus_web
-      - traefik.http.routers.databasus_https.rule=Host(`databasus.internal.${FQDN}`)
-      - traefik.http.routers.databasus_https.entrypoints=websecure
-      - traefik.http.routers.databasus_https.tls=true
-      - traefik.http.routers.databasus_https.tls.certresolver=cloudflare
-      - traefik.http.routers.databasus_https.middlewares=authentik@docker
-
 networks:
   postgres_network:
     name: postgres_network
@@ -108,7 +76,4 @@ networks:
 volumes:
   postgres_data:
     name: postgres-data
-    driver: local
-  databasus_data:
-    name: databasus-data
     driver: local

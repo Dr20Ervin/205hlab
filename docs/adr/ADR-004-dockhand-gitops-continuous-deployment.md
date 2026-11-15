@@ -6,7 +6,7 @@
 | **Date** | `2026-10` |
 | **Deciders** | Vajda Ervin-Oliver |
 | **Domain** | CI/CD, GitOps & Secrets Management |
-| **Related Files** | [`.github/workflows/validate-compose.yml`](../../.github/workflows/validate-compose.yml), [`compose/README.md`](../../compose/README.md) |
+| **Related Files** | [`.github/workflows/validate-compose.yml`](../../.github/workflows/validate-compose.yml), [`compose/README.md`](../../compose/README.md), [`stack-upgrade-and-rollback.md`](../runbooks/stack-upgrade-and-rollback.md) |
 
 ---
 

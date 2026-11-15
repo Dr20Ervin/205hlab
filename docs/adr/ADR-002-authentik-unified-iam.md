@@ -6,7 +6,7 @@
 | **Date** | `2026-10` |
 | **Deciders** | Vajda Ervin-Oliver |
 | **Domain** | Security & Identity Access Management (IAM) |
-| **Related Stacks** | [`compose/authentik/`](../../compose/authentik/), [`compose/traefik/`](../../compose/traefik/) |
+| **Related Stacks** | [`compose/authentik/`](../../compose/authentik/), [`compose/traefik/`](../../compose/traefik/), [`iam-and-ingress-recovery.md`](../runbooks/iam-and-ingress-recovery.md) |
 
 ---
 

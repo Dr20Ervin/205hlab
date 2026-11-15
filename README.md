@@ -18,7 +18,7 @@
 
 <br/>
 
-**[📖 Architecture](#-system-architecture) · [📜 ADRs](docs/adr/README.md) · [🌐 Routing & DNS](#-routing--dns-design) · [📦 Services](#-service-catalog) · [🔒 Security](#-security-posture) · [📁 Structure](#-repository-structure) · [🚀 Deployment](#-deployment--operations)**
+**[📖 Architecture](#-system-architecture) · [📜 ADRs](docs/adr/README.md) · [🚨 Runbooks](docs/runbooks/README.md) · [🌐 Routing & DNS](#-routing--dns-design) · [📦 Services](#-service-catalog) · [🔒 Security](#-security-posture) · [📁 Structure](#-repository-structure) · [🚀 Deployment](#-deployment--operations)**
 
 <br/>
 
@@ -254,17 +254,17 @@ flowchart TD
     DNS -.->|Catalog replication| AuxDNS
 ```
 
-### 📜 Architecture Decision Records (ADRs)
+### 📜 Architecture Decision Records (ADRs) & Operational Runbooks
 
-Major systems design choices, rejected alternatives, and operational trade-offs are formally documented as immutable records in [`docs/adr/`](docs/adr/README.md):
+Major systems design choices, rejected alternatives, and operational trade-offs are formally documented as immutable records in [`docs/adr/`](docs/adr/README.md), paired 1-to-1 with executable Standard Operating Procedures (SOPs) in [`docs/runbooks/`](docs/runbooks/README.md):
 
-| ADR | Decision | Focus |
-| :--- | :--- | :--- |
-| **[ADR-001](docs/adr/ADR-001-centralized-postgresql-18.md)** | Centralized PostgreSQL 18 (`--data-checksums`) | Memory efficiency, `db-init.sql` isolation, Databasus backups (Tracearr TimescaleDB exception) |
-| **[ADR-002](docs/adr/ADR-002-authentik-unified-iam.md)** | Authentik Unified Zero-Trust IAM | Two-tier OIDC + Traefik `authentik@docker` ForwardAuth across all 31 services |
-| **[ADR-003](docs/adr/ADR-003-split-horizon-technitium-dns.md)** | Split-Horizon Technitium DNS + Catalog HA | Internal zone isolation (`*.internal.205hlab.com`), DNSSEC, automatic AUX replication |
-| **[ADR-004](docs/adr/ADR-004-dockhand-gitops-continuous-deployment.md)** | Dockhand GitOps & Zero-Plaintext Secrets | Scheduled sync, encrypted deploy-time injection (no `.env` on disk), Hawser boundary |
-| **[ADR-005](docs/adr/ADR-005-decouple-smart-home-haos-appliance.md)** | Decoupled HAOS Appliance (ASUS X540SA) | Fault & power isolation for Zigbee, APC UPS telemetry, and auxiliary DNS |
+| ADR | Decision | Focus | Operational Runbook |
+| :--- | :--- | :--- | :--- |
+| **[ADR-001](docs/adr/ADR-001-centralized-postgresql-18.md)** | Centralized PostgreSQL 18 (`--data-checksums`) | Memory efficiency, `db-init.sql` isolation, Databasus backups (Tracearr TimescaleDB exception) | [**`disaster-recovery.md`**](docs/runbooks/disaster-recovery.md) |
+| **[ADR-002](docs/adr/ADR-002-authentik-unified-iam.md)** | Authentik Unified Zero-Trust IAM | Two-tier OIDC + Traefik `authentik@docker` ForwardAuth across all 31 services | [**`iam-and-ingress-recovery.md`**](docs/runbooks/iam-and-ingress-recovery.md) |
+| **[ADR-003](docs/adr/ADR-003-split-horizon-technitium-dns.md)** | Split-Horizon Technitium DNS + Catalog HA | Internal zone isolation (`*.internal.205hlab.com`), DNSSEC, automatic AUX replication | [**`dns-failover-and-sync.md`**](docs/runbooks/dns-failover-and-sync.md) |
+| **[ADR-004](docs/adr/ADR-004-dockhand-gitops-continuous-deployment.md)** | Dockhand GitOps & Zero-Plaintext Secrets | Scheduled sync, encrypted deploy-time injection (no `.env` on disk), Hawser boundary | [**`stack-upgrade-and-rollback.md`**](docs/runbooks/stack-upgrade-and-rollback.md) |
+| **[ADR-005](docs/adr/ADR-005-decouple-smart-home-haos-appliance.md)** | Decoupled HAOS Appliance (ASUS X540SA) | Fault & power isolation for Zigbee, APC UPS telemetry, and auxiliary DNS | [**`power-outage-and-storage-health.md`**](docs/runbooks/power-outage-and-storage-health.md) |
 
 ---
 
@@ -289,7 +289,7 @@ A key design decision in this homelab is the **split between internal-only and e
 | :--- | :--- | :--- |
 | `adminer.internal.205hlab.com` | Database web UI | [`postgres`](compose/postgres/) |
 | `changedetection.internal.205hlab.com` | Change monitoring | [`changedetection`](compose/changedetection/) |
-| `databasus.internal.205hlab.com` | Database management interface | — |
+| `databasus.internal.205hlab.com` | Database backup & DR restore UI | [`databasus`](compose/databasus/) |
 | `dockhand.internal.205hlab.com` | Docker container management | — |
 | `myip.internal.205hlab.com` | IP & DNS leak diagnostics (ForwardAuth) | [`network-mon`](compose/network-mon/) |
 | `openspeed.internal.205hlab.com` | HTML5 LAN speed test server | [`network-mon`](compose/network-mon/) |
@@ -394,7 +394,7 @@ The homelab runs **two Technitium DNS servers** providing redundancy and split-h
 | Service | URL | Description |
 | :--- | :--- | :--- |
 | **Dockhand** | `dockhand.internal.205hlab.com` | Central Docker management & GitOps CI/CD engine running on the primary Ubuntu Server. Periodically synchronizes `205hlab` from GitHub to automate stack deployments. Also monitors the auxiliary ASUS X540SA node (Home Assistant OS) via a **Hawser agent (standard v0.2.52)** for remote container observation and troubleshooting. Authentik ForwardAuth protected. |
-| **Databasus** | `databasus.internal.205hlab.com` | Automated PostgreSQL database backup & management engine running in [`compose/postgres/`](compose/postgres/). Schedules periodic database snapshots with Authentik ForwardAuth protection. |
+| **Databasus** | `databasus.internal.205hlab.com` | Automated PostgreSQL backup coordinator and `databasus-verifier` restore verification agent running in [`compose/databasus/`](compose/databasus/). Schedules daily `pg_dump` snapshots, tests restores into ephemeral containers after backup (checking per-table row counts), and sits behind Authentik ForwardAuth; decoupled from `compose/postgres/` for outage resilience. |
 
 ### 📊 Observability, Telemetry & Health
 
@@ -545,13 +545,14 @@ Security and credential lifecycle management follow strict enterprise zero-trust
 │   ├── images/                           # Wallpapers, banners & branding assets
 │   └── README.md                         # Direct link & CDN usage guide
 │
-├── [compose/](compose/)                  # 20 Production Docker Compose stacks (see compose/README.md)
+├── [compose/](compose/)                  # 21 Production Docker Compose stacks (see compose/README.md)
 │   ├── authentik/                        # Authentik SSO server + worker
 │   │   ├── compose.yaml
 │   │   ├── db-init.sql                   # PostgreSQL schema init
 │   │   ├── example.env
 │   │   └── setup_secrets.sh
 │   ├── changedetection/                  # ChangeDetection.io + Playwright Chrome
+│   ├── databasus/                        # Databasus backup engine + databasus-verifier agent
 │   ├── downloaderr/                      # Gluetun WireGuard VPN + qBittorrent + qui
 │   ├── freshrss/                         # FreshRSS feed aggregator
 │   ├── grafana/                          # Grafana 13 (Authentik OIDC)
@@ -583,6 +584,14 @@ Security and credential lifecycle management follow strict enterprise zero-trust
 │   ├── ADR-003-split-horizon-technitium-dns.md
 │   ├── ADR-004-dockhand-gitops-continuous-deployment.md
 │   └── ADR-005-decouple-smart-home-haos-appliance.md
+│
+├── [docs/runbooks/](docs/runbooks/)      # Operational & Disaster Recovery runbooks
+│   ├── README.md                         # Master runbook index, severity & RTO matrix
+│   ├── disaster-recovery.md              # Automated restore verification, drills & rebuild SOP
+│   ├── iam-and-ingress-recovery.md       # Authentik lockout, ForwardAuth & MNGT_IP bypass
+│   ├── dns-failover-and-sync.md          # Technitium HA failover, Catalog sync & DNSSEC
+│   ├── stack-upgrade-and-rollback.md     # FreshRSS -> Databasus -> Dockhand upgrade & rollback
+│   └── power-outage-and-storage-health.md # APC UPS, OpenZFS scrubs, S.M.A.R.T. & PG checksums
 │
 ├── [grafana-dashboards/](grafana-dashboards/)       # 11 Declarative Grafana dashboards (see grafana-dashboards/README.md)
 │   ├── core/                             # Authentik · cAdvisor · PostgreSQL · Technitium
@@ -705,24 +714,25 @@ docker compose up -d
 ```
 1.  traefik          → Core ingress, must start first
 2.  postgres         → Central database (required by most apps)
-3.  authentik        → SSO IdP (required by all WAN services)
-4.  technitium       → Internal DNS
-5.  prometheus       → Metrics storage
-6.  prom-exporters   → Metric scrapers
-7.  grafana          → Dashboards (needs prometheus + authentik)
-8.  paperless        → Document archive
-9.  mealie           → Recipe manager
-10. freshrss         → RSS reader
-11. reactive-resume  → Resume builder (needs postgres + valkey + authentik)
-12. changedetection  → Change monitoring
-13. searxng          → Privacy metasearch (Gluetun VPN + Valkey)
-14. jelly            → Jellyfin + Seerr
-15. kavita           → Kavita digital library & reader (eBooks, comics, manga)
-16. servarr          → Automation suite (Sonarr, Radarr, Lidarr, Chaptarr, etc.)
-17. downloaderr      → Gluetun VPN + qBittorrent + qui
-18. tracearr         → Media analytics (needs TimescaleDB)
-19. network-mon      → Network performance auditing & diagnostics (needs postgres + authentik)
-20. web-tools        → Client-side utilities (IT-Tools, Omni-Tools, Draw.io, BentoPDF)
+3.  databasus        → Decoupled backup orchestrator + databasus-verifier agent
+4.  authentik        → SSO IdP (required by all WAN services)
+5.  technitium       → Internal DNS
+6.  prometheus       → Metrics storage
+7.  prom-exporters   → Metric scrapers
+8.  grafana          → Dashboards (needs prometheus + authentik)
+9.  paperless        → Document archive
+10. mealie           → Recipe manager
+11. freshrss         → RSS reader
+12. reactive-resume  → Resume builder (needs postgres + valkey + authentik)
+13. changedetection  → Change monitoring
+14. searxng          → Privacy metasearch (Gluetun VPN + Valkey)
+15. jelly            → Jellyfin + Seerr
+16. kavita           → Kavita digital library & reader (eBooks, comics, manga)
+17. servarr          → Automation suite (Sonarr, Radarr, Lidarr, Chaptarr, etc.)
+18. downloaderr      → Gluetun VPN + qBittorrent + qui
+19. tracearr         → Media analytics (needs TimescaleDB)
+20. network-mon      → Network performance auditing & diagnostics (needs postgres + authentik)
+21. web-tools        → Client-side utilities (IT-Tools, Omni-Tools, Draw.io, BentoPDF)
 ```
 
 ---
@@ -731,12 +741,12 @@ docker compose up -d
 
 > [!NOTE]
 > **Engineering Transparency & Intermediate State:**  
-> The homelab currently operates in an acknowledged **intermediate backup state**. While a fully automated, immutable 3-2-1 backup pipeline is not yet fully in place, all critical, irreplaceable files and databases are actively protected through a combination of automated database dumping and manual multi-device redundancy.
+> The homelab currently operates in an acknowledged **intermediate backup state**. While a fully automated, immutable 3-2-1 backup pipeline is not yet fully in place, all critical, irreplaceable files and databases are actively protected through a combination of automated database dumping and manual multi-device redundancy. See [**`docs/runbooks/disaster-recovery.md`**](docs/runbooks/disaster-recovery.md) for the complete RPO/RTO recovery matrix and step-by-step restore drill procedures.
 
 ```mermaid
 flowchart LR
     subgraph Current["Current State (Intermediate)"]
-        DB["PostgreSQL Databases"] -->|Automated Snapshots| Databasus["Databasus\n(Local Disk / Backups)"]
+        DB["PostgreSQL Databases"] -->|Daily Snapshots (24h RPO)| Databasus["Databasus + databasus-verifier\n(Automated Restore Check · RTO <15m)"]
         Files["Critical Documents & Configs"] -->|Manual Backups| Offline["Secondary Physical Devices\n(External Media / PCs)"]
         CloudStaging["Cloud Storage Integration\n(In Progress)"]
     end
@@ -749,8 +759,8 @@ flowchart LR
 ```
 
 #### Current Protection Posture
-- **Automated Database Backups via Databasus:**  
-  All application relational databases hosted on PostgreSQL 18 (Authentik, Paperless-ngx, Mealie, FreshRSS, the Servarr suite, qui, Reactive Resume, and Speedtest Tracker) are backed up automatically using **Databasus** (`databasus.internal.205hlab.com`), which runs as a dedicated companion container in [`compose/postgres/`](compose/postgres/). Databasus automates structured `pg_dump` schedules and retains timestamped snapshots in `${DATABASUS_BACKUP}`.
+- **Automated Database Backups & Restore Verification via Databasus:**  
+  All application relational databases hosted on PostgreSQL 18 (Authentik, Paperless-ngx, Mealie, FreshRSS, the Servarr suite, qui, Reactive Resume, and Speedtest Tracker) are backed up **daily** (`24h RPO`) using **Databasus** (`databasus.internal.205hlab.com`), paired with the official containerized **`databasus-verifier`** (`verification-agent run`) worker in a dedicated decoupled stack ([`compose/databasus/`](compose/databasus/)). After each backup completes, `databasus-verifier` automatically restores the archive into an ephemeral PostgreSQL 18 container, verifies schema and per-table row counts against the source, tears the throwaway container down, and logs results (`Target RTO: < 15m single DB / < 30m full cluster`) — documented in [**`docs/runbooks/disaster-recovery.md`**](docs/runbooks/disaster-recovery.md).
 - **Manual Redundancy for Critical Data:**  
   High-value, non-reproducible data—including archived documents from Paperless-ngx, identity certificates, and custom configurations—are manually backed up across secondary physical devices and workstations on the internal LAN.
 - **Offsite Cloud Storage Integration:**  

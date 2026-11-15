@@ -6,7 +6,7 @@
 | **Date** | `2026-10` |
 | **Deciders** | Vajda Ervin-Oliver |
 | **Domain** | Hardware Topology & Physical Fault Isolation |
-| **Related Documentation** | [`README.md#-physical-infrastructure`](../../README.md#-physical-infrastructure), [`ADR-003`](ADR-003-split-horizon-technitium-dns.md), [`ADR-004`](ADR-004-dockhand-gitops-continuous-deployment.md) |
+| **Related Documentation** | [`README.md#-physical-infrastructure`](../../README.md#-physical-infrastructure), [`ADR-003`](ADR-003-split-horizon-technitium-dns.md), [`ADR-004`](ADR-004-dockhand-gitops-continuous-deployment.md), [`power-outage-and-storage-health.md`](../runbooks/power-outage-and-storage-health.md) |
 
 ---
 

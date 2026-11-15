@@ -6,7 +6,7 @@
 | **Date** | `2026-10` |
 | **Deciders** | Vajda Ervin-Oliver |
 | **Domain** | Networking & DNS |
-| **Related Stacks** | [`compose/technitium/`](../../compose/technitium/), [`compose/prom-exporters/`](../../compose/prom-exporters/) |
+| **Related Stacks** | [`compose/technitium/`](../../compose/technitium/), [`compose/prom-exporters/`](../../compose/prom-exporters/), [`dns-failover-and-sync.md`](../runbooks/dns-failover-and-sync.md) |
 
 ---
 
