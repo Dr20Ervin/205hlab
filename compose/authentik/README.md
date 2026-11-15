@@ -212,17 +212,18 @@ Use this method whenever an upstream service provides native OAuth2 or OpenID Co
 To integrate **Vikunja** (`compose/vikunja/`) with Authentik:
 1. **Create Application & Provider Pair**:
    - **Application Name:** `Vikunja` (Slug: `vikunja`, Group: `Household SaaS`)
+   - **Launch URL:** `https://vikunja.205hlab.com/login?redirectToProvider=authentik` *(triggers automatic redirect to Authentik on login)*
    - **Provider Type:** `OAuth2/OpenID Connect`
    - **Client Type:** `Confidential`
    - **Signing Key:** Select your default certificate/signing key
    - **Redirect URIs**:
      - Web Login (`Strict` · `Authorization`): `https://vikunja.205hlab.com/auth/openid/authentik`
      - Desktop Client (`Regex` · `Authorization`): `^http://127\.0\.0\.1:[0-9]+/auth/openid/authentik$`
-   - **Scopes:** `openid`, `email`, `profile`
+   - **Scopes:** `openid`, `email`, `profile` *(optionally add `groups` if syncing teams via the standard groups claim in Vikunja 2.8+)*
 2. **Policy Bindings**:
    - Bind group `vikunja_users` under **Application** > **Policy / Group Bindings**.
 3. **Provider Key Mapping**:
-   - Because Vikunja matches the provider key against the redirect URI (`/auth/openid/<provider_key>`), declare the provider key in `compose/vikunja/config.yml`:
+   - Because Vikunja matches the provider key against the redirect URI (`/auth/openid/<provider_key>`), declare the provider key in `config.yml` on the host under `${VIKUNJA_CONFIG_DIR}/config.yml` (e.g., `/srv/vikunja/config/config.yml` mounted at `/etc/vikunja:ro`):
      ```yaml
      auth:
        openid:
@@ -234,6 +235,7 @@ To integrate **Vikunja** (`compose/vikunja/`) with Authentik:
      VIKUNJA_AUTH_OPENID_ENABLED=true
      VIKUNJA_AUTH_OPENID_PROVIDERS_AUTHENTIK_NAME="authentik Login"
      VIKUNJA_AUTH_OPENID_PROVIDERS_AUTHENTIK_AUTHURL=https://authentik.205hlab.com/application/o/vikunja/
+     VIKUNJA_AUTH_OPENID_PROVIDERS_AUTHENTIK_LOGOUTURL=https://authentik.205hlab.com/application/o/vikunja/end-session/
      VIKUNJA_AUTH_OPENID_PROVIDERS_AUTHENTIK_CLIENTID=<Client ID from authentik>
      VIKUNJA_AUTH_OPENID_PROVIDERS_AUTHENTIK_CLIENTSECRET=<Client Secret from authentik>
      VIKUNJA_AUTH_OPENID_PROVIDERS_AUTHENTIK_SCOPE="openid email profile"

@@ -15,21 +15,24 @@ services:
       - VIKUNJA_SERVICE_TIMEZONE=${TZ:-UTC}
       - VIKUNJA_SERVICE_PUBLICURL=https://vikunja.${FQDN:?FQDN Not defined}/
       - VIKUNJA_SERVICE_ENABLEREGISTRATION=${VIKUNJA_ENABLE_REGISTRATION:-false}
-      - VIKUNJA_SERVICE_JWTSECRET=${VIKUNJA_JWT_SECRET:?VIKUNJA_JWT_SECRET Not defined}
+      - VIKUNJA_SERVICE_SECRET=${VIKUNJA_SERVICE_SECRET:?VIKUNJA_SERVICE_SECRET Not defined}
+      - VIKUNJA_SERVICE_IPEXTRACTIONMETHOD=xff
+      - VIKUNJA_SERVICE_TRUSTEDPROXIES=${VIKUNJA_TRUSTED_PROXIES:?VIKUNJA_TRUSTED_PROXIES Not defined}
       - VIKUNJA_DATABASE_TYPE=postgres
       - VIKUNJA_DATABASE_HOST=${POSTGRES_HOST:-postgres}
-      - VIKUNJA_DATABASE_PORT=${POSTGRES_PORT:-5432}
       - VIKUNJA_DATABASE_USER=${POSTGRES_USER:-vikunja_app}
       - VIKUNJA_DATABASE_PASSWORD=${POSTGRES_PASSWORD:?POSTGRES_PASSWORD Not defined}
+      - VIKUNJA_DATABASE_PORT=${POSTGRES_PORT:-5432}
       - VIKUNJA_DATABASE_DATABASE=${POSTGRES_DB:-vikunja}
       - VIKUNJA_DATABASE_SSLMODE=disable
       - VIKUNJA_FILES_BASEPATH=/app/vikunja/files
       - VIKUNJA_AUTH_OPENID_ENABLED=${VIKUNJA_OIDC_ENABLED:-true}
       - VIKUNJA_AUTH_OPENID_PROVIDERS_AUTHENTIK_NAME=${VIKUNJA_OIDC_NAME:-authentik Login}
       - VIKUNJA_AUTH_OPENID_PROVIDERS_AUTHENTIK_AUTHURL=https://authentik.${FQDN:?FQDN Not defined}/application/o/vikunja/
+      - VIKUNJA_AUTH_OPENID_PROVIDERS_AUTHENTIK_LOGOUTURL=https://authentik.${FQDN:?FQDN Not defined}/application/o/vikunja/end-session/
       - VIKUNJA_AUTH_OPENID_PROVIDERS_AUTHENTIK_CLIENTID=${VIKUNJA_OIDC_CLIENT_ID:?VIKUNJA_OIDC_CLIENT_ID Not defined}
       - VIKUNJA_AUTH_OPENID_PROVIDERS_AUTHENTIK_CLIENTSECRET=${VIKUNJA_OIDC_CLIENT_SECRET:?VIKUNJA_OIDC_CLIENT_SECRET Not defined}
-      - VIKUNJA_AUTH_OPENID_PROVIDERS_AUTHENTIK_SCOPE=openid email profile
+      - VIKUNJA_AUTH_OPENID_PROVIDERS_AUTHENTIK_SCOPE=${VIKUNJA_OIDC_SCOPE:-openid email profile}
       - VIKUNJA_AUTH_LOCAL_ENABLED=${VIKUNJA_AUTH_LOCAL_ENABLED:-false}
       - VIKUNJA_MAILER_ENABLED=${SMTP_ENABLED:-false}
       - VIKUNJA_MAILER_HOST=${SMTP_HOST:-}
@@ -43,13 +46,7 @@ services:
       - postgres_network
     volumes:
       - vikunja_data:/app/vikunja/files
-      - ./config.yml:/etc/vikunja/config.yml:ro
-    healthcheck:
-      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3456/api/v1/health || exit 1"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-      start_period: 20s
+      - ${VIKUNJA_CONFIG_DIR:?VIKUNJA_CONFIG_DIR Not defined}:/etc/vikunja:ro
     labels:
       - traefik.enable=true
       - traefik.docker.network=traefik_network
