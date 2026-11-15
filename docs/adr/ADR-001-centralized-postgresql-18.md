@@ -12,7 +12,7 @@
 
 ## Context and Problem Statement
 
-When designing the `205hlab` production baseline on a single primary bare-metal host (Fujitsu ESPRIMO P710: Intel Core i7-3770 4C/8T, **32 GB DDR3 RAM**, SATA SSD storage), more than a dozen self-hosted services require durable relational persistence — including identity management (Authentik), document OCR indexing (Paperless-ngx), media acquisition automation (Sonarr, Radarr, Lidarr, Chaptarr, Prowlarr), download management UI (qui), household utilities (Mealie, FreshRSS, Reactive Resume), and network telemetry (Speedtest Tracker).
+When designing the `205hlab` production baseline on a single primary bare-metal host (Fujitsu ESPRIMO P710: Intel Core i7-3770 4C/8T, **32 GB DDR3 RAM**, SATA SSD storage), more than a dozen self-hosted services require durable relational persistence — including identity management (Authentik), document OCR indexing (Paperless-ngx), media acquisition automation (Sonarr, Radarr, Lidarr, Chaptarr, Prowlarr), download management UI (qui), household utilities (Mealie, FreshRSS, Reactive Resume, Vikunja), and network telemetry (Speedtest Tracker).
 
 Under a 32 GB non-ECC memory ceiling alongside memory-intensive services (Authentik, Paperless/Tika/Gotenberg, Prometheus, Jellyfin), how should relational data be structured to maximize storage integrity, eliminate concurrency lock failures, minimize idle RAM consumption, and maintain a reliable automated backup strategy?
 
@@ -95,5 +95,5 @@ The core data tier is standardized on a single `docker.io/library/postgres:18.3`
 
 - **Compose Enforcement:** [`compose/postgres/compose.yaml`](../../compose/postgres/compose.yaml) defines `POSTGRES_INITDB_ARGS=--data-checksums`, exposes **zero** `ports:` bindings, and sets `limits: cpus: '2.0', memory: 4G`.
 - **Network Isolation:** All tenant stacks connect to `postgres_network` declared `external: true` rather than exposing `5432` on the host LAN.
-- **Provisioning Traceability:** Every PostgreSQL-dependent stack directory (`authentik`, `paperless`, `mealie`, `freshrss`, `servarr`, `downloaderr`, `reactive-resume`, `network-mon`) maintains a version-controlled `db-init.sql` defining least-privilege roles.
+- **Provisioning Traceability:** Every PostgreSQL-dependent stack directory (`authentik`, `paperless`, `mealie`, `freshrss`, `servarr`, `downloaderr`, `reactive-resume`, `network-mon`, `vikunja`) maintains a version-controlled `db-init.sql` defining least-privilege roles.
 - **CI Validation:** [`.github/workflows/validate-compose.yml`](../../.github/workflows/validate-compose.yml) creates the mock `postgres_network` bridge and verifies all tenant stacks render cleanly without undefined DB variables.

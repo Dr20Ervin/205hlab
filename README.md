@@ -218,6 +218,7 @@ flowchart TD
             Mealie["Mealie\nmealie.205hlab.com"]
             FreshRSS["FreshRSS\nfreshrss.205hlab.com"]
             ReactiveResume["Reactive Resume\nresume.205hlab.com"]
+            Vikunja["Vikunja (Tasks)\nvikunja.205hlab.com"]
             SearXNG["SearXNG\nsearch.205hlab.com"]
             Grafana["Grafana 13\ngrafana.205hlab.com"]
             Speedtest["Speedtest Tracker\nspeedtest.205hlab.com"]
@@ -327,6 +328,7 @@ A key design decision in this homelab is the **split between internal-only and e
 | `sonarr.205hlab.com` | Sonarr TV | ForwardAuth | [`servarr`](compose/servarr/) |
 | `speedtest.205hlab.com` | Speedtest Tracker | ForwardAuth | [`network-mon`](compose/network-mon/) |
 | `tracearr.205hlab.com` | Tracearr analytics | ForwardAuth | [`tracearr`](compose/tracearr/) |
+| `vikunja.205hlab.com` | Vikunja task manager & maintenance reminders | OIDC (native) | [`vikunja`](compose/vikunja/) |
 
 ---
 
@@ -382,7 +384,7 @@ The homelab runs **two Technitium DNS servers** providing redundancy and split-h
 
 | Stack | Image | Description |
 | :--- | :--- | :--- |
-| [`postgres`](compose/postgres/) | `postgres:18.3` | Central relational database with `--data-checksums` for silent corruption detection. Each application gets an isolated database user provisioned via `db-init.sql`. Shared by: Authentik, Mealie, Paperless, FreshRSS, Servarr (\*arr suite incl. Chaptarr), qui, Reactive Resume, Speedtest Tracker. |
+| [`postgres`](compose/postgres/) | `postgres:18.3` | Central relational database with `--data-checksums` for silent corruption detection. Each application gets an isolated database user provisioned via `db-init.sql`. Shared by: Authentik, Mealie, Paperless, FreshRSS, Servarr (\*arr suite incl. Chaptarr), qui, Reactive Resume, Speedtest Tracker, Vikunja. |
 | [`postgres`](compose/postgres/) | `adminer:latest` | Web-based DB admin UI at `adminer.internal.205hlab.com` — LAN-only access. |
 | [`tracearr`](compose/tracearr/) | `timescale/timescaledb-ha:pg18.4-ts2.29.1` | Dedicated TimescaleDB time-series cluster for Tracearr analytics. Custom `max_locks_per_transaction`, `max_connections`, and telemetry-off configuration. Paired with Redis 8 for task queuing. |
 | [`paperless`](compose/paperless/) | `valkey/valkey:9-alpine` | Valkey (open-source Redis fork v9) broker powering Paperless-ngx background task and document processing queues. |
@@ -428,6 +430,7 @@ The homelab runs **two Technitium DNS servers** providing redundancy and split-h
 | [`mealie`](compose/mealie/) | `mealie-recipes/mealie:latest` | `mealie.205hlab.com` | OIDC native |
 | [`freshrss`](compose/freshrss/) | `freshrss/freshrss:1.30.4` | `freshrss.205hlab.com` | OIDC native |
 | [`reactive-resume`](compose/reactive-resume/) | `amruthpillai/reactive-resume:latest` + `valkey:9-alpine` | `resume.205hlab.com` | OIDC native |
+| [`vikunja`](compose/vikunja/) | `vikunja/vikunja:latest` | `vikunja.205hlab.com` | OIDC native |
 | [`searxng`](compose/searxng/) | `searxng:latest` + `gluetun:v3.41.3` + `valkey:9-alpine` | `search.205hlab.com` | ForwardAuth |
 | [`changedetection`](compose/changedetection/) | `changedetection.io` + `sockpuppetbrowser` | `changedetection.internal.205hlab.com` | LAN-only |
 | [`web-tools`](compose/web-tools/) | `corentinth/it-tools:latest` | `it-tools.205hlab.com` | ForwardAuth |
@@ -440,6 +443,8 @@ The homelab runs **two Technitium DNS servers** providing redundancy and split-h
 > **FreshRSS** serves a dual role: personal news aggregator and the homelab's **Infrastructure Release Sentinel**. It tracks upstream GitHub release feeds across all 20+ container stacks via a version-controlled **Dynamic OPML** architecture ([`compose/freshrss/rss-feeds/`](compose/freshrss/rss-feeds/)), providing an early-warning radar for security patches, feature changes, and breaking configurations before triggering container updates in **Dockhand** or running manual infrastructure migrations.
 
 > **SearXNG** is a privacy-respecting metasearch engine. Outbound scraping exits through a dedicated **Gluetun WireGuard VPN** tunnel (`network_mode: service:gluetun-search`, AirVPN provider) to eliminate residential IP rate-limits and CAPTCHAs, with query caching and engine rate limits backed by a local **Valkey 9** instance over loopback.
+
+> **Vikunja** orchestrates task workflows and homelab maintenance reminders (OpenWrt configuration backups, HAOS `.tar` appliance snapshots, Technitium DNS `.zip` archives, and cold offline ZFS snapshot replication). It connects natively to Authentik via OIDC, stores state on the centralized PostgreSQL 18 cluster, and supports bi-directional CalDAV synchronization.
 
 > **Web Tools** hosts purely client-side, zero-state engineering and document utilities (**IT-Tools**, **Omni-Tools**, **Draw.io**, and **BentoPDF**). All processing (regex parsing, token decoding, diagramming, and PDF manipulation) executes locally in the browser via JavaScript/WebAssembly with `read_only: true` root filesystems, `no-new-privileges:true`, and Authentik ForwardAuth protection to prevent query/context leakage to public SaaS providers.
 
@@ -545,7 +550,7 @@ Security and credential lifecycle management follow strict enterprise zero-trust
 │   ├── images/                           # Wallpapers, banners & branding assets
 │   └── README.md                         # Direct link & CDN usage guide
 │
-├── [compose/](compose/)                  # 21 Production Docker Compose stacks (see compose/README.md)
+├── [compose/](compose/)                  # 22 Production Docker Compose stacks (see compose/README.md)
 │   ├── authentik/                        # Authentik SSO server + worker
 │   │   ├── compose.yaml
 │   │   ├── db-init.sql                   # PostgreSQL schema init
@@ -575,6 +580,11 @@ Security and credential lifecycle management follow strict enterprise zero-trust
 │   ├── technitium/                       # Technitium DNS server (Primary)
 │   ├── tracearr/                         # Tracearr + TimescaleDB + Redis
 │   ├── traefik/                          # Traefik v3 ingress proxy
+│   ├── vikunja/                          # Vikunja task manager & maintenance reminders
+│   │   ├── compose.yaml
+│   │   ├── db-init.sql                   # PostgreSQL schema init
+│   │   ├── example.env
+│   │   └── setup_secrets.sh
 │   └── web-tools/                        # IT-Tools · Omni-Tools · Draw.io · BentoPDF
 │
 ├── [docs/adr/](docs/adr/)                # Architecture Decision Records (ADR-001 .. ADR-005)
@@ -724,15 +734,16 @@ docker compose up -d
 10. mealie           → Recipe manager
 11. freshrss         → RSS reader
 12. reactive-resume  → Resume builder (needs postgres + valkey + authentik)
-13. changedetection  → Change monitoring
-14. searxng          → Privacy metasearch (Gluetun VPN + Valkey)
-15. jelly            → Jellyfin + Seerr
-16. kavita           → Kavita digital library & reader (eBooks, comics, manga)
-17. servarr          → Automation suite (Sonarr, Radarr, Lidarr, Chaptarr, etc.)
-18. downloaderr      → Gluetun VPN + qBittorrent + qui
-19. tracearr         → Media analytics (needs TimescaleDB)
-20. network-mon      → Network performance auditing & diagnostics (needs postgres + authentik)
-21. web-tools        → Client-side utilities (IT-Tools, Omni-Tools, Draw.io, BentoPDF)
+13. vikunja          → Task management & maintenance reminders (needs postgres + authentik)
+14. changedetection  → Change monitoring
+15. searxng          → Privacy metasearch (Gluetun VPN + Valkey)
+16. jelly            → Jellyfin + Seerr
+17. kavita           → Kavita digital library & reader (eBooks, comics, manga)
+18. servarr          → Automation suite (Sonarr, Radarr, Lidarr, Chaptarr, etc.)
+19. downloaderr      → Gluetun VPN + qBittorrent + qui
+20. tracearr         → Media analytics (needs TimescaleDB)
+21. network-mon      → Network performance auditing & diagnostics (needs postgres + authentik)
+22. web-tools        → Client-side utilities (IT-Tools, Omni-Tools, Draw.io, BentoPDF)
 ```
 
 ---
@@ -760,7 +771,7 @@ flowchart LR
 
 #### Current Protection Posture
 - **Automated Database Backups & Restore Verification via Databasus:**  
-  All application relational databases hosted on PostgreSQL 18 (Authentik, Paperless-ngx, Mealie, FreshRSS, the Servarr suite, qui, Reactive Resume, and Speedtest Tracker) are backed up **daily** (`24h RPO`) using **Databasus** (`databasus.internal.205hlab.com`), paired with the official containerized **`databasus-verifier`** (`verification-agent run`) worker in a dedicated decoupled stack ([`compose/databasus/`](compose/databasus/)). Backups are written to dedicated datasets on the OpenZFS mirror pool **`BinPool`** (`${DATABASUS_BACKUP}`), automatically tested into ephemeral PostgreSQL 18 containers after each run (comparing schema and per-table row counts against production), and manually replicated from `BinPool` to secondary offline LAN storage.
+  All application relational databases hosted on PostgreSQL 18 (Authentik, Paperless-ngx, Mealie, FreshRSS, the Servarr suite, qui, Reactive Resume, Speedtest Tracker, and Vikunja) are backed up **daily** (`24h RPO`) using **Databasus** (`databasus.internal.205hlab.com`), paired with the official containerized **`databasus-verifier`** (`verification-agent run`) worker in a dedicated decoupled stack ([`compose/databasus/`](compose/databasus/)). Backups are written to dedicated datasets on the OpenZFS mirror pool **`BinPool`** (`${DATABASUS_BACKUP}`), automatically tested into ephemeral PostgreSQL 18 containers after each run (comparing schema and per-table row counts against production), and manually replicated from `BinPool` to secondary offline LAN storage.
 - **Manual Redundancy for Appliances & File Assets:**  
   High-value configuration and non-reproducible assets are manually backed up across secondary physical devices:
   - **OpenWrt Router (Xiaomi AX6S):** LuCI `.tar.gz` configuration exports (VLANs, firewall zones, Cloudflare `iptables` rules, port forwards).

@@ -1,0 +1,10 @@
+# ==============================================================================
+# 205hlab Vikunja Configuration Template
+# Declares the 'authentik' provider key so Viper binds environment variables:
+# VIKUNJA_AUTH_OPENID_PROVIDERS_AUTHENTIK_*
+# Upstream Ref: https://vikunja.io/docs/openid/
+# ==============================================================================
+auth:
+  openid:
+    providers:
+      authentik: {}

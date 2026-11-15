@@ -6,7 +6,7 @@
 [![Database](https://img.shields.io/badge/Database-PostgreSQL%2018-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org)
 
 > **Identity & Access Management (IAM) Hub** for the `205hlab` production homelab.  
-> Authentik acts as the centralized single sign-on (SSO), OAuth2/OIDC identity provider (IdP), and Traefik ForwardAuth security perimeter for **all 31 homelab services**.  
+> Authentik acts as the centralized single sign-on (SSO), OAuth2/OIDC identity provider (IdP), and Traefik ForwardAuth security perimeter for **all 32 homelab services**.  
 > **Architecture Decision Record:** See [**ADR-002: Enforce Unified Zero-Trust IAM with Authentik (Native OIDC & Traefik ForwardAuth)**](../../docs/adr/ADR-002-authentik-unified-iam.md) for the security rationale behind this stack.
 
 ---
@@ -44,6 +44,7 @@ flowchart TD
         Profilarr["Profilarr"]
         Technitium["Technitium DNS"]
         Dockhand["Dockhand"]
+        Vikunja["Vikunja"]
     end
 
     subgraph ProxyAuth ["Tier 2: Traefik ForwardAuth (Proxy Providers)"]
@@ -58,7 +59,7 @@ flowchart TD
     NativeOIDC <-->|3. Token & UserInfo Exchange<br/>/application/o/token/| Server
 ```
 
-1. **Tier 1 — Native OAuth2 / OIDC (11 Services)**: For applications with built-in SSO capabilities (e.g. Mealie, Grafana, Paperless-ngx, Kavita, Jellyfin). The user authenticates against Authentik directly via OIDC flows, and permissions are mapped using tokens, scopes, and group claims.
+1. **Tier 1 — Native OAuth2 / OIDC (12 Services)**: For applications with built-in SSO capabilities (e.g. Mealie, Grafana, Paperless-ngx, Kavita, Jellyfin, Vikunja). The user authenticates against Authentik directly via OIDC flows, and permissions are mapped using tokens, scopes, and group claims.
 2. **Tier 2 — Traefik ForwardAuth / Proxy Providers (20 Services)**: For applications without native OIDC or where uniform pre-authentication is required (e.g. Sonarr, Radarr, IT-Tools, Adminer). Traefik intercepts incoming HTTP/S requests and checks session validity with Authentik's embedded outpost before proxying the request to the upstream container.
 
 ---
@@ -110,6 +111,7 @@ Access to applications, administrative privileges, and internal role mappings ar
 | | `paperless_users` | Standard document viewing, tagging, and archiving permissions |
 | | `freshrss_users` | Access to personal RSS feed reader & subscription dashboard |
 | | `reactive-resume_users` | Access to Reactive Resume builder, resume creation, and PDF export |
+| | `vikunja_users` | Access to Vikunja task management, kanban boards, and maintenance checklist |
 | **Media & Library** | `jellyfin-admins` | Jellyfin media server administrator (libraries, hardware transcoding, plugins) |
 | | `jellyfin-users` | Standard streaming access for household members |
 | | `jellyfin-kids` | Curated children's profile access with rating restrictions |
@@ -146,6 +148,7 @@ These services use native OIDC authentication flows against Authentik's OAuth2 e
 | **Qui** | `qui.205hlab.com` | OAuth2 / OIDC | `qui_users` | [`compose/downloaderr/`](../downloaderr/) |
 | **Reactive Resume**| `resume.205hlab.com` | OAuth2 / OIDC | `reactive-resume_users` | [`compose/reactive-resume/`](../reactive-resume/) |
 | **Technitium DNS**| `technitium.internal.205hlab.com`| OAuth2 / OIDC | `technitium_admins` | [`compose/technitium/`](../technitium/) |
+| **Vikunja** | `vikunja.205hlab.com` | OAuth2 / OIDC | `vikunja_users` | [`compose/vikunja/`](../vikunja/) |
 
 ### 2. Traefik ForwardAuth (Proxy Providers)
 
@@ -204,6 +207,39 @@ Use this method whenever an upstream service provides native OAuth2 or OpenID Co
 3. **Configure the Service `.env`**:
    * Supply the `OIDC_CLIENT_ID`, `OIDC_CLIENT_SECRET`, and OIDC discovery URL:  
      `https://authentik.205hlab.com/application/o/<slug>/.well-known/openid-configuration`
+
+#### Detailed Reference: Vikunja OIDC Integration
+To integrate **Vikunja** (`compose/vikunja/`) with Authentik:
+1. **Create Application & Provider Pair**:
+   - **Application Name:** `Vikunja` (Slug: `vikunja`, Group: `Household SaaS`)
+   - **Provider Type:** `OAuth2/OpenID Connect`
+   - **Client Type:** `Confidential`
+   - **Signing Key:** Select your default certificate/signing key
+   - **Redirect URIs**:
+     - Web Login (`Strict` · `Authorization`): `https://vikunja.205hlab.com/auth/openid/authentik`
+     - Desktop Client (`Regex` · `Authorization`): `^http://127\.0\.0\.1:[0-9]+/auth/openid/authentik$`
+   - **Scopes:** `openid`, `email`, `profile`
+2. **Policy Bindings**:
+   - Bind group `vikunja_users` under **Application** > **Policy / Group Bindings**.
+3. **Provider Key Mapping**:
+   - Because Vikunja matches the provider key against the redirect URI (`/auth/openid/<provider_key>`), declare the provider key in `compose/vikunja/config.yml`:
+     ```yaml
+     auth:
+       openid:
+         providers:
+           authentik: {}
+     ```
+   - Inject the credentials into Vikunja's environment (`.env` or Dockhand):
+     ```env
+     VIKUNJA_AUTH_OPENID_ENABLED=true
+     VIKUNJA_AUTH_OPENID_PROVIDERS_AUTHENTIK_NAME="authentik Login"
+     VIKUNJA_AUTH_OPENID_PROVIDERS_AUTHENTIK_AUTHURL=https://authentik.205hlab.com/application/o/vikunja/
+     VIKUNJA_AUTH_OPENID_PROVIDERS_AUTHENTIK_CLIENTID=<Client ID from authentik>
+     VIKUNJA_AUTH_OPENID_PROVIDERS_AUTHENTIK_CLIENTSECRET=<Client Secret from authentik>
+     VIKUNJA_AUTH_OPENID_PROVIDERS_AUTHENTIK_SCOPE="openid email profile"
+     VIKUNJA_AUTH_LOCAL_ENABLED=false
+     ```
+   - Setting `VIKUNJA_AUTH_LOCAL_ENABLED=false` disables local database authentication, mandating Authentik SSO.
 
 ---
 

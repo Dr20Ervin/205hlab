@@ -38,6 +38,7 @@ This stack provides high-performance, centralized relational persistence for the
         │ lidarr-main / log       │ chaptarr-main/log/cache │
         │ prowlarr-main / log     │ qui                     │
         │ reactive-resume         │ speedtest_tracker       │
+        │ vikunja                 │ (spare tenant)          │
         └─────────────────────────┴─────────────────────────┘
 ```
 

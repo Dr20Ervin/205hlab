@@ -12,8 +12,8 @@
 | Tier | Workload / Component | Backup & Resilience Mechanism | RPO *(Max Data Loss)* | Target RTO *(Recovery Time)* |
 | :--- | :--- | :--- | :--- | :--- |
 | **Tier 0: Split-Horizon DNS** | Technitium DNS (`internal.205hlab.com`, LAN DNS) | Real-time RFC Catalog Zone replication to `technitium-aux` on HAOS ([ADR-003](../adr/ADR-003-split-horizon-technitium-dns.md)) | **~0 min** *(AXFR/IXFR)* | **0 min** *(Automatic LAN failover to ASUS X540SA)* |
-| **Tier 1: Compose & Stateless Ingress** | All 21 `compose.yaml` templates, Traefik, SearXNG, Web Tools | GitHub (`Dr20Ervin/205hlab`) + Dockhand Encrypted Vault ([ADR-004](../adr/ADR-004-dockhand-gitops-continuous-deployment.md)) | **0 min** *(Git-tracked)* | **< 10 min** *(Git sync / clone + `docker compose up -d`)* |
-| **Tier 2: Central Relational Tier** | PostgreSQL 18 (`authentik`, `paperless`, `mealie`, `freshrss`, `*arr`, `qui`, `resume`, `speedtest`) | Automated **daily** scheduled dumps to `BinPool` datasets + **After backup** restore verification via **Databasus** (`databasus-verifier`) | **24 hours** *(Daily schedule)* | **< 15 min** *(Single DB rollback)* / **< 30 min** *(Full PG18 cluster rebuild)* |
+| **Tier 1: Compose & Stateless Ingress** | All 22 `compose.yaml` templates, Traefik, SearXNG, Web Tools | GitHub (`Dr20Ervin/205hlab`) + Dockhand Encrypted Vault ([ADR-004](../adr/ADR-004-dockhand-gitops-continuous-deployment.md)) | **0 min** *(Git-tracked)* | **< 10 min** *(Git sync / clone + `docker compose up -d`)* |
+| **Tier 2: Central Relational Tier** | PostgreSQL 18 (`authentik`, `paperless`, `mealie`, `freshrss`, `*arr`, `qui`, `resume`, `speedtest`, `vikunja`) | Automated **daily** scheduled dumps to `BinPool` datasets + **After backup** restore verification via **Databasus** (`databasus-verifier`) | **24 hours** *(Daily schedule)* | **< 15 min** *(Single DB rollback)* / **< 30 min** *(Full PG18 cluster rebuild)* |
 | **Tier 3: Network & Appliance Configs** | OpenWrt router `.tar.gz`, HAOS `.tar`, Technitium `.zip`, Dockhand `/app/data` + master key | Manual LuCI exports, HAOS snapshots, Technitium admin backups, Dockhand volume archives | **Manual cadence** *(Weekly / monthly export)* | **< 15 min** *(Upload / restore archive)* |
 | **Tier 4: File Assets & Non-DB State** | Paperless-ngx source PDFs (`media/`), `*arr` `<ApiKey>` values, Bazarr SQLite config | OpenZFS `BinPool` storage datasets + manual multi-device copies + personal password manager | **Manual cadence** *(Multi-device sync)* | **15–30 min** *(File copy / key paste)* |
 | **Tier 5: Bulk Media & OpenZFS Pool** | Jellyfin / Servarr media libraries on `BinPool` | OpenZFS 2× 4 TB mirror (hardware redundancy against single-drive loss) | **0 min** *(Single drive fault)* | **30–60 min** *(Drive replacement & scrub)* |
@@ -25,24 +25,24 @@
 The homelab combines automated database snapshots, Git-tracked infrastructure, appliance exports, and manual multi-device redundancy across five distinct operational layers:
 
 ### 1. Centralized Relational Tier (`BinPool` ZFS Datasets via Databasus)
-- **Engine & Schedule:** **Databasus** (`databasus.internal.205hlab.com`) coordinates automated **daily** `pg_dump` backups for all 12 tenant databases on `postgres:18.3` (`authentik`, `paperless`, `mealie`, `freshrss`, `qui`, `reactive-resume`, `speedtest_tracker`, and the entire Servarr suite: `sonarr-main`, `radarr-main`, `lidarr-main`, `chaptarr-main`, `prowlarr-main`).
+- **Engine & Schedule:** **Databasus** (`databasus.internal.205hlab.com`) coordinates automated **daily** `pg_dump` backups for all 13 tenant databases on `postgres:18.3` (`authentik`, `paperless`, `mealie`, `freshrss`, `qui`, `reactive-resume`, `speedtest_tracker`, `vikunja`, and the entire Servarr suite: `sonarr-main`, `radarr-main`, `lidarr-main`, `chaptarr-main`, `prowlarr-main`).
 - **Primary Storage Target:** Backups are written directly to a dedicated dataset on the OpenZFS mirror pool **`BinPool`** (`${DATABASUS_BACKUP}`, e.g., `/BinPool/backups/postgres`).
 - **Automated Verification:** The official containerized **`databasus-verifier`** agent automatically tests each backup archive into an ephemeral PostgreSQL 18 container, counts table rows against the live database, logs results in the **Restore verifications** tab, and tears down the container.
 - **Secondary Replication:** Backup archives stored on `BinPool` are manually copied to secondary external drives and workstations on the internal LAN for offline disaster readiness.
 
 ### 2. Declarative Infrastructure & Observability (Git & Dashboards)
-- **Compose Stacks:** All 21 production Docker Compose stacks are version-controlled in GitHub (`Dr20Ervin/205hlab`). Any host can reconstruct the full container topography in minutes.
+- **Compose Stacks:** All 22 production Docker Compose stacks are version-controlled in GitHub (`Dr20Ervin/205hlab`). Any host can reconstruct the full container topography in minutes.
 - **Grafana Dashboards:** All 11 production Grafana dashboards are exported as declarative JSON in [`grafana-dashboards/`](../../grafana-dashboards/README.md) (organized in `205hlab - Core`, `205hlab - Hardware`, and `205hlab - SaaS`). Automated continuous Grafana Git Sync is tracked on the repository roadmap.
 - **Secrets Management:** Injected at deploy time from **Dockhand's built-in encrypted vault** (zero plain-text `.env` on disk).
 
 ### 3. Perimeter, Network & Smart Home Appliances (Out-of-Band State)
-- **OpenWrt Gateway Router (Xiaomi Redmi AX6S):** Periodic `.tar.gz` archive exported via LuCI (`System → Backup / Flash Firmware`) or `sysupgrade -b`. Preserves custom VLAN trunking, firewall forwarding zones, Cloudflare `iptables` origin allowlists, DHCP static leases, and port forwarding rules.
-- **Home Assistant OS Appliance (ASUS X540SA):** Full HAOS `.tar` backup created before OS or add-on upgrades and copied off-device. Preserves Home Assistant Core, the SONOFF Zigbee 3.0 coordinator network/pairing state, NUT Server configuration, and `technitium-aux`.
-- **Technitium DNS Settings (`technitium` + `technitium-aux`):** While authoritative zone records continuously replicate via the RFC Catalog Zone (`cluster-catalog.dns.205hlab.com`), full settings archives (`.zip`) are periodically exported via `Administration → Backup & Restore` to preserve ad-blocklist subscriptions, upstream DNS-over-HTTPS forwarders, TSIG keys, and Authentik OIDC configurations.
+- **OpenWrt Gateway Router (Xiaomi Redmi AX6S):** Periodic `.tar.gz` archive exported via LuCI (`System → Backup / Flash Firmware`) or `sysupgrade -b`. Preserves custom VLAN trunking, firewall forwarding zones, Cloudflare `iptables` origin allowlists, DHCP static leases, and port forwarding rules. Backups are downloaded and archived in `/BinPool/backup-manual/openwrt/`.
+- **Home Assistant OS Appliance (ASUS X540SA):** Full HAOS `.tar` backup created before OS or add-on upgrades and copied off-device. Preserves Home Assistant Core, the SONOFF Zigbee 3.0 coordinator network/pairing state, NUT Server configuration, and `technitium-aux`. Backups are archived in `/BinPool/backup-manual/haos/`.
+- **Technitium DNS Settings (`technitium` + `technitium-aux`):** While authoritative zone records continuously replicate via the RFC Catalog Zone (`cluster-catalog.dns.205hlab.com`), full settings archives (`.zip`) are periodically exported via `Administration → Backup & Restore` to preserve ad-blocklist subscriptions, upstream DNS-over-HTTPS forwarders, TSIG keys, and Authentik OIDC configurations. Backups are stored in `/BinPool/backup-manual/technitium/`.
 
 ### 4. Dockhand GitOps Engine & Credentials Vault
 - **Data Volume (`dockhand_data`):** Dockhand stores its internal SQLite database, Git repository connections, sync schedules, and encrypted secret provider vault inside `/app/data`.
-- **Backup Procedure:** The `dockhand_data` volume is periodically archived to `BinPool`, while Dockhand's master encryption key is kept securely inside a personal password manager (iCloud Passwords).
+- **Backup Procedure:** The `dockhand_data` volume is periodically archived to `/BinPool/backup-manual/dockhand/`, while Dockhand's master encryption key is kept securely inside a personal password manager (iCloud Passwords).
 - **Built-in Restic Engine:** Dockhand's built-in volume snapshot engine (`FEAT_BACKUPS_ENABLED=true`) can additionally snapshot stateful non-database volumes.
 
 ### 5. Media, File Assets & Servarr Non-DB State
@@ -69,7 +69,7 @@ flowchart TD
     end
 
     subgraph PostgresStack["compose/postgres/ (Production Relational Tier)"]
-        PROD[("postgres (205hlab-pgdb)\n--data-checksums · 12 Tenant DBs")]
+        PROD[("postgres (205hlab-pgdb)\n--data-checksums · 13 Tenant DBs")]
         ADM["Adminer (:8080)\nadminer.internal.205hlab.com"]
         
         ADM -->|Inspect Prod| PROD
@@ -208,7 +208,7 @@ docker exec -it postgres psql -U "$POSTGRES_USER" -d postgres -c "CREATE DATABAS
 - **Via Databasus UI:** Trigger **Restore** on the target backup snapshot in `https://databasus.internal.205hlab.com`.
 - **Via CLI:**
   ```bash
-  gunzip -c /mnt/storage/backups/postgres/<backup-file>.sql.gz | docker exec -i postgres psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "<target_db_name>"
+  gunzip -c /BinPool/backups/postgres/<backup-file>.sql.gz | docker exec -i postgres psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "<target_db_name>"
   ```
 
 Verify checksums and restart the application:
@@ -271,7 +271,7 @@ done
    docker exec -it postgres psql -U "$POSTGRES_USER" -d postgres -c "SELECT datname, numbackends, checksum_failures FROM pg_stat_database ORDER BY datname;"
    ```
    Confirm `checksum_failures` is `0` across every row.
-2. **Deploy remaining stacks** in the 1–21 startup sequence documented in [`README.md`](../../README.md#recommended-stack-startup-order) (`authentik` → `technitium` → monitoring → productivity & media).
+2. **Deploy remaining stacks** in the 1–22 startup sequence documented in [`README.md`](../../README.md#recommended-stack-startup-order) (`authentik` → `technitium` → monitoring → productivity & media).
 
 ---
 

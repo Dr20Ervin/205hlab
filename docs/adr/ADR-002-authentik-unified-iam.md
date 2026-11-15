@@ -69,10 +69,10 @@
 
 **Chosen Option:** **Option 1 — Self-Hosted Authentik with a Mandatory Two-Tier Enforcement Hierarchy**
 
-Authentik (`compose/authentik/`) acts as the mandatory security perimeter for **all 31 protected services** across `205hlab`, governed by ~30 structured RBAC groups (`authentik Admins`, `pgdb_admins`, `dockhand_admins`, `technitium_admins`, `grafana_admins`/`editors`/`viewers`, `mealie_admins`/`users`, `jellyfin-admins`/`users`/`kids`/`users-hun`, etc.):
+Authentik (`compose/authentik/`) acts as the mandatory security perimeter for **all 32 protected services** across `205hlab`, governed by ~30 structured RBAC groups (`authentik Admins`, `pgdb_admins`, `dockhand_admins`, `technitium_admins`, `grafana_admins`/`editors`/`viewers`, `mealie_admins`/`users`, `jellyfin-admins`/`users`/`kids`/`users-hun`, etc.):
 
-1. **Tier 1 — Native OAuth2 / OIDC (11 Services):**  
-   Preferred wherever supported — **Dockhand, FreshRSS, Grafana 13, Jellyfin (via SSO Plugin), Kavita, Mealie, Paperless-ngx, Profilarr, qui, Reactive Resume, and Technitium DNS**. Authentik supplies `/application/o/<slug>/` discovery endpoints and maps group/entitlement claims directly to downstream roles.
+1. **Tier 1 — Native OAuth2 / OIDC (12 Services):**  
+   Preferred wherever supported — **Dockhand, FreshRSS, Grafana 13, Jellyfin (via SSO Plugin), Kavita, Mealie, Paperless-ngx, Profilarr, qui, Reactive Resume, Technitium DNS, and Vikunja**. Authentik supplies `/application/o/<slug>/` discovery endpoints and maps group/entitlement claims directly to downstream roles.
 2. **Tier 2 — Traefik ForwardAuth Middleware (20 Services):**  
    Enforced via the `authentik@docker` middleware label declared on [`authentik-server`](../../compose/authentik/compose.yaml#L44-L59) for all applications without native OIDC (the Servarr suite, Seerr, SearXNG, MeTube, Speedtest Tracker, Tracearr, ChangeDetection, Web Tools, Adminer, Databasus, MyIP). Traefik intercepts requests at `/outpost.goauthentik.io/auth/traefik` before proxying any traffic to upstream containers.
 
