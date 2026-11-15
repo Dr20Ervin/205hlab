@@ -23,7 +23,7 @@ This stack deliberately decouples **Databasus** (the automated PostgreSQL backup
                               ▼
                    [ Databasus (:4005) ]
                      • Volume: databasus-data
-                     • Backups: ${DATABASUS_BACKUP}
+                     • Backups: ${DATABASUS_BACKUP} (BinPool dataset)
                               │
          ┌────────────────────┴────────────────────────┐
          │ (postgres_network)                          │ (databasus_internal · HTTP internal)
@@ -65,7 +65,7 @@ labels:
 | :--- | :--- | :--- |
 | `FQDN` | Base domain name | `205hlab.com` |
 | `TZ` | Container timezone | `UTC` |
-| `DATABASUS_BACKUP` | Host path containing PostgreSQL backup archives | `/mnt/storage/backups/postgres` |
+| `DATABASUS_BACKUP` | Host path containing PostgreSQL backup archives (ZFS `BinPool` dataset) | `/BinPool/backups/postgres` |
 | `DATABASUS_AGENT_ID` | Verification Agent UUID generated in Databasus UI | *(UI: Settings -> Verification agents)* |
 | `DATABASUS_AGENT_TOKEN` | One-time verification agent auth token | *(Injected via Dockhand encrypted vault)* |
 | `DATABASUS_MAX_CPU` | CPU budget advertised to Databasus across concurrent jobs | `2` |

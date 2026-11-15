@@ -127,7 +127,7 @@ Orchestration progressed through **plain terminal CLI**, **Portainer**, and **Do
 | **RAM** | 32 GB DDR3 |
 | **OS Drive** | 1× 240 GB Kingston A400 SSD (Ubuntu Server LTS) |
 | **Data Drive** | 1× 480 GB ADATA SU630 SSD (`/srv` — Docker volumes & app data) |
-| **Media Pool** | 2× 4 TB Hitachi Enterprise HDDs (OpenZFS mirrored pool — bulk media) |
+| **ZFS Storage Pool (`BinPool`)** | 2× 4 TB Hitachi Enterprise HDDs (OpenZFS mirrored pool — bulk media, backup datasets & archives) |
 | **NIC** | TP-Link TG-3468 Gigabit PCI-e |
 | **iGPU (Transcoding)** | Intel HD Graphics 4000 — exposed as `/dev/dri` for Jellyfin VAAPI |
 | **Host OS** | Ubuntu Server LTS |
@@ -183,7 +183,7 @@ flowchart TD
     end
 
     subgraph HAOS["🏠 ASUS X540SA — Home Assistant OS"]
-        HA["Home Assistant OS\n• Zigbee (SONOFF Dongle)\n• APC UPS Monitoring"]
+        HA["Home Assistant OS\n• Zigbee (SONOFF Dongle)\n• NUT Server (apc-950va)"]
         AuxDNS["Technitium DNS — AUX\n• Zone Replica via Catalog\n• DNS Redundancy\n• internal.205hlab.com mirror"]
         Switch -.->|LAN| HA
         Switch -.->|LAN| AuxDNS
@@ -760,9 +760,16 @@ flowchart LR
 
 #### Current Protection Posture
 - **Automated Database Backups & Restore Verification via Databasus:**  
-  All application relational databases hosted on PostgreSQL 18 (Authentik, Paperless-ngx, Mealie, FreshRSS, the Servarr suite, qui, Reactive Resume, and Speedtest Tracker) are backed up **daily** (`24h RPO`) using **Databasus** (`databasus.internal.205hlab.com`), paired with the official containerized **`databasus-verifier`** (`verification-agent run`) worker in a dedicated decoupled stack ([`compose/databasus/`](compose/databasus/)). After each backup completes, `databasus-verifier` automatically restores the archive into an ephemeral PostgreSQL 18 container, verifies schema and per-table row counts against the source, tears the throwaway container down, and logs results (`Target RTO: < 15m single DB / < 30m full cluster`) — documented in [**`docs/runbooks/disaster-recovery.md`**](docs/runbooks/disaster-recovery.md).
-- **Manual Redundancy for Critical Data:**  
-  High-value, non-reproducible data—including archived documents from Paperless-ngx, identity certificates, and custom configurations—are manually backed up across secondary physical devices and workstations on the internal LAN.
+  All application relational databases hosted on PostgreSQL 18 (Authentik, Paperless-ngx, Mealie, FreshRSS, the Servarr suite, qui, Reactive Resume, and Speedtest Tracker) are backed up **daily** (`24h RPO`) using **Databasus** (`databasus.internal.205hlab.com`), paired with the official containerized **`databasus-verifier`** (`verification-agent run`) worker in a dedicated decoupled stack ([`compose/databasus/`](compose/databasus/)). Backups are written to dedicated datasets on the OpenZFS mirror pool **`BinPool`** (`${DATABASUS_BACKUP}`), automatically tested into ephemeral PostgreSQL 18 containers after each run (comparing schema and per-table row counts against production), and manually replicated from `BinPool` to secondary offline LAN storage.
+- **Manual Redundancy for Appliances & File Assets:**  
+  High-value configuration and non-reproducible assets are manually backed up across secondary physical devices:
+  - **OpenWrt Router (Xiaomi AX6S):** LuCI `.tar.gz` configuration exports (VLANs, firewall zones, Cloudflare `iptables` rules, port forwards).
+  - **Home Assistant OS (ASUS X540SA):** Full HAOS `.tar` appliance snapshots (HA Core, SONOFF Zigbee pairing state, NUT server configuration).
+  - **Technitium DNS:** Authoritative zone records replicated in real-time via RFC Catalog Zone; complete settings archives (`.zip`) exported periodically via admin console.
+  - **Dockhand:** Container management state and built-in encrypted secrets vault (`dockhand_data:/app/data`) archived to `BinPool`, with master encryption keys kept in personal password manager.
+  - **Paperless-ngx:** Raw source document PDFs in `media/` reside on `BinPool` and are copied to secondary media.
+- **Automated Power Failure Protection (NUT Server & Client):**  
+  The APC Back-UPS XS 950U connects via USB to the ASUS X540SA appliance running Network UPS Tools (NUT) Server. When battery drops below 65% or runtime drops below 300 seconds, the NUT client on the Ubuntu Server executes a clean shutdown—halting Docker containers, checkpointing PostgreSQL 18, and exporting `BinPool` cleanly before battery power exhausts, while the battery-backed ASUS laptop keeps smart home and auxiliary DNS online throughout the blackout.
 - **Offsite Cloud Storage Integration:**  
   Encrypted offsite cloud storage integration is currently actively in progress to provide an initial remote safeguard for sensitive document archives and database dumps.
 

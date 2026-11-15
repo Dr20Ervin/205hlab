@@ -64,7 +64,7 @@ If Home Assistant and all DNS instances reside on the same primary compute tower
 
 Smart-home infrastructure and auxiliary DNS are physically separated onto the dedicated **ASUS X540SA** node:
 
-1. **Dedicated Physical Responsibilities:** Runs **Home Assistant OS (HAOS)** bare-metal, directly driving the **SONOFF Zigbee 3.0 USB Dongle Plus**, monitoring the **APC Back-UPS XS 950U**, and hosting **Auxiliary Technitium DNS (`technitium-aux`)** fed automatically via RFC Catalog Zone replication from the Ubuntu Server ([ADR-003](ADR-003-split-horizon-technitium-dns.md)).
+1. **Dedicated Physical Responsibilities:** Runs **Home Assistant OS (HAOS)** bare-metal, directly driving the **SONOFF Zigbee 3.0 USB Dongle Plus**, hosting the **Network UPS Tools (NUT) Server** for the **APC Back-UPS XS 950U** (signaling automated graceful shutdown to the primary Ubuntu Server client at 65% battery or 300s runtime), and hosting **Auxiliary Technitium DNS (`technitium-aux`)** fed automatically via RFC Catalog Zone replication from the Ubuntu Server ([ADR-003](ADR-003-split-horizon-technitium-dns.md)).
 2. **Strict GitOps & Lifecycle Boundary:** HAOS manages its own native add-on lifecycles (`no Git repo synced` to HAOS). Cross-node integration with the primary server is strictly limited to:
    - **Dockhand Hawser Agent (`standard v0.2.52`)** ([ADR-004](ADR-004-dockhand-gitops-continuous-deployment.md)) for remote container health inspection, log streaming, and troubleshooting from `dockhand.internal.205hlab.com`.
    - **Prometheus Telemetry** surfacing APC UPS load/runtime metrics on Grafana's `APC UPS Dashboard` (`205hlab - Hardware`).
@@ -73,7 +73,7 @@ Smart-home infrastructure and auxiliary DNS are physically separated onto the de
 
 ### Positive Consequences
 - **100% Maintenance Isolation:** Kernel upgrades, ZFS maintenance, or full Docker daemon restarts on the Fujitsu ESPRIMO P710 cause zero interruption to smart-home devices or household DNS queries.
-- **Defense-in-Depth Power Monitoring:** Because the HAOS laptop has its own internal battery and sits behind the APC UPS, it stays online to log power events and ensure clean UPS shutdown coordination even if primary compute powers down.
+- **Defense-in-Depth Power Monitoring & Automated Shutdown:** Because the HAOS laptop has its own internal battery and sits behind the APC UPS, it stays online to serve as the NUT Server and trigger automated graceful shutdown of the primary compute tower before battery depletion, keeping smart home lighting and auxiliary DNS operational throughout the blackout.
 - **Sustainable Hardware Utilization:** Converts an otherwise obsolete consumer laptop into an always-on low-power infrastructure appliance with zero additional hardware spend.
 
 ### Negative Consequences & Mitigations

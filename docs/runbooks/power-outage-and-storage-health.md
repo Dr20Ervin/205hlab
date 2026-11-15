@@ -12,8 +12,8 @@
 ```mermaid
 flowchart TD
     Grid["Utility AC Grid Power"] --> UPS["APC Back-UPS XS 950U\n(Battery Backup & Surge Protection)"]
-    UPS -->|"USB HID Telemetry"| HAOS["ASUS X540SA (HAOS Appliance)\n+ Internal Laptop Battery Buffer\n• Zigbee Coordinator (SONOFF)\n• technitium-aux DNS Replica"]
-    UPS -.->|"Protected AC / Surge Domain"| Main["Fujitsu ESPRIMO P710 (Ubuntu Server LTS)\n• 240 GB OS SSD + 480 GB /srv SSD\n• 2x 4 TB Hitachi OpenZFS Mirror Pool"]
+    UPS -->|"USB HID Telemetry"| HAOS["ASUS X540SA (HAOS Appliance)\n+ Internal Laptop Battery Buffer\n• Zigbee Coordinator (SONOFF)\n• technitium-aux DNS Replica\n• NUT Server (apc-950va)"]
+    UPS -.->|"Protected AC / Surge Domain"| Main["Fujitsu ESPRIMO P710 (Ubuntu Server LTS)\n• 240 GB OS SSD + 480 GB /srv SSD\n• 2x 4 TB Hitachi OpenZFS Mirror (BinPool)\n• NUT Client (upsmon)"]
     HAOS -->|"Prometheus Metrics"| Grafana["Grafana: APC UPS Dashboard\ngrafana-dashboards/hardware/apc-ups.json"]
     Main -->|"zfs_exporter & smartctl-exporter"| GrafanaZFS["Grafana: OpenZFS Overview\ngrafana-dashboards/hardware/zfs.json"]
 ```
@@ -24,19 +24,50 @@ flowchart TD
 
 ---
 
-## 🔌 Procedure 1: Monitoring Active Grid Power Events
+## 🔌 Procedure 1: Grid Power Event Response & Automated NUT Graceful Shutdown
 
-1. **Inspect UPS Telemetry (Home Assistant & Grafana):**
-   - Open Grafana **Hardware -> APC UPS Dashboard** ([`apc-ups.json`](../../grafana-dashboards/hardware/apc-ups.json)) or Home Assistant UI to inspect:
-     - Input line voltage (`V`)
-     - UPS battery charge (`%`) & estimated runtime remaining
-     - Real-time load percentage (`%`)
-2. **Proactive Graceful Shutdown (If Extended Outage Imminent):**
-   - Stop high-write application stacks gracefully or shut down the primary Ubuntu Server cleanly before UPS battery depletion so PostgreSQL flushes WAL/checkpoints cleanly and OpenZFS exports pools cleanly:
-     ```bash
-     sudo shutdown -h now
+### 1. Real-Time UPS Telemetry (Home Assistant & Grafana)
+- Open Grafana **Hardware -> APC UPS Dashboard** ([`apc-ups.json`](../../grafana-dashboards/hardware/apc-ups.json)) or the Home Assistant UI to inspect:
+  - Input line voltage (`V`)
+  - UPS battery charge percentage (`%`) & estimated runtime remaining (`seconds` / `minutes`)
+  - Real-time power load percentage (`%`)
+
+### 2. Automated Graceful Shutdown via Network UPS Tools (NUT Server & Client)
+During a sustained power outage, shutdown of the primary compute tower (**Fujitsu ESPRIMO P710**) is **fully automated** via Network UPS Tools (NUT) to prevent dirty unmounts and data corruption:
+
+1. **NUT Server on HAOS (ASUS X540SA):**
+   - The **APC Back-UPS XS 950U** connects directly via USB to the ASUS X540SA appliance.
+   - Home Assistant OS runs the NUT Server with driver `usbhid-ups` and the following tuned battery threshold overrides:
+     ```yaml
+     devices:
+       - name: apc-950va
+         driver: usbhid-ups
+         port: auto
+         config:
+           - pollinterval=15
+           - maxretry=3
+           - ignorelb
+           - override.battery.charge.low = 65
+           - override.battery.runtime.low = 300
      ```
-   - OpenWrt router + ASUS X540SA stay powered longer once high-draw tower loads are shed.
+2. **NUT Client on Ubuntu Server (`upsmon`):**
+   - The Fujitsu ESPRIMO P710 runs `nut-client` (`upsmon`), monitoring the `apc-950va` UPS over the internal network.
+   - **Shutdown Trigger Thresholds:**
+     - Battery charge drops to **65%** (`override.battery.charge.low = 65`), OR
+     - Estimated runtime drops to **300 seconds (5 minutes)** (`override.battery.runtime.low = 300`).
+   - When either threshold is breached, NUT signals a low battery condition (`LOWBATT`) and executes `SHUTDOWNCMD`:
+     - Systemd signals Docker to gracefully stop all running containers.
+     - Centralized **PostgreSQL 18** flushes its write-ahead log (WAL) and creates a clean shutdown checkpoint.
+     - OpenZFS unmounts datasets cleanly and exports **`BinPool`**.
+     - Host powers off safely before battery depletion with zero bit rot or page corruption.
+3. **Power Isolation Buffer:**
+   - Because the **ASUS X540SA** laptop has its own internal battery on top of the UPS, it easily outlasts the shutdown period—keeping **Home Assistant Core**, **Zigbee lighting mesh**, and **`technitium-aux`** LAN DNS resolution operational for household members throughout the blackout.
+
+### 3. Manual Immediate Shutdown Fallback
+If an operator is physically present and knows a blackout will be prolonged, the primary server can be shut down manually before the 65% threshold:
+```bash
+sudo shutdown -h now
+```
 
 ---
 
@@ -63,24 +94,24 @@ Once utility power stabilizes and the **Fujitsu ESPRIMO P710** boots back into U
 
 ---
 
-## 🗄️ Procedure 3: OpenZFS Mirrored Pool Audit & Bit-Rot Scrubbing
+## 🗄️ Procedure 3: OpenZFS Mirrored Pool (`BinPool`) Audit & Bit-Rot Scrubbing
 
-The **2× 4 TB Hitachi Enterprise HDDs** operate as an OpenZFS mirrored pool for media and bulk storage. After any unclean shutdown or power brownout, verify zero vdev or checksum errors:
+The **2× 4 TB Hitachi Enterprise HDDs** operate as an OpenZFS mirrored pool named **`BinPool`** for media, backup archives, and persistent bulk storage. After any unclean shutdown or power brownout, verify zero vdev or checksum errors:
 
 1. **Inspect current ZFS pool health and error counters:**
    ```bash
-   zpool status -v
-   zpool list
+   zpool status -v BinPool
+   zpool list BinPool
    ```
    Confirm pool state is **`ONLINE`** and **`READ`**, **`WRITE`**, and **`CKSUM`** error columns read `0` on both mirrored disks.
 
 2. **Launch a post-outage (or monthly scheduled) OpenZFS scrub:**
    ```bash
-   sudo zpool scrub <pool-name>
+   sudo zpool scrub BinPool
    ```
    Monitor scrub progress:
    ```bash
-   zpool status <pool-name>
+   zpool status BinPool
    ```
 
 3. **Verify via Grafana Telemetry:**
@@ -92,7 +123,7 @@ The **2× 4 TB Hitachi Enterprise HDDs** operate as an OpenZFS mirrored pool for
 
 ### 1. Audit Physical SSDs & Mirror HDDs via `smartctl`
 
-Inspect S.M.A.R.T. attributes across the OS SSD (`240 GB Kingston A400`), Docker `/srv` SSD (`480 GB ADATA SU630`), and both `4 TB Hitachi` mirror drives (also exported to Prometheus by `smartctl-exporter` on port `:9633`):
+Inspect S.M.A.R.T. attributes across the OS SSD (`240 GB Kingston A400`), Docker `/srv` SSD (`480 GB ADATA SU630`), and both `4 TB Hitachi` mirror drives in `BinPool` (also exported to Prometheus by `smartctl-exporter` on port `:9633`):
 
 ```bash
 lsblk -d -o NAME,MODEL,SIZE,ROTA
@@ -122,7 +153,7 @@ docker exec -it postgres psql -U "$POSTGRES_USER" -d postgres -c \
 ## ✅ Post-Outage Sign-Off Checklist
 
 - [ ] Ubuntu Server boot complete, NTP time synced, and all 21 Compose stacks healthy (`docker ps`).
-- [ ] `zpool status -v` reports **`ONLINE`** with `0` Read/Write/Checksum errors across both 4 TB Hitachi HDDs (and post-outage `zpool scrub` clean).
+- [ ] `zpool status -v BinPool` reports **`ONLINE`** with `0` Read/Write/Checksum errors across both 4 TB Hitachi HDDs (and post-outage `zpool scrub BinPool` clean).
 - [ ] S.M.A.R.T. attributes healthy across all 4 SATA drives (`smartctl-exporter`).
 - [ ] PostgreSQL 18 `pg_stat_database` reports `checksum_failures = 0` across all tenant databases.
 - [ ] APC UPS battery recharging normally in [`grafana-dashboards/hardware/apc-ups.json`](../../grafana-dashboards/hardware/apc-ups.json).

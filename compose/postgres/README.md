@@ -123,7 +123,7 @@ Each application maintains an isolated database and restricted user. Provisionin
 
 ## 💾 Backup & Disaster Recovery
 
-- **Decoupled Automated Backups & Restore Verification (`compose/databasus/`):** Daily scheduled `pg_dump` backups and automated post-backup restore verification (**`databasus-verifier`**) are managed in the dedicated [`compose/databasus/`](../databasus/) stack (`databasus.internal.205hlab.com`) so backup and verification workflows stay independent of primary `postgres` container uptime.
+- **Decoupled Automated Backups & Restore Verification (`compose/databasus/`):** Daily scheduled `pg_dump` backups (written to OpenZFS `BinPool` datasets and replicated to secondary offline storage) and automated post-backup restore verification (**`databasus-verifier`**) are managed in the dedicated [`compose/databasus/`](../databasus/) stack (`databasus.internal.205hlab.com`) so backup and verification workflows stay independent of primary `postgres` container uptime.
 - **Step-by-Step Recovery Playbooks:** See [**`docs/runbooks/disaster-recovery.md`**](../../docs/runbooks/disaster-recovery.md) for RPO (`24h`) / RTO (`< 15m` single DB, `< 30m` full cluster) targets, automated verification, manual restore drills, single-app rollbacks, and cold bare-metal recovery.
 - **Physical Data Files:** All tables, indexes, and write-ahead logs (WAL) reside in Docker named volume `postgres_data` (`/var/lib/postgresql/data`).
 - **Manual Full Cluster Backup:**
