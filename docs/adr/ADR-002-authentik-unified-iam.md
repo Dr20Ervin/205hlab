@@ -92,5 +92,5 @@ Authentik (`compose/authentik/`) acts as the mandatory security perimeter for **
 ## Compliance & Verification (Fitness Functions)
 
 - **Compose Middleware Audit:** Every WAN-exposed router in `compose/*/` lacking native OIDC must declare `traefik.http.routers.<service>_https.middlewares=authentik@docker`.
-- **RBAC Documentation Sync:** [`compose/authentik/README.md`](../../compose/authentik/README.md) maintains the complete 31-service integration matrix and Authentik group taxonomy.
+- **RBAC Documentation Sync:** [`compose/authentik/README.md`](../../compose/authentik/README.md) maintains the complete 32-service integration matrix and Authentik group taxonomy.
 - **Monitoring:** Authentik metrics are scraped over `monitoring_network` into Prometheus and visualized on the `authentik` Grafana dashboard (`205hlab - Core`).

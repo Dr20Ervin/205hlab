@@ -12,7 +12,7 @@
 
 ## Context and Problem Statement
 
-`205hlab` comprises 20 modular Docker Compose stacks powering 30+ services on the primary Ubuntu Server, alongside container workloads running on the auxiliary HAOS appliance (ASUS X540SA). Deploying changes via manual SSH + `docker compose up -d` risks configuration drift between the Git repository and live containers, while traditional Compose workflows require keeping sensitive API keys, database passwords, and OIDC secrets in plain-text `.env` files on the host SSD.
+`205hlab` comprises 22 modular Docker Compose stacks powering 30+ services on the primary Ubuntu Server, alongside container workloads running on the auxiliary HAOS appliance (ASUS X540SA). Deploying changes via manual SSH + `docker compose up -d` risks configuration drift between the Git repository and live containers, while traditional Compose workflows require keeping sensitive API keys, database passwords, and OIDC secrets in plain-text `.env` files on the host SSD.
 
 **Evolutionary Context (`Plain CLI` → `Portainer` → `Dockge & Unraid` → `Dockhand on Ubuntu Server`):** Prior iterations progressed from managing containers purely over **plain terminal CLI**, to **Portainer**, and then to **Dockge running on Unraid** (alongside Beszel). While Unraid + Dockge made routine consumer-NAS management easy, Unraid proved overly abstracted and limiting for serious Linux systems administration — obscuring direct bare-metal control over Ubuntu Server, kernel tuning, OpenZFS, `iptables`, and network microsegmentation. Returning to **bare-metal Ubuntu Server LTS** created the opportunity to adopt **Dockhand** for scheduled GitOps and encrypted deploy-time secrets. Meanwhile, full enterprise orchestrators (**Kubernetes / K3s + ArgoCD + HashiCorp Vault**) continue to be evaluated in isolated dev VMs rather than imposing excessive control-plane overhead onto a single 4C/8T production tower.
 
@@ -76,7 +76,7 @@
 Production delivery operates as a strict **Two-Stage CI/CD Pipeline** (documented in root [`README.md`](../../README.md#-production-cicd-pipeline-github-actions--dockhand-gitops)):
 
 1. **Stage 1 — Continuous Integration Gate (`.github/workflows/validate-compose.yml`):**  
-   On every push or pull request touching `compose/**`, GitHub Actions dynamically discovers all 20 stack directories, bootstraps mock bridge networks, populates blank template keys via [`.github/scripts/prepare-test-env.py`](../../.github/scripts/prepare-test-env.py), and validates `docker compose config --quiet` against each `example.env`.
+   On every push or pull request touching `compose/**`, GitHub Actions dynamically discovers all 22 stack directories, bootstraps mock bridge networks, populates blank template keys via [`.github/scripts/prepare-test-env.py`](../../.github/scripts/prepare-test-env.py), and validates `docker compose config --quiet` against each `example.env`.
 2. **Stage 2 — Continuous Deployment via Dockhand (`dockhand.internal.205hlab.com`):**  
    Once merged to `main`, Dockhand on the Ubuntu Server polls the repository on schedule, injects production secrets from its encrypted internal database at deploy time (**no `.env` files on disk**), and reconciles container state with zero manual SSH intervention.
 3. **Remote Node Boundary via Hawser (`standard v0.2.52`):**  

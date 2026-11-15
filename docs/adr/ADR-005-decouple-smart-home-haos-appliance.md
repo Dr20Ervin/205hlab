@@ -14,7 +14,7 @@
 
 Home automation controls physical apartment infrastructure — Zigbee lighting, motion/climate sensors via a **SONOFF Zigbee 3.0 USB Dongle Plus**, and power telemetry from an **APC Back-UPS XS 950U**. Simultaneously, the apartment relies on internal DNS resolution ([ADR-003](ADR-003-split-horizon-technitium-dns.md)) for basic internet connectivity.
 
-If Home Assistant and all DNS instances reside on the same primary compute tower (**Fujitsu ESPRIMO P710**) alongside 20 media, analytics, and database Docker stacks, then any Ubuntu kernel update, Docker daemon restart, ZFS pool maintenance, or storage bottleneck interrupts household lighting, automations, UPS monitoring, and DNS resolution simultaneously.
+If Home Assistant and all DNS instances reside on the same primary compute tower (**Fujitsu ESPRIMO P710**) alongside 22 media, analytics, and database Docker stacks, then any Ubuntu kernel update, Docker daemon restart, ZFS pool maintenance, or storage bottleneck interrupts household lighting, automations, UPS monitoring, and DNS resolution simultaneously.
 
 **Evolutionary Context (Years of Virtualized HAOS):** For years prior to `205hlab`, Home Assistant ran inside a **Virtual Machine on the main server**. That setup repeatedly exposed a fundamental flaw: whenever the primary host suffered an issue or underwent maintenance, apartment IoT lighting and sensors stopped working right alongside the server. Extracting Home Assistant onto a separate physical **ASUS X540SA** laptop (`Intel Celeron N3060` 2C/2T, `4 GB DDR3`, `240 GB Kingston A400 SSD`) salvaged from leftover hardware solved both smart-home fault isolation and created an always-on second machine capable of hosting the **auxiliary DNS replica** (originally running Pi-hole sync and AdGuard Home sync, now upgraded to native **Technitium DNS Catalog Zone replication** per [ADR-003](ADR-003-split-horizon-technitium-dns.md)).
 
@@ -46,7 +46,7 @@ If Home Assistant and all DNS instances reside on the same primary compute tower
 
 #### Option 2 — Home Assistant Container on Primary Ubuntu Server
 - **Pros:**
-  - Zero extra physical device; managed purely within `compose/` alongside the 20 existing stacks.
+  - Zero extra physical device; managed purely within `compose/` alongside the 22 existing stacks.
 - **Cons:**
   - Shares reboot and failure domains with Docker/Ubuntu maintenance: taking the server down kills apartment automations and UPS tracking during the outage itself.
   - Container mode lacks the official **HAOS Supervisor** add-on ecosystem, requiring manual sidecar wiring for Zigbee2MQTT/Matter/add-ons and leaving Auxiliary DNS coupled to the exact same host.

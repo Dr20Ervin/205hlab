@@ -129,7 +129,7 @@ Access to applications, administrative privileges, and internal role mappings ar
 
 ---
 
-## 📑 Master Integration Matrix (All 31 Services)
+## 📑 Master Integration Matrix (All 32 Services)
 
 ### 1. Native OAuth2 / OpenID Connect (OIDC) Applications
 

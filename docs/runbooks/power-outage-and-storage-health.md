@@ -152,7 +152,7 @@ docker exec -it postgres psql -U "$POSTGRES_USER" -d postgres -c \
 
 ## ✅ Post-Outage Sign-Off Checklist
 
-- [ ] Ubuntu Server boot complete, NTP time synced, and all 21 Compose stacks healthy (`docker ps`).
+- [ ] Ubuntu Server boot complete, NTP time synced, and all 22 Compose stacks healthy (`docker ps`).
 - [ ] `zpool status -v BinPool` reports **`ONLINE`** with `0` Read/Write/Checksum errors across both 4 TB Hitachi HDDs (and post-outage `zpool scrub BinPool` clean).
 - [ ] S.M.A.R.T. attributes healthy across all 4 SATA drives (`smartctl-exporter`).
 - [ ] PostgreSQL 18 `pg_stat_database` reports `checksum_failures = 0` across all tenant databases.
