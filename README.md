@@ -18,11 +18,11 @@
 
 <br/>
 
-**[📖 Architecture](#-system-architecture) · [📜 ADRs](docs/adr/README.md) · [🚨 Runbooks](docs/runbooks/README.md) · [🌐 Routing & DNS](#-routing--dns-design) · [📦 Services](#-service-catalog) · [🔒 Security](#-security-posture) · [📁 Structure](#-repository-structure) · [🚀 Deployment](#-deployment--operations)**
+**[🖥️ Hardware](#-physical-infrastructure) · [🏗️ Architecture](#-system-architecture) · [📜 ADRs](docs/adr/README.md) · [🚨 Runbooks](docs/runbooks/README.md) · [📦 Services & DNS](#-services-routing--dns) · [🔒 Security](#-security-posture) · [🚀 Operations & Backups](#-operations-cicd--backups) · [👤 Author](#-author)**
 
 <br/>
 
-> *Snapshot Release `2026-11-14` — Production architecture baseline, actively running in my home 24/7.*
+> *Snapshot Release `2026-11-14` — Production architecture baseline, running 24/7 at home.*
 
 </div>
 
@@ -36,132 +36,47 @@
 
 ## 📌 About This Repository
 
-This repository serves a **dual purpose**:
+This repository is both my **live home production environment** and my **systems engineering portfolio**. Everything documented here runs 24/7 in my apartment—handling DNS, identity management, document archival, task tracking, network monitoring, and media automation for my household.
 
-**Engineering Portfolio** — A tangible, real-world showcase of systems architecture, container orchestration, defense-in-depth security, infrastructure automation, and observability engineering. Everything here is what I personally architect, deploy, debug, and maintain.
-
-**Live Production Homelab** — The operational backbone powering day-to-day self-hosted digital services, media automation, household productivity tools, and smart home infrastructure. This is not a demo — these stacks are online right now, serving my household daily.
-
-Every service is governed by production-grade standards: hard CPU/RAM resource limits, Docker healthchecks, network microsegmentation, automated TLS lifecycle management, **mandatory centralized SSO/ForwardAuth on every WAN-facing route**, and end-to-end Prometheus telemetry piped into Grafana dashboards.
-
----
-
-## 🧠 Skills & Engineering Background
-
-While this repository focuses on **containerized infrastructure running on bare-metal Ubuntu Server**, my homelab journey spans years of hands-on enterprise and virtualization experience across the full infrastructure stack:
-
-<details>
-<summary><strong>🖥️ Virtualization & Hypervisors</strong></summary>
-<br/>
-
-Deep experience architecting and operating **Proxmox VE** clusters — including KVM virtual machines, unprivileged LXC containers, PCI/GPU hardware passthrough, Software-Defined Networking (SDN with VLANs and VNet overlays), and automated backup workflows with Proxmox Backup Server (PBS). Comfortable managing full cluster HA fencing and live VM migration.
-
-</details>
-
-<details>
-<summary><strong>🗄️ Enterprise Storage & OpenZFS</strong></summary>
-<br/>
-
-Designing and operating high-integrity ZFS storage pools on **TrueNAS (Core & SCALE)** — including vdev topology selection (RAID-Z1/Z2/Z3, mirrored vdevs), dataset recordsize tuning per workload, L2ARC/ZIL SSD tiering, automated snapshot schedules, remote ZFS replication over SSH, and periodic bit-rot scrubbing for data integrity assurance.
-
-</details>
-
-<details>
-<summary><strong>🔐 Identity & Access Management (IAM)</strong></summary>
-<br/>
-
-Multi-generation directory and identity progression: starting with **Windows Server Active Directory Domain Services (AD DS)** in a VM (GPO, DNS, DHCP, Kerberos), migrating to **OpenLDAP**, and adopting Red Hat-ecosystem **FreeIPA** primarily for centralized POSIX user/group permissions across **OpenZFS datasets and NFS shares** (intentionally omitted from single-node bare-metal production and ready to re-implement when scaling to a multi-node cluster). Web authentication evolved from selective SSO into a mandatory, zero-trust architecture driven by **Authentik** across all 31 services — providing OIDC, OAuth2, ForwardAuth middleware, and group/entitlement RBAC.
-
-</details>
-
-<details>
-<summary><strong>🌐 Reverse Proxy, TLS, DNS & Traffic Engineering</strong></summary>
-<br/>
-
-Ingress evolved from early internal **Nginx Proxy Manager (NPM)** + **Cloudflare Tunnels (`cloudflared`)** setups into an enterprise-style edge powered by **Traefik Proxy v3** — dynamic Docker/file providers, middleware chaining (ForwardAuth, security headers, rate limiting), automated Let's Encrypt **Cloudflare DNS-01 ACME** TLS (no port 80 exposure), and Prometheus metrics export. On the DNS layer, progression across **Pi-hole** (with multi-node sync), **AdGuard Home** (with sync), and **ISC BIND9** culminated in dual-node **Technitium DNS** using native RFC Catalog Zone replication and DNSSEC.
-
-</details>
-
-<details>
-<summary><strong>🛡️ Perimeter Security & Network Hardening</strong></summary>
-<br/>
-
-Multi-tier ingress protection combining **Cloudflare Proxy** at the edge with strict host-level **`iptables`/`nftables`** rules on the Ubuntu Server. The firewall enforces that only verified **Cloudflare origin IP blocks** and internal LAN/VLAN CIDRs can reach open ports — making the server completely immune to internet port scanners and direct-to-IP exploitation attempts even if the DNS record is publicly resolvable. Combined with Cloudflare's WAF, bot mitigation, and DDoS protection.
-
-</details>
-
-<details>
-<summary><strong>📡 Custom Network Firmware & Routing</strong></summary>
-<br/>
-
-Custom-compiled **OpenWrt** flashed on a **Xiaomi Redmi Router AX6S** — handling core LAN routing, VLAN isolation between IoT, trusted, and management zones, firewall zone-based policy enforcement, hardware NAT acceleration, DHCP/DNS request interception, and WAN port forwarding with strict source validation.
-
-</details>
-
-<details>
-<summary><strong>🏠 Smart Home & Automation Infrastructure</strong></summary>
-<br/>
-
-After operating Home Assistant inside a main-server **Virtual Machine** for years, smart-home infrastructure was intentionally decoupled onto a dedicated, isolated bare-metal **ASUS X540SA** appliance running **Home Assistant OS (HAOS)**. This guarantees zero IoT/Zigbee blast radius during primary server maintenance and provides dedicated physical hardware for the **auxiliary Technitium DNS replica** (following earlier Pi-hole sync and AdGuard Home sync setups — see [DNS Design](#-routing--dns-design)).
-
-</details>
-
-<details>
-<summary><strong>🐳 Container Systems & Observability Engineering</strong></summary>
-<br/>
-
-Orchestration progressed through **plain terminal CLI**, **Portainer**, and **Dockge & Unraid** (alongside **Beszel**) before returning to bare-metal **Ubuntu Server LTS** with **Dockhand GitOps** for full Linux systems administration control, encrypted deploy-time secrets injection, non-root `PUID`/`PGID` hardening, `no-new-privileges:true`, deterministic CPU/RAM caps, and isolated bridge networks. Telemetry and monitoring experience spans **InfluxDB + Telegraf**, **Uptime Kuma**, **Grafana Loki**, and **Grafana Alloy** (evaluated and deliberately deferred until multi-node expansion), currently standardized on **Prometheus v3** and **Grafana 13**.
-
-</details>
+Because my household relies on these services daily, I treat the setup like a real production environment rather than a sandbox. Changes go through GitHub Actions syntax and variable linting, deployments sync via GitOps, databases are backed up and automatically restore-tested every night, and major design trade-offs are recorded in [Architecture Decision Records (`docs/adr/`)](docs/adr/README.md) paired with [Operational Runbooks (`docs/runbooks/`)](docs/runbooks/README.md).
 
 ---
 
 ## 🖥️ Physical Infrastructure
 
-### Primary Production Server — Fujitsu ESPRIMO P710
+### Primary Server — Fujitsu ESPRIMO P710
 
 | Component | Specification |
 | :--- | :--- |
-| **Case & Form Factor** | Fujitsu ESPRIMO P710 (Tower) |
-| **CPU** | Intel Core i7-3770 (4C/8T, 3.2 GHz base / 3.6 GHz boost) |
-| **RAM** | 32 GB DDR3 |
-| **OS Drive** | 1× 240 GB Kingston A400 SSD (Ubuntu Server LTS) |
-| **Data Drive** | 1× 480 GB ADATA SU630 SSD (`/srv` — Docker volumes & app data) |
-| **ZFS Storage Pool (`BinPool`)** | 2× 4 TB Hitachi Enterprise HDDs (OpenZFS mirrored pool — bulk media, backup datasets & archives) |
-| **NIC** | TP-Link TG-3468 Gigabit PCI-e |
-| **iGPU (Transcoding)** | Intel HD Graphics 4000 — exposed as `/dev/dri` for Jellyfin VAAPI |
-| **Host OS** | Ubuntu Server LTS |
+| **System** | Fujitsu ESPRIMO P710 Tower · Ubuntu Server LTS |
+| **CPU & RAM** | Intel Core i7-3770 (4C/8T, 3.2–3.6 GHz) · 32 GB DDR3 |
+| **iGPU** | Intel HD Graphics 4000 (`/dev/dri` passed to Jellyfin for VAAPI transcoding) |
+| **OS & App SSDs** | 240 GB Kingston A400 (OS) + 480 GB ADATA SU630 (`/srv` Docker volumes & app data) |
+| **ZFS Pool (`BinPool`)** | 2× 4 TB Hitachi Enterprise HDDs (OpenZFS mirror — backups, documents & bulk media) |
+| **Network** | TP-Link TG-3468 Gigabit PCIe NIC |
 
 ### HAOS / Smart Home + Auxiliary DNS — ASUS X540SA
 
 | Component | Specification |
 | :--- | :--- |
-| **Platform** | ASUS X540SA laptop |
-| **CPU** | Intel Celeron N3060 (2C/2T, low-power) |
-| **RAM** | 4 GB DDR3 |
-| **Storage** | 1× 240 GB Kingston A400 SSD |
-| **Connected Devices** | SONOFF Zigbee 3.0 USB Dongle Plus · APC Back-UPS XS 950U (USB) |
-| **Services Running** | Home Assistant OS (HAOS) + **Auxiliary Technitium DNS** (`technitium-aux`) |
-| **DNS Role** | Receives zone replication from primary Technitium via Catalog zone — provides DNS redundancy for the internal homelab network |
+| **System** | Repurposed ASUS X540SA Laptop · Home Assistant OS (HAOS) |
+| **CPU, RAM & Storage** | Intel Celeron N3060 (2C/2T) · 4 GB DDR3 · 240 GB Kingston A400 SSD |
+| **USB Peripherals** | SONOFF Zigbee 3.0 Dongle Plus · APC Back-UPS XS 950U (NUT server) |
+| **Role** | Smart home automation, UPS power telemetry, and **Auxiliary Technitium DNS** (`technitium-aux`) |
 
-### Network Infrastructure
+### Network Gear & Edge
 
-| Device | Role |
+| Component | Role |
 | :--- | :--- |
-| **Xiaomi Redmi Router AX6S** | Primary router — custom-compiled **OpenWrt**, VLANs, firewall zones, port forwarding, hardware NAT |
-| **TP-Link 5-Port Gigabit Switch** | Unmanaged gigabit switching for wired LAN segments |
-| **Cloudflare** | Edge proxy, CDN, WAF, DNS, and ACME DNS-01 TLS certificate automation |
+| **Xiaomi Redmi Router AX6S** | Flashed with custom-compiled **OpenWrt** — VLAN isolation, firewall zones, hardware NAT, Cloudflare CIDR port-forwarding |
+| **TP-Link 5-Port GbE Switch** | Wired gigabit LAN switching |
+| **Cloudflare** | Edge reverse proxy, WAF, DDoS mitigation, and DNS-01 ACME certificate validation |
 
-### 📐 Hardware Philosophy & Sustainable Engineering
+### Why This Hardware?
 
-- **Pragmatic Economics & Apartment Footprint Constraints:**  
-  In today's economic climate and within an apartment environment, deploying a high-draw, acoustic-heavy enterprise server rack is neither financially prudent nor spatially viable. The physical setup was intentionally engineered around strict living-space constraints: **low idle power consumption**, **whisper-quiet thermals**, and a **minimal physical footprint**.
-- **Transforming E-Waste into 24/7 Production Infrastructure:**  
-  Rather than purchasing costly enterprise appliances, this entire production cluster was built by rescuing and repurposing discarded leftover hardware. The Fujitsu ESPRIMO P710 tower (Intel Core i7-3770, 32 GB DDR3) and ASUS X540SA laptop were salvaged from what would otherwise be electronic waste (e-waste) and transformed into a resilient, production-grade 24/7 self-hosted backbone running with 99.9% uptime. The quad-core i7 processor delivers an optimal performance-per-watt ratio, while its integrated Intel HD 4000 iGPU provides dedicated VAAPI hardware video transcoding for Jellyfin without the heat, noise, and power draw of a discrete PCIe graphics card.
-- **Strict Separation: Production vs. Development/Testing:**  
-  The hardware documented here represents the **Production Environment** powering mission-critical household services (identity, document archival, networking, media). To maintain zero blast radius on daily household operations, all cutting-edge enterprise testing, staging, and research (such as experimenting with HashiCorp Vault, Kubernetes/K3s clusters, and automated CI pipelines) takes place in isolated Virtual Machines running on separate dev hardware.
-- **Architectural Scalability:**  
-  While this single-node bare-metal architecture is right-sized for the household's current compute requirements, the entire infrastructure was engineered with cloud-native principles from day one. Every stack is containerized, decoupled from the underlying hardware, parameter-driven, and synchronized via GitOps. This design guarantees seamless horizontal scaling to **multi-node high-availability clusters (such as Kubernetes / K3s)** and **10GbE+ SFP+ backplanes** whenever budget, space, and enterprise throughput demands warrant future hardware expansion.
+- **Apartment-Friendly Repurposed E-Waste:** Running a loud, power-hungry rack server in an apartment makes no sense financially or acoustically. Both the Fujitsu tower and ASUS laptop were rescued from discarded hardware. The i7-3770 has a low idle power draw, stays quiet, and its built-in QuickSync iGPU handles video transcoding without needing a discrete GPU.
+- **Fault Isolation (Two-Node Split):** I used to run Home Assistant inside a VM on my main server, which meant every host reboot or maintenance window took down the smart lights and Zigbee network. Moving HAOS and the secondary DNS server onto the dedicated ASUS laptop (which also has its own built-in battery alongside the APC UPS) keeps smart home automation and LAN DNS resolution online even if the main Ubuntu server is powered off.
+- **Production vs. Lab Separation:** This hardware strictly runs stable household services. Whenever I test new tooling—like multi-node K3s clusters, HashiCorp Vault, or Proxmox SDN setups—I spin them up in isolated VMs on separate test hardware so I don't break production.
 
 ---
 
@@ -184,7 +99,7 @@ flowchart TD
 
     subgraph HAOS["🏠 ASUS X540SA — Home Assistant OS"]
         HA["Home Assistant OS\n• Zigbee (SONOFF Dongle)\n• NUT Server (apc-950va)"]
-        AuxDNS["Technitium DNS — AUX\n• Zone Replica via Catalog\n• DNS Redundancy\n• internal.205hlab.com mirror"]
+        AuxDNS["Technitium DNS — AUX\n• Zone Replica via Catalog\n• DNS Redundancy"]
         Switch -.->|LAN| HA
         Switch -.->|LAN| AuxDNS
     end
@@ -192,342 +107,153 @@ flowchart TD
     subgraph Server["🖥️ Fujitsu ESPRIMO P710 — Ubuntu Server LTS"]
         subgraph Ingress["Ingress, Identity & DNS"]
             Traefik["Traefik v3\n• TLS Termination (ACME / CF)\n• ForwardAuth Middleware\n• HTTP→HTTPS Redirect"]
-            Authentik["Authentik SSO\n• MANDATORY on all WAN routes\n• OIDC / OAuth2 / ForwardAuth\n• Group RBAC & Entitlements"]
-            DNS["Technitium DNS — PRIMARY\n• Split-Horizon DNS\n• 8 Authoritative Zones\n• DNSSEC on dns.205hlab.com\n• Catalog → AUX replication"]
+            Authentik["Authentik SSO\n• Gates all WAN routes\n• OIDC / OAuth2 / ForwardAuth\n• Group RBAC"]
+            DNS["Technitium DNS — PRIMARY\n• Split-Horizon DNS (8 Zones)\n• DNSSEC on dns.205hlab.com"]
         end
 
         subgraph Data["Data Tier"]
-            PG[("PostgreSQL 18\n--data-checksums\nIsolated DBs per app")]
-            TSB[("TimescaleDB pg18\nTracearr time-series")]
-            VLK[("Valkey 9\nPaperless broker")]
+            PG[("PostgreSQL 18\n--data-checksums\n9 Isolated App DBs")]
+            TSB[("TimescaleDB pg18\nTracearr TSDB")]
+            VLK[("Valkey 9 / Redis\nIn-Memory Queues")]
         end
 
-        subgraph InternalApps["🔒 Internal Services — internal.205hlab.com"]
-            Adminer["Adminer\nadminer.internal.205hlab.com"]
-            Databasus["Databasus\ndatabasus.internal.205hlab.com"]
-            Dockhand["Dockhand\ndockhand.internal.205hlab.com"]
-            Prom["Prometheus v3\nprometheus.internal.205hlab.com"]
-            CDet["ChangeDetection.io\nchangedetection.internal.205hlab.com"]
-            TechUI["Technitium UI\ntechnitium.internal.205hlab.com"]
-            OpenSpeed["OpenSpeedTest\nopenspeed.internal.205hlab.com"]
-            MyIP["MyIP\nmyip.internal.205hlab.com"]
+        subgraph InternalApps["🔒 Internal Only — *.internal.205hlab.com"]
+            IntGroup["Adminer · Databasus · Dockhand\nPrometheus · Technitium UI\nChangeDetection · OpenSpeedTest · MyIP"]
         end
 
-        subgraph ExternalApps["🌐 External Services — 205hlab.com (Authentik protected)"]
-            Paperless["Paperless-ngx\npaperless.205hlab.com"]
-            Mealie["Mealie\nmealie.205hlab.com"]
-            FreshRSS["FreshRSS\nfreshrss.205hlab.com"]
-            ReactiveResume["Reactive Resume\nresume.205hlab.com"]
-            Vikunja["Vikunja (Tasks)\nvikunja.205hlab.com"]
-            SearXNG["SearXNG\nsearch.205hlab.com"]
-            Grafana["Grafana 13\ngrafana.205hlab.com"]
-            Speedtest["Speedtest Tracker\nspeedtest.205hlab.com"]
-            WebTools["Web Tools (IT, Omni, Draw, PDF)\n*.205hlab.com"]
+        subgraph ExternalApps["🌐 Productivity & Monitoring — *.205hlab.com"]
+            ExtGroup["Paperless-ngx · Mealie · FreshRSS\nReactive Resume · Vikunja · SearXNG\nGrafana 13 · Speedtest Tracker · Web Tools"]
         end
 
-        subgraph Media["🎬 Media — 205hlab.com (Authentik protected)"]
-            Jellyfin["Jellyfin\njellyfin.205hlab.com"]
-            Kavita["Kavita\nkavita.205hlab.com"]
-            Seerr["Seerr\nseer.205hlab.com"]
-            Sonarr["Sonarr\nsonarr.205hlab.com"]
-            Radarr["Radarr\nradarr.205hlab.com"]
-            Lidarr["Lidarr\nlidarr.205hlab.com"]
-            Chaptarr["Chaptarr\nchaptarr.205hlab.com"]
-            Bazarr["Bazarr\nbazarr.205hlab.com"]
-            Prowlarr["Prowlarr\nprowlarr.205hlab.com"]
-            Profilarr["Profilarr\nprofilarr.205hlab.com"]
-            Qui["qui\nqui.205hlab.com"]
-            MeTube["MeTube\nmetube.205hlab.com"]
-            Tracearr["Tracearr\ntracearr.205hlab.com"]
+        subgraph Media["🎬 Media Stack — *.205hlab.com"]
+            MediaGroup["Jellyfin · Kavita · Seerr · Tracearr\nSonarr · Radarr · Lidarr · Chaptarr\nBazarr · Prowlarr · Profilarr · qui · MeTube"]
         end
     end
 
     Switch -->|LAN ingress| Traefik
-    Traefik <-->|ForwardAuth gate| Authentik
-    Authentik -->|SSO protected| ExternalApps
-    Authentik -->|SSO protected| Media
+    Traefik <-->|ForwardAuth| Authentik
+    Authentik -->|Protected| ExternalApps
+    Authentik -->|Protected| Media
     Traefik --> InternalApps
     Traefik --> DNS
-    ExternalApps --> PG
-    ExternalApps --> VLK
-    Media --> PG
-    Media --> TSB
+    ExternalApps --> PG & VLK
+    Media --> PG & TSB
     DNS -.->|Catalog replication| AuxDNS
 ```
 
-### 📜 Architecture Decision Records (ADRs) & Operational Runbooks
+### 📜 Architecture Decision Records (ADRs) & Runbooks
 
-Major systems design choices, rejected alternatives, and operational trade-offs are formally documented as immutable records in [`docs/adr/`](docs/adr/README.md), paired 1-to-1 with executable Standard Operating Procedures (SOPs) in [`docs/runbooks/`](docs/runbooks/README.md):
+Key architectural trade-offs and the alternatives I rejected are documented in [`docs/adr/`](docs/adr/README.md), each paired with a recovery procedure in [`docs/runbooks/`](docs/runbooks/README.md):
 
-| ADR | Decision | Focus | Operational Runbook |
+| ADR | Decision | Why I Built It This Way | Operational Runbook |
 | :--- | :--- | :--- | :--- |
-| **[ADR-001](docs/adr/ADR-001-centralized-postgresql-18.md)** | Centralized PostgreSQL 18 (`--data-checksums`) | Memory efficiency, `db-init.sql` isolation, Databasus backups (Tracearr TimescaleDB exception) | [**`disaster-recovery.md`**](docs/runbooks/disaster-recovery.md) |
-| **[ADR-002](docs/adr/ADR-002-authentik-unified-iam.md)** | Authentik Unified Zero-Trust IAM | Two-tier OIDC + Traefik `authentik@docker` ForwardAuth across all 31 services | [**`iam-and-ingress-recovery.md`**](docs/runbooks/iam-and-ingress-recovery.md) |
-| **[ADR-003](docs/adr/ADR-003-split-horizon-technitium-dns.md)** | Split-Horizon Technitium DNS + Catalog HA | Internal zone isolation (`*.internal.205hlab.com`), DNSSEC, automatic AUX replication | [**`dns-failover-and-sync.md`**](docs/runbooks/dns-failover-and-sync.md) |
-| **[ADR-004](docs/adr/ADR-004-dockhand-gitops-continuous-deployment.md)** | Dockhand GitOps & Zero-Plaintext Secrets | Scheduled sync, encrypted deploy-time injection (no `.env` on disk), Hawser boundary | [**`stack-upgrade-and-rollback.md`**](docs/runbooks/stack-upgrade-and-rollback.md) |
-| **[ADR-005](docs/adr/ADR-005-decouple-smart-home-haos-appliance.md)** | Decoupled HAOS Appliance (ASUS X540SA) | Fault & power isolation for Zigbee, APC UPS telemetry, and auxiliary DNS | [**`power-outage-and-storage-health.md`**](docs/runbooks/power-outage-and-storage-health.md) |
+| **[ADR-001](docs/adr/ADR-001-centralized-postgresql-18.md)** | Centralized PostgreSQL 18 (`--data-checksums`) | Running 1 shared Postgres container instead of 9 separate DB instances saves ~2.5 GB of idle RAM on a 32 GB host and simplifies nightly backups. | [**`disaster-recovery.md`**](docs/runbooks/disaster-recovery.md) |
+| **[ADR-002](docs/adr/ADR-002-authentik-unified-iam.md)** | Unified Authentik SSO & ForwardAuth | Puts a single login and RBAC layer in front of all 31 services (native OIDC where supported, Traefik ForwardAuth everywhere else). | [**`iam-and-ingress-recovery.md`**](docs/runbooks/iam-and-ingress-recovery.md) |
+| **[ADR-003](docs/adr/ADR-003-split-horizon-technitium-dns.md)** | Split-Horizon Technitium DNS + Catalog HA | Keeps admin UIs (`*.internal.205hlab.com`) completely off public DNS while automatically syncing zones to the HAOS backup node. | [**`dns-failover-and-sync.md`**](docs/runbooks/dns-failover-and-sync.md) |
+| **[ADR-004](docs/adr/ADR-004-dockhand-gitops-continuous-deployment.md)** | Dockhand GitOps & Runtime Secrets | Syncs compose stacks from GitHub and injects secrets from an encrypted DB at container startup so plaintext `.env` files never sit on disk. | [**`stack-upgrade-and-rollback.md`**](docs/runbooks/stack-upgrade-and-rollback.md) |
+| **[ADR-005](docs/adr/ADR-005-decouple-smart-home-haos-appliance.md)** | Decoupled HAOS Appliance (ASUS X540SA) | Isolates Zigbee, UPS monitoring (NUT), and backup DNS onto low-power battery-backed hardware so server maintenance doesn't impact the house. | [**`power-outage-and-storage-health.md`**](docs/runbooks/power-outage-and-storage-health.md) |
 
 ---
 
-## 🌐 Routing & DNS Design
-
-### Subdomain Strategy — Internal vs. External
-
-A key design decision in this homelab is the **split between internal-only and externally-accessible services**, enforced at both the DNS and Traefik routing layers:
-
-| Subdomain Pattern | Access | Protection | Description |
-| :--- | :--- | :--- | :--- |
-| `*.205hlab.com` | 🌐 **Internet + LAN** | 🔒 **Authentik mandatory** | Services accessible from WAN. Every single route is protected by Authentik ForwardAuth middleware or native OIDC SSO — no anonymous access under any circumstance. |
-| `*.internal.205hlab.com` | 🏠 **LAN only** | 🏠 LAN-restricted + Authentik | Management and infrastructure UIs. Only resolvable on the internal network via Technitium's authoritative `internal.205hlab.com` zone. The subdomain does not exist in public DNS. |
-
-### Traefik Route Map
-
-#### 🔒 Internal Services (`*.internal.205hlab.com`)
-
-> These hostnames exist **only** in the internal `internal.205hlab.com` Technitium DNS zone. They are not resolvable from the internet.
-
-| Traefik Route | Service | Stack |
-| :--- | :--- | :--- |
-| `adminer.internal.205hlab.com` | Database web UI | [`postgres`](compose/postgres/) |
-| `changedetection.internal.205hlab.com` | Change monitoring | [`changedetection`](compose/changedetection/) |
-| `databasus.internal.205hlab.com` | Database backup & DR restore UI | [`databasus`](compose/databasus/) |
-| `dockhand.internal.205hlab.com` | Docker container management | — |
-| `myip.internal.205hlab.com` | IP & DNS leak diagnostics (ForwardAuth) | [`network-mon`](compose/network-mon/) |
-| `openspeed.internal.205hlab.com` | HTML5 LAN speed test server | [`network-mon`](compose/network-mon/) |
-| `prometheus.internal.205hlab.com` | Prometheus TSDB | [`prometheus`](compose/prometheus/) |
-| `technitium.internal.205hlab.com` | Technitium DNS admin UI | [`technitium`](compose/technitium/) |
-
-#### 🌐 External Services (`*.205hlab.com`) — All Protected by Authentik
-
-> Every WAN-facing route is **mandatorily gated** behind Authentik — either as Traefik `ForwardAuth` middleware or native OIDC SSO integration. No unauthenticated access is possible.
-
-| Traefik Route | Service | Auth Method | Stack |
-| :--- | :--- | :--- | :--- |
-| `authentik.205hlab.com` | Authentik SSO | — (is the IdP) | [`authentik`](compose/authentik/) |
-| `bazarr.205hlab.com` | Bazarr subtitles | ForwardAuth | [`servarr`](compose/servarr/) |
-| `chaptarr.205hlab.com` | Chaptarr books & audiobooks | ForwardAuth | [`servarr`](compose/servarr/) |
-| `draw.205hlab.com` | Draw.io architecture diagrams | ForwardAuth | [`web-tools`](compose/web-tools/) |
-| `freshrss.205hlab.com` | FreshRSS reader | OIDC (native) | [`freshrss`](compose/freshrss/) |
-| `grafana.205hlab.com` | Grafana dashboards | OIDC (native) | [`grafana`](compose/grafana/) |
-| `it-tools.205hlab.com` | IT-Tools developer utilities | ForwardAuth | [`web-tools`](compose/web-tools/) |
-| `jellyfin.205hlab.com` | Jellyfin media server | OIDC (SSO Plugin) | [`jelly`](compose/jelly/) |
-| `kavita.205hlab.com` | Kavita digital library & reader | OIDC (native) | [`kavita`](compose/kavita/) |
-| `lidarr.205hlab.com` | Lidarr music | ForwardAuth | [`servarr`](compose/servarr/) |
-| `mealie.205hlab.com` | Mealie recipes | OIDC (native) | [`mealie`](compose/mealie/) |
-| `metube.205hlab.com` | MeTube downloader | ForwardAuth | [`downloaderr`](compose/downloaderr/) |
-| `omni.205hlab.com` | Omni-Tools Swiss Army utilities | ForwardAuth | [`web-tools`](compose/web-tools/) |
-| `paperless.205hlab.com` | Paperless-ngx docs | OIDC (native) | [`paperless`](compose/paperless/) |
-| `pdf.205hlab.com` | BentoPDF client-side WASM toolkit | ForwardAuth | [`web-tools`](compose/web-tools/) |
-| `profilarr.205hlab.com` | Profilarr profiles | OIDC (native) | [`servarr`](compose/servarr/) |
-| `prowlarr.205hlab.com` | Prowlarr indexers | ForwardAuth | [`servarr`](compose/servarr/) |
-| `qui.205hlab.com` | qui qBittorrent UI | OIDC (native) | [`downloaderr`](compose/downloaderr/) |
-| `radarr.205hlab.com` | Radarr movies | ForwardAuth | [`servarr`](compose/servarr/) |
-| `resume.205hlab.com` | Reactive Resume | OIDC (native) | [`reactive-resume`](compose/reactive-resume/) |
-| `search.205hlab.com` | SearXNG metasearch | ForwardAuth | [`searxng`](compose/searxng/) |
-| `seer.205hlab.com` | Seerr requests | ForwardAuth | [`jelly`](compose/jelly/) |
-| `sonarr.205hlab.com` | Sonarr TV | ForwardAuth | [`servarr`](compose/servarr/) |
-| `speedtest.205hlab.com` | Speedtest Tracker | ForwardAuth | [`network-mon`](compose/network-mon/) |
-| `tracearr.205hlab.com` | Tracearr analytics | ForwardAuth | [`tracearr`](compose/tracearr/) |
-| `vikunja.205hlab.com` | Vikunja task manager & maintenance reminders | OIDC (native) | [`vikunja`](compose/vikunja/) |
-
----
+## 📦 Services, Routing & DNS
 
 ### 🧭 Technitium DNS — Dual-Instance Architecture
 
-The homelab runs **two Technitium DNS servers** providing redundancy and split-horizon resolution across the entire network:
+Services are split into two routing tiers enforced by **Technitium DNS** and **Traefik v3**:
 
-```
-┌─────────────────────────────────────┐    Catalog Zone Replication
-│  PRIMARY — Ubuntu Server (Docker)   │ ──────────────────────────────► ┌─────────────────────────────────┐
-│  technitium.internal.205hlab.com    │                                  │  AUX — HAOS (ASUS X540SA)       │
-│  Ports: 53/tcp, 53/udp              │                                  │  technitium-aux                 │
-│  Admin: :5380 (management VLAN only)│                                  │  Receives replicated zones      │
-└─────────────────────────────────────┘                                  └─────────────────────────────────┘
-```
+| Subdomain Pattern | Scope | Access Policy |
+| :--- | :--- | :--- |
+| `*.205hlab.com` | **WAN + LAN** | Routed through Cloudflare Proxy and gated by **Authentik** (native OIDC or Traefik `ForwardAuth` middleware). |
+| `*.internal.205hlab.com` | **LAN Only** | Authoritative only inside the local `internal.205hlab.com` Technitium zone. These records do not exist in public Cloudflare DNS. |
 
-**Primary server** (Docker on Ubuntu Server) is authoritative for all zones and serves recursive queries for the LAN. **Auxiliary server** (native on HAOS) receives zone replicas via the Technitium Catalog mechanism — meaning if the primary server goes down for maintenance, the auxiliary continues resolving all internal hostnames without manual zone configuration.
-
-#### DNS Zones
-
-| Zone | Type | DNSSEC | Purpose |
-| :--- | :--- | :--- | :--- |
-| `205hlab.com` | Forwarder | — | Forwards public zone queries upstream (Cloudflare) while allowing internal override |
-| `internal.205hlab.com` | Primary | — | Authoritative for all `*.internal.205hlab.com` hostnames — **internal services only** |
-| `dns.205hlab.com` | Primary | ✅ DNSSEC | DNS server host records, signed with DNSSEC |
-| `lan.205hlab.com` | Primary | — | LAN device hostname records |
-| `mngt.205hlab.com` | Primary | — | Management interface records (Proxmox, switches, router, IPMI) |
-| `cluster-catalog.dns.205hlab.com` | Catalog | — | Technitium Catalog zone — drives automatic zone replication to the AUX server |
-| `0.10.10.in-addr.arpa` | Primary | — | Reverse DNS for `10.10.0.0/24` (LAN subnet) |
-| `0.14.10.in-addr.arpa` | Primary | — | Reverse DNS for `10.14.0.0/24` (management subnet) |
-
-**Key DNS features:**
-- **Split-horizon**: `internal.205hlab.com` and `lan.205hlab.com` zones exist only internally. Clients on the LAN resolve `service.internal.205hlab.com` to the server's LAN IP; external DNS has no record of these hostnames.
-- **DNSSEC**: The `dns.205hlab.com` zone is DNSSEC-signed, providing cryptographic zone integrity.
-- **Ad/malware blocking**: Network-wide DNS-layer filtering enforced at the resolver level.
-- **Forwarders**: `1.1.1.1` (Cloudflare) and `9.9.9.9` (Quad9) as upstream resolvers for non-local queries.
-- **Catalog-driven replication**: Zone changes on the primary are automatically propagated to the auxiliary — zero manual zone management on the HAOS server.
+To prevent LAN DNS outages when rebooting the primary Ubuntu server, **Technitium DNS** runs in an active/secondary pair. The primary instance on Ubuntu Server is authoritative for 8 zones (`205hlab.com` forwarder, `internal`, `dns` with DNSSEC, `lan`, `mngt`, reverse PTR zones for `10.10.0.0/24` and `10.14.0.0/24`, and `cluster-catalog.dns.205hlab.com`). Any zone update automatically replicates to the auxiliary Technitium instance on the HAOS appliance via RFC Catalog Zones, with `1.1.1.1` and `9.9.9.9` as upstream resolvers and network-wide ad/malware blocklists.
 
 ---
 
-## 📦 Service Catalog
+### Service Catalog (22 Compose Stacks)
 
-### 🔀 Ingress, TLS & Identity
+> Full stack configurations, environment templates, and per-service documentation live in **[`compose/`](compose/README.md)**.
 
-| Stack | Image | Description |
-| :--- | :--- | :--- |
-| [`traefik`](compose/traefik/) | `traefik:v3.7.18` | Core reverse proxy. All HTTPS termination, Cloudflare DNS-01 ACME certificates, automatic HTTP→HTTPS redirect, ForwardAuth middleware chaining across all protected routes, Prometheus metrics on `:9090`, and health probe on `:8082`. Trusted proxy CIDRs locked to Cloudflare IP blocks + internal subnet. |
-| [`authentik`](compose/authentik/) | `goauthentik/server:2026.8.5` | Centralized Identity Provider (IdP). **Every WAN-facing service routes through Authentik** — either as a Traefik ForwardAuth middleware gate or via native OIDC SSO integration. Provides OIDC discovery, OAuth2 authorization, email dispatch, and fine-grained entitlement/group RBAC. |
-| [`technitium`](compose/technitium/) | `technitium/dns-server:15.6.2` | **Primary** Technitium DNS server. Authoritative for 8 internal zones, split-horizon resolution, DNSSEC on `dns.205hlab.com`, ad/malware blocking, and Catalog-driven replication to the auxiliary instance on HAOS. |
-| HAOS (native) | `technitium/dns-server` | **Auxiliary** Technitium DNS server running natively on the ASUS X540SA HAOS appliance. Receives all zone replicas from the primary via the Catalog zone — provides DNS continuity during primary server maintenance windows. |
+#### 🔀 Ingress, Identity, Data & Management
 
-### 🗄️ Centralized Data Tier
-
-| Stack | Image | Description |
-| :--- | :--- | :--- |
-| [`postgres`](compose/postgres/) | `postgres:18.3` | Central relational database with `--data-checksums` for silent corruption detection. Each application gets an isolated database user provisioned via `db-init.sql`. Shared by: Authentik, Mealie, Paperless, FreshRSS, Servarr (\*arr suite incl. Chaptarr), qui, Reactive Resume, Speedtest Tracker, Vikunja. |
-| [`postgres`](compose/postgres/) | `adminer:latest` | Web-based DB admin UI at `adminer.internal.205hlab.com` — LAN-only access. |
-| [`tracearr`](compose/tracearr/) | `timescale/timescaledb-ha:pg18.4-ts2.29.1` | Dedicated TimescaleDB time-series cluster for Tracearr analytics. Custom `max_locks_per_transaction`, `max_connections`, and telemetry-off configuration. Paired with Redis 8 for task queuing. |
-| [`paperless`](compose/paperless/) | `valkey/valkey:9-alpine` | Valkey (open-source Redis fork v9) broker powering Paperless-ngx background task and document processing queues. |
-| [`reactive-resume`](compose/reactive-resume/) | `valkey/valkey:9-alpine` | Dedicated Valkey (open-source Redis fork v9) broker powering Reactive Resume live resume subscriptions, shared rate limits, and state resilience. |
-| [`searxng`](compose/searxng/) | `valkey/valkey:9-alpine` | Dedicated Valkey (open-source Redis fork v9) broker powering SearXNG metasearch query caching and engine rate-limiting over loopback. |
-
-### 🏗️ Infrastructure & Management (Internal)
-
-| Service | URL | Description |
-| :--- | :--- | :--- |
-| **Dockhand** | `dockhand.internal.205hlab.com` | Central Docker management & GitOps CI/CD engine running on the primary Ubuntu Server. Periodically synchronizes `205hlab` from GitHub to automate stack deployments. Also monitors the auxiliary ASUS X540SA node (Home Assistant OS) via a **Hawser agent (standard v0.2.52)** for remote container observation and troubleshooting. Authentik ForwardAuth protected. |
-| **Databasus** | `databasus.internal.205hlab.com` | Automated PostgreSQL backup coordinator and `databasus-verifier` restore verification agent running in [`compose/databasus/`](compose/databasus/). Schedules daily `pg_dump` snapshots, tests restores into ephemeral containers after backup (checking per-table row counts), and sits behind Authentik ForwardAuth; decoupled from `compose/postgres/` for outage resilience. |
-
-### 📊 Observability, Telemetry & Health
-
-| Stack | Image | URL | Description |
+| Stack | Services & Role | Route | Auth / Access |
 | :--- | :--- | :--- | :--- |
-| [`prometheus`](compose/prometheus/) | `prom/prometheus:v3.11.3` | `prometheus.internal.205hlab.com` | Central time-series monitoring engine. 30-day retention, 50 GB storage cap. Internal-only access. |
-| [`grafana`](compose/grafana/) | `grafana/grafana:13.0.1` | `grafana.205hlab.com` | Visualization platform. Authentik OAuth2/OIDC login with entitlement-based RBAC (`Grafana Admins`, `Grafana Editors`, `Viewer`). |
-| [`prom-exporters`](compose/prom-exporters/) | node-exporter · cadvisor · postgres-exporter · technitium-exporter · zfs-exporter · smartctl-exporter | internal | Host hardware telemetry, container cgroup metrics, PostgreSQL stats, DNS query rates, OpenWrt router stats, APC UPS metrics, ZFS pool states, and physical drive S.M.A.R.T. health. |
+| [`traefik`](compose/traefik/) | **Traefik v3.7** — Reverse proxy, Cloudflare DNS-01 ACME TLS, ForwardAuth chaining, Prometheus metrics (`:9090`). | — | Edge Ingress |
+| [`authentik`](compose/authentik/) | **Authentik 2026.8** — Central IdP providing OIDC, OAuth2, Traefik ForwardAuth outpost, and group RBAC. | `authentik.205hlab.com` | IdP Root |
+| [`technitium`](compose/technitium/) | **Technitium DNS 15.6** — Primary split-horizon resolver, DNSSEC, Catalog sync to HAOS `technitium-aux`. | `technitium.internal.205hlab.com` | LAN-only (`:5380` mngt) |
+| [`postgres`](compose/postgres/) | **PostgreSQL 18.3** (`--data-checksums`, per-app DBs provisioned via `db-init.sql`) + **Adminer** web UI. | `adminer.internal.205hlab.com` | LAN-only |
+| [`databasus`](compose/databasus/) | **Databasus** + **`databasus-verifier`** — Nightly `pg_dump` backups with automated test restores into ephemeral PG18 containers. | `databasus.internal.205hlab.com` | LAN + ForwardAuth |
+| — (Host) | **Dockhand** — GitOps engine on Ubuntu Server + remote **Hawser agent (v0.2.52)** observing HAOS containers. | `dockhand.internal.205hlab.com` | LAN + ForwardAuth |
 
-**Version-controlled Grafana dashboards** in [`grafana-dashboards/`](grafana-dashboards/) (organized in folders `205hlab - Core`, `205hlab - Hardware`, and `205hlab - SaaS`):
+#### 📊 Observability & Network Diagnostics
 
-| Grafana Folder | Dashboards |
-| :--- | :--- |
-| `📁 205hlab - Core` | `authentik` · `PostgreSQL Database` · `Speedtest Tracker` · `Technitium DNS Exporter` · `Traefik Standalone Dashboard` · `y0nei's cAdvisor dashboard` |
-| `📁 205hlab - Hardware` | `APC UPS Dashboard` · `Node Exporter Full` · `OpenWRT` · `ZFS / Overview` |
-| `📁 205hlab - SaaS` | `Qui overview` |
-
-### 🌐 Network Performance & Diagnostics
-
-| Stack | Image | URL | Auth | Description |
-| :--- | :--- | :--- | :--- | :--- |
-| [`network-mon`](compose/network-mon/) | `linuxserver/speedtest-tracker:latest` | `speedtest.205hlab.com` | ForwardAuth | Automated Ookla/Speedtest CLI runs, latency/jitter trend graphs, and Prometheus metric export. Optimal 3-hour scheduling (`23 */3 * * *`) captures 24h ISP performance trends without saturating streaming bandwidth. Backed by PostgreSQL 18. |
-| [`network-mon`](compose/network-mon/) | `openspeedtest/latest` | `openspeed.internal.205hlab.com` | LAN-only | Pure HTML5 in-LAN speed test server benchmarking raw gigabit switch and OpenWrt router throughput without consuming external WAN quota. Binds direct host ports on `${LAN_IP}:3000` and `${MNGT_IP}:3000` to bypass reverse proxy overhead when testing switches. |
-| [`network-mon`](compose/network-mon/) | `jason5ng32/myip:latest` | `myip.internal.205hlab.com` | ForwardAuth | Self-hosted IP, DNS, and WebRTC leak detection dashboard with direct access on `${MNGT_IP}:18966` for management VLAN diagnostics. |
-
-### 🏠 Household SaaS & Productivity
-
-| Stack | Image | URL | Auth |
+| Stack | Services & Role | Route | Auth / Access |
 | :--- | :--- | :--- | :--- |
-| [`paperless`](compose/paperless/) | `paperless-ngx` + `gotenberg:8.37` + `tika:3.3.1.0` | `paperless.205hlab.com` | OIDC native |
-| [`mealie`](compose/mealie/) | `mealie-recipes/mealie:latest` | `mealie.205hlab.com` | OIDC native |
-| [`freshrss`](compose/freshrss/) | `freshrss/freshrss:1.30.4` | `freshrss.205hlab.com` | OIDC native |
-| [`reactive-resume`](compose/reactive-resume/) | `amruthpillai/reactive-resume:latest` + `valkey:9-alpine` | `resume.205hlab.com` | OIDC native |
-| [`vikunja`](compose/vikunja/) | `vikunja/vikunja:latest` | `vikunja.205hlab.com` | OIDC native |
-| [`searxng`](compose/searxng/) | `searxng:latest` + `gluetun:v3.41.3` + `valkey:9-alpine` | `search.205hlab.com` | ForwardAuth |
-| [`changedetection`](compose/changedetection/) | `changedetection.io` + `sockpuppetbrowser` | `changedetection.internal.205hlab.com` | LAN-only |
-| [`web-tools`](compose/web-tools/) | `corentinth/it-tools:latest` | `it-tools.205hlab.com` | ForwardAuth |
-| [`web-tools`](compose/web-tools/) | `iib0011/omni-tools:latest` | `omni.205hlab.com` | ForwardAuth |
-| [`web-tools`](compose/web-tools/) | `jgraph/drawio:latest` | `draw.205hlab.com` | ForwardAuth |
-| [`web-tools`](compose/web-tools/) | `ghcr.io/alam00000/bentopdf-simple:latest` | `pdf.205hlab.com` | ForwardAuth |
+| [`prometheus`](compose/prometheus/) | **Prometheus v3.11** — Central TSDB (30-day retention, 50 GB cap). | `prometheus.internal.205hlab.com` | LAN-only |
+| [`grafana`](compose/grafana/) | **Grafana 13.0** — Dashboards with Authentik OIDC role mapping (`Admin`, `Editor`, `Viewer`). | `grafana.205hlab.com` | OIDC |
+| [`prom-exporters`](compose/prom-exporters/) | **6 Metric Exporters** — `node-exporter`, `cadvisor`, `postgres`, `technitium`, `zfs`, `smartctl` (+ OpenWrt & NUT scrapes). | Internal scrape network | Internal |
+| [`network-mon`](compose/network-mon/) | **Speedtest Tracker** (3-hour WAN tests on PG18), **OpenSpeedTest** (LAN throughput on `:3000`), and **MyIP** (leak diagnostics on `:18966`). | `speedtest.205hlab.com`<br>`openspeed.internal.205hlab.com`<br>`myip.internal.205hlab.com` | ForwardAuth<br>LAN-only<br>LAN + ForwardAuth |
 
-> **Paperless-ngx** runs a full document processing pipeline: Apache Tika extracts text from Office/PDF files, Gotenberg handles PDF rendering with sandboxed Chromium, and Valkey queues all background OCR and classification tasks.
+<details>
+<summary><strong>📈 Version-Controlled Grafana Dashboards (<code>grafana-dashboards/</code>)</strong></summary>
+<br/>
 
-> **FreshRSS** serves a dual role: personal news aggregator and the homelab's **Infrastructure Release Sentinel**. It tracks upstream GitHub release feeds across all 20+ container stacks via a version-controlled **Dynamic OPML** architecture ([`compose/freshrss/rss-feeds/`](compose/freshrss/rss-feeds/)), providing an early-warning radar for security patches, feature changes, and breaking configurations before triggering container updates in **Dockhand** or running manual infrastructure migrations.
+11 declarative JSON dashboards are stored in [`grafana-dashboards/`](grafana-dashboards/README.md) across three folders:
+- **`205hlab - Core`:** `authentik` · `PostgreSQL Database` · `Speedtest Tracker` · `Technitium DNS Exporter` · `Traefik Standalone Dashboard` · `cAdvisor`
+- **`205hlab - Hardware`:** `APC UPS Dashboard` · `Node Exporter Full` · `OpenWRT` · `ZFS / Overview`
+- **`205hlab - SaaS`:** `Qui overview`
 
-> **SearXNG** is a privacy-respecting metasearch engine. Outbound scraping exits through a dedicated **Gluetun WireGuard VPN** tunnel (`network_mode: service:gluetun-search`, AirVPN provider) to eliminate residential IP rate-limits and CAPTCHAs, with query caching and engine rate limits backed by a local **Valkey 9** instance over loopback.
+</details>
 
-> **Vikunja** orchestrates task workflows and homelab maintenance reminders (OpenWrt configuration backups, HAOS `.tar` appliance snapshots, Technitium DNS `.zip` archives, and cold offline ZFS snapshot replication). It connects natively to Authentik via OIDC, stores state on the centralized PostgreSQL 18 cluster, and supports bi-directional CalDAV synchronization.
+#### 🏠 Household SaaS & Utilities
 
-> **Web Tools** hosts purely client-side, zero-state engineering and document utilities (**IT-Tools**, **Omni-Tools**, **Draw.io**, and **BentoPDF**). All processing (regex parsing, token decoding, diagramming, and PDF manipulation) executes locally in the browser via JavaScript/WebAssembly with `read_only: true` root filesystems, `no-new-privileges:true`, and Authentik ForwardAuth protection to prevent query/context leakage to public SaaS providers.
-
-### 🎬 Media Automation & Delivery
-
-| Stack | Image | URL | Auth |
+| Stack | Services & Engineering Notes | Route | Auth |
 | :--- | :--- | :--- | :--- |
-| [`jelly`](compose/jelly/) | `linuxserver/jellyfin:latest` | `jellyfin.205hlab.com` | OIDC (SSO Plugin) |
-| [`jelly`](compose/jelly/) | `seerr-team/seerr:latest` | `seer.205hlab.com` | ForwardAuth |
-| [`kavita`](compose/kavita/) | `linuxserver/kavita:latest` | `kavita.205hlab.com` | OIDC native |
-| [`servarr`](compose/servarr/) | `linuxserver/sonarr:latest` | `sonarr.205hlab.com` | ForwardAuth |
-| [`servarr`](compose/servarr/) | `linuxserver/radarr:latest` | `radarr.205hlab.com` | ForwardAuth |
-| [`servarr`](compose/servarr/) | `linuxserver/lidarr:latest` | `lidarr.205hlab.com` | ForwardAuth |
-| [`servarr`](compose/servarr/) | `chaptarr/chaptarr:latest` | `chaptarr.205hlab.com` | ForwardAuth |
-| [`servarr`](compose/servarr/) | `linuxserver/bazarr:latest` | `bazarr.205hlab.com` | ForwardAuth |
-| [`servarr`](compose/servarr/) | `linuxserver/prowlarr:latest` | `prowlarr.205hlab.com` | ForwardAuth |
-| [`servarr`](compose/servarr/) | `dictionarry-hub/profilarr:latest` | `profilarr.205hlab.com` | OIDC native |
-| [`downloaderr`](compose/downloaderr/) | `alexta69/metube:latest` | `metube.205hlab.com` | ForwardAuth |
-| [`downloaderr`](compose/downloaderr/) | `autobrr/qui:latest` | `qui.205hlab.com` | OIDC native |
-| [`downloaderr`](compose/downloaderr/) | `linuxserver/qbittorrent:latest` + `qdm12/gluetun:v3.41.3` | — (VPN-only) | — |
-| [`tracearr`](compose/tracearr/) | `tracearr:latest` | `tracearr.205hlab.com` | ForwardAuth |
+| [`paperless`](compose/paperless/) | **Paperless-ngx** + **Gotenberg 8** + **Apache Tika** + **Valkey 9** — OCR document archive stored on `BinPool`. | `paperless.205hlab.com` | OIDC |
+| [`mealie`](compose/mealie/) | **Mealie** — Household recipe manager and meal planner backed by PostgreSQL 18. | `mealie.205hlab.com` | OIDC |
+| [`freshrss`](compose/freshrss/) | **FreshRSS 1.30** — News reader + **Release Sentinel** tracking GitHub releases for all 22 stacks via versioned OPML ([`rss-feeds/`](compose/freshrss/rss-feeds/)). | `freshrss.205hlab.com` | OIDC |
+| [`reactive-resume`](compose/reactive-resume/) | **Reactive Resume v6** + **Valkey 9** — Self-hosted CV builder backed by PostgreSQL 18. | `resume.205hlab.com` | OIDC |
+| [`vikunja`](compose/vikunja/) | **Vikunja** — Task manager & recurring homelab maintenance reminders (CalDAV sync, PG18 backend). | `vikunja.205hlab.com` | OIDC |
+| [`searxng`](compose/searxng/) | **SearXNG** + **Gluetun (WireGuard/AirVPN)** + **Valkey 9** — Privacy metasearch routing outbound queries over VPN to avoid ISP rate limits. | `search.205hlab.com` | ForwardAuth |
+| [`changedetection`](compose/changedetection/) | **ChangeDetection.io** + **SockpuppetBrowser** (Playwright Chrome) — Web page change & price monitor. | `changedetection.internal.205hlab.com` | LAN-only |
+| [`web-tools`](compose/web-tools/) | **IT-Tools**, **Omni-Tools**, **Draw.io**, **BentoPDF** — Client-side browser/WASM utilities running on read-only root filesystems. | `it-tools` · `omni` · `draw` · `pdf`<br>`(.205hlab.com)` | ForwardAuth |
 
-> **qBittorrent** runs with its entire network stack inside the **Gluetun WireGuard VPN** container (`network_mode: service:gluetun`, AirVPN provider). All torrent traffic exits via WireGuard with kill-switch enforcement. The **qui** web UI provides the user-facing interface, authenticated via Authentik OIDC.
+#### 🎬 Media Automation & Delivery
 
-> **Jellyfin** uses Intel HD Graphics 4000 hardware acceleration via `/dev/dri` passthrough (VAAPI) for real-time transcoding of movies, TV shows, and music.
-
-> **Chaptarr & Kavita** power the digital reading pipeline: **Chaptarr** automates acquisition and library management for audiobooks, eBooks, comics, and manga (backed by PostgreSQL 18 and protected by Authentik ForwardAuth), while **Kavita** serves eBooks, comics, and manga from read-only library mounts with native Authentik OIDC SSO and OPDS support.
+| Stack | Services & Engineering Notes | Route | Auth |
+| :--- | :--- | :--- | :--- |
+| [`jelly`](compose/jelly/) | **Jellyfin** (Intel HD 4000 `/dev/dri` VAAPI hardware transcoding) + **Seerr** media request portal. | `jellyfin.205hlab.com`<br>`seer.205hlab.com` | OIDC (Plugin)<br>ForwardAuth |
+| [`kavita`](compose/kavita/) | **Kavita** — Digital reader for eBooks, manga, and comics mounted read-only from `BinPool`. | `kavita.205hlab.com` | OIDC |
+| [`servarr`](compose/servarr/) | **Sonarr** (TV) · **Radarr** (Movies) · **Lidarr** (Music) · **Chaptarr** (Books/Audiobooks) · **Bazarr** (Subtitles) · **Prowlarr** (Indexers) · **Profilarr** (Quality profiles) · **FlareSolverr**. Migrated to PostgreSQL 18. | `sonarr` · `radarr` · `lidarr`<br>`chaptarr` · `bazarr` · `prowlarr`<br>`profilarr` `(.205hlab.com)` | ForwardAuth<br>(Profilarr: OIDC) |
+| [`downloaderr`](compose/downloaderr/) | **qBittorrent** bound inside **Gluetun WireGuard VPN** (`network_mode: service:gluetun` with kill-switch) + **qui** web UI + **MeTube** downloader. | `qui.205hlab.com`<br>`metube.205hlab.com` | OIDC<br>ForwardAuth |
+| [`tracearr`](compose/tracearr/) | **Tracearr** + **TimescaleDB (PG18)** + **Redis 8** — Playback analytics and streaming telemetry. | `tracearr.205hlab.com` | ForwardAuth |
 
 ---
 
 ## 🔒 Security Posture
 
-Security is **engineered into every layer** — not bolted on after the fact.
+Security is handled in layers from the Cloudflare edge down to individual container definitions:
 
-```
-[ Cloudflare WAF + DDoS Absorption ]
-           ↓
-[ OpenWrt iptables: Cloudflare IP allowlist only ]
-           ↓
-[ Ubuntu Server host firewall ]
-           ↓
-[ Traefik TLS termination + ForwardAuth middleware ]
-           ↓
-[ Authentik SSO → MANDATORY on ALL WAN routes ]
-           ↓   ↓
-  [ OIDC SSO ]  [ ForwardAuth ]    ← depending on service capability
-           ↓
-[ Docker bridge network segmentation ]
-           ↓
-[ Dockhand Secrets: Encrypted DB → Injected at deploy time (No .env on disk) ]
-           ↓
-[ Container: no-new-privileges, non-root UID, read-only socket ]
+```text
+[ Cloudflare Edge WAF & DDoS Protection ]
+                   ↓
+[ OpenWrt Firewall: Allows only Cloudflare IPs & LAN CIDRs on 80/443 ]
+                   ↓
+[ Traefik v3: DNS-01 ACME TLS + Security Headers + ForwardAuth ]
+                   ↓
+[ Authentik SSO: OIDC or ForwardAuth required on every WAN route ]
+                   ↓
+[ Scoped Docker Bridge Networks + Hardened Containers + Runtime Secrets ]
 ```
 
-| Layer | Detail |
+| Layer | Implementation |
 | :--- | :--- |
-| **Cloudflare Edge WAF** | Bot mitigation, rate limiting, and DDoS absorption before any traffic touches the network. |
-| **Perimeter Firewall** | Host `iptables` drops all inbound WAN traffic except Cloudflare-origin CIDRs and internal LAN subnets. Direct IP connections are silently dropped regardless of port. |
-| **TLS Automation** | Certificates via DNS-01 ACME (Cloudflare API token) — no port 80 required. Automatic renewal by Traefik. |
-| **Authentik — Zero Trust Gateway** | **Every single WAN-facing route is mandatorily protected by Authentik.** Services that support OIDC natively use it directly. Services that don't use Traefik `ForwardAuth` middleware — the `authentik@docker` middleware is applied at the Traefik router level. No anonymous access is possible from the internet. |
-| **Internal Subdomain Isolation** | `*.internal.205hlab.com` hostnames exist only in the internal Technitium DNS zone. They are not published in Cloudflare/public DNS. Even if someone guessed the hostname, Cloudflare has no record to route it. |
-| **Entitlement RBAC** | Grafana admin/editor roles, Mealie admin groups, service-specific Authentik applications — all permissions flow from Authentik entitlement claims on the JWT, not per-service user stores. |
-| **Container Hardening** | `no-new-privileges:true` · non-root `PUID`/`PGID` · read-only Docker socket (`:ro`) · no host networking except strictly required. |
-| **Resource Caps** | Every container defines `deploy.resources.limits` (CPU + RAM) preventing resource exhaustion or leaky processes from destabilizing host services. |
-| **Network Segmentation** | Docker bridge networks are purpose-scoped: `traefik_network`, `postgres_network`, `monitoring_network`, `servarr_backend`, `paperless_network`, etc. Database ports are never published to host interfaces. |
-| **Dockhand Secrets (Zero-Plaintext)** | Production secrets are stored encrypted in Dockhand's internal database and dynamically injected into Docker Compose at deploy time. **No secrets are ever written to `.env` files on disk**, preventing credential harvesting from host storage. Secret values are masked (`***`) in the UI and non-retrievable once saved. All `example.env` files in git are strictly dummy templates. |
-
----
-
-### 🔐 Dockhand Secrets Management & Zero-Plaintext Architecture
-
-Security and credential lifecycle management follow strict enterprise zero-trust principles:
-
-- **Encrypted Database Storage & Runtime Injection:**  
-  In production on the Ubuntu Server, **Dockhand** serves as the central secrets manager. All production credentials (database passwords, Authentik encryption keys, API tokens, and OIDC client secrets) are stored encrypted in Dockhand’s internal database. At deploy time, Dockhand injects these values directly into the container processes.
-- **Zero-Plaintext on Disk (`.env`-less Production):**  
-  Unlike standard Docker Compose setups that leave sensitive credentials sitting in plain-text `.env` files on the host filesystem, Dockhand’s deploy-time injection means **no `.env` files containing production secrets exist on the host SSD**. Even with physical or shell host access, credentials cannot be harvested from flat configuration files.
-- **UI Masking & Immutable Secret Display:**  
-  All secret values are permanently masked (`***`) in the Dockhand web UI immediately upon saving. They cannot be revealed, copied, or inspected through the web interface; modifying a secret requires entering a completely new value.
-- **Template-Only Git Repositories:**  
-  All `example.env` files version-controlled in this repository are strictly structural templates with parameter-validation guards (`${VARIABLE:?error_message}`) and dummy values. Production secrets never enter Git history.
-- **Pragmatic Production vs. Dev Enterprise Testing:**  
-  While enterprise solutions like **HashiCorp Vault** and **Kubernetes Secrets** are actively evaluated and tested in separate development/staging virtual machines, Dockhand's native encrypted secrets engine provides the exact right-sized, zero-overhead security footprint needed for this production homelab without the operational complexity of managing external KMS clusters.
+| **Perimeter Firewall** | OpenWrt `iptables` and Ubuntu host rules drop all inbound WAN packets unless they originate from official **Cloudflare IP ranges**. Direct-to-IP scans on ports 80/443 are silently dropped. |
+| **Zero-Port-80 TLS** | Traefik obtains wildcard certificates via Let's Encrypt **DNS-01 ACME** (Cloudflare API token), avoiding HTTP-01 port 80 exposure. |
+| **Mandatory WAN SSO** | Every `*.205hlab.com` route requires **Authentik** authentication—either via native OIDC with JWT entitlement claims or Traefik's `authentik@docker` ForwardAuth middleware. |
+| **Network Microsegmentation** | Stacks communicate over scoped bridge networks (`traefik_network`, `postgres_network`, `monitoring_network`, `servarr_backend`). Database ports are never published to the host. |
+| **Container Hardening** | Containers run with `no-new-privileges:true`, non-root `PUID`/`PGID` mappings, read-only Docker sockets (`:ro`), and explicit CPU/RAM limits (`deploy.resources.limits`) so a runaway process cannot starve the host. |
+| **No Plaintext `.env` Files** | Production credentials live encrypted inside **Dockhand's** database and are injected into container memory at deploy time. No production `.env` files sit on the host SSD, and repository `example.env` files use strict `${VAR:?error}` validation guards with dummy placeholders. |
 
 ---
 
@@ -536,270 +262,81 @@ Security and credential lifecycle management follow strict enterprise zero-trust
 ```text
 205hlab/
 ├── .github/
-│   ├── scripts/
-│   │   └── prepare-test-env.py           # CI helper: mocks empty template variables for linting
-│   ├── workflows/
-│   │   └── validate-compose.yml          # GitHub Actions CI: Dynamic Compose syntax & env linter
-│   ├── ISSUE_TEMPLATE/
-│   │   ├── bug_report.md                 # Structured bug report template
-│   │   └── feature_request.md            # Feature request template
-│   └── PULL_REQUEST_TEMPLATE.md          # PR checklist template
-│
-├── assets/                               # Static media, icons & dashboard assets
-│   ├── icons/                            # Application icons (SVG / PNG)
-│   ├── images/                           # Wallpapers, banners & branding assets
-│   └── README.md                         # Direct link & CDN usage guide
-│
-├── [compose/](compose/)                  # 22 Production Docker Compose stacks (see compose/README.md)
-│   ├── authentik/                        # Authentik SSO server + worker
-│   │   ├── compose.yaml
-│   │   ├── db-init.sql                   # PostgreSQL schema init
-│   │   ├── example.env
-│   │   └── setup_secrets.sh
-│   ├── changedetection/                  # ChangeDetection.io + Playwright Chrome
-│   ├── databasus/                        # Databasus backup engine + databasus-verifier agent
-│   ├── downloaderr/                      # Gluetun WireGuard VPN + qBittorrent + qui
-│   ├── freshrss/                         # FreshRSS feed aggregator
-│   ├── grafana/                          # Grafana 13 (Authentik OIDC)
-│   ├── jelly/                            # Jellyfin (HW transcode) + Seerr
-│   ├── kavita/                           # Kavita digital library & reader (Authentik OIDC)
-│   ├── mealie/                           # Mealie recipe manager
-│   ├── network-mon/                      # Speedtest Tracker + OpenSpeedTest + MyIP
-│   │   ├── compose.yaml
-│   │   ├── db-init.sql                   # PostgreSQL schema init
-│   │   ├── example.env
-│   │   └── setup_secrets.sh
-│   ├── paperless/                        # Paperless-ngx + Gotenberg + Tika + Valkey
-│   ├── postgres/                         # PostgreSQL 18 + Adminer
-│   ├── prom-exporters/                   # Node, cAdvisor, PG, Technitium, ZFS, Smartctl exporters
-│   ├── prometheus/                       # Prometheus TSDB monitoring engine
-│   ├── reactive-resume/                  # Reactive Resume v6 + Valkey
-│   ├── searxng/                          # SearXNG + Gluetun VPN + Valkey
-│   ├── servarr/                          # Sonarr · Radarr · Lidarr · Chaptarr
-│   │                                     # Bazarr · Prowlarr · FlareSolverr · Profilarr
-│   ├── technitium/                       # Technitium DNS server (Primary)
-│   ├── tracearr/                         # Tracearr + TimescaleDB + Redis
-│   ├── traefik/                          # Traefik v3 ingress proxy
-│   ├── vikunja/                          # Vikunja task manager & maintenance reminders
-│   │   ├── compose.yaml
-│   │   ├── db-init.sql                   # PostgreSQL schema init
-│   │   ├── example.env
-│   │   └── setup_secrets.sh
-│   └── web-tools/                        # IT-Tools · Omni-Tools · Draw.io · BentoPDF
-│
-├── [docs/adr/](docs/adr/)                # Architecture Decision Records (ADR-001 .. ADR-005)
-│   ├── README.md                         # ADR index, lifecycle & template
-│   ├── ADR-001-centralized-postgresql-18.md
-│   ├── ADR-002-authentik-unified-iam.md
-│   ├── ADR-003-split-horizon-technitium-dns.md
-│   ├── ADR-004-dockhand-gitops-continuous-deployment.md
-│   └── ADR-005-decouple-smart-home-haos-appliance.md
-│
-├── [docs/runbooks/](docs/runbooks/)      # Operational & Disaster Recovery runbooks
-│   ├── README.md                         # Master runbook index, severity & RTO matrix
-│   ├── disaster-recovery.md              # Automated restore verification, drills & rebuild SOP
-│   ├── iam-and-ingress-recovery.md       # Authentik lockout, ForwardAuth & MNGT_IP bypass
-│   ├── dns-failover-and-sync.md          # Technitium HA failover, Catalog sync & DNSSEC
-│   ├── stack-upgrade-and-rollback.md     # FreshRSS -> Databasus -> Dockhand upgrade & rollback
-│   └── power-outage-and-storage-health.md # APC UPS, OpenZFS scrubs, S.M.A.R.T. & PG checksums
-│
-├── [grafana-dashboards/](grafana-dashboards/)       # 11 Declarative Grafana dashboards (see grafana-dashboards/README.md)
-│   ├── core/                             # Authentik · cAdvisor · PostgreSQL · Technitium
-│   ├── hardware/                         # Node Exporter · OpenWrt · APC UPS · OpenZFS
-│   └── saas/                             # qui / qBittorrent overview
-│
-├── .gitignore                            # Prevents accidental .env secret commits
-├── CODE_OF_CONDUCT.md
-├── CONTRIBUTING.md
-├── LICENSE                               # MIT License — Vajda Ervin-Oliver
-├── SECURITY.md
+│   ├── scripts/prepare-test-env.py       # Populates dummy env vars for CI linting
+│   ├── workflows/validate-compose.yml    # GitHub Actions CI: validates all compose stacks
+│   └── ISSUE_TEMPLATE/ & PR_TEMPLATE     # Repository contribution templates
+├── assets/                               # Custom SVG/PNG icons & branding for Authentik/dashboards
+├── compose/                              # 22 Docker Compose stacks (compose.yaml, example.env, db-init.sql)
+├── docs/
+│   ├── adr/                              # Architecture Decision Records (ADR-001 .. ADR-005)
+│   └── runbooks/                         # Disaster recovery & operational SOPs
+├── grafana-dashboards/                   # 11 versioned JSON dashboards (core, hardware, saas)
 └── README.md
 ```
 
-> [!TIP]
-> Application icons and branding assets for Authentik and future dashboards are version-controlled in [`assets/`](assets/). If an image is not yet in the repository folder, you can find and download clean SVGs and PNGs at **[Dashboard Icons](https://dashboardicons.com/)** (`https://dashboardicons.com/`).
-
 ---
 
-## 🚀 Deployment & Operations
+## 🚀 Operations, CI/CD & Backups
 
-### Prerequisites
-
-| Requirement | Notes |
-| :--- | :--- |
-| Ubuntu Server LTS | Bare-metal host |
-| Docker Engine v26+ | Official Docker CE |
-| Docker Compose v2.20+ | Bundled or standalone plugin |
-| Cloudflare account | Domain DNS on Cloudflare; API token with `Zone:DNS:Edit` for ACME |
-| OpenWrt router | Port-forward 80/443 to server LAN IP; iptables Cloudflare allowlist configured |
-| Technitium DNS (AUX) | Running on HAOS; Catalog zone pointing to primary for auto-replication |
-
-### Bootstrap Docker Networks
-
-Shared external networks must exist before launching multi-stack services:
-
-```bash
-docker network create traefik_network
-docker network create postgres_network
-docker network create monitoring_network
-docker network create servarr_backend
-```
-
-### Configure & Launch Each Stack
-
-#### 🔄 Production CI/CD Pipeline (GitHub Actions & Dockhand GitOps)
-
-In production, day-to-day stack deployments and updates follow a strict two-stage continuous integration and GitOps delivery model:
-
-```mermaid
-flowchart TD
-    subgraph Stage1["Stage 1: Continuous Integration (CI Gate)"]
-        Dev["Developer Commit & Push"]
-        GH["GitHub Repository\n(Dr20Ervin/205hlab)"]
-        GHA["GitHub Actions CI Runner\n(.github/workflows/validate-compose.yml)"]
-        DISCOVER["Dynamic Stack Discovery\n(Finds all compose/*/ stacks)"]
-        LINT["Docker Compose Config Linter\n(Validates YAML, Schemas, & example.env)"]
-        SUMMARY["Step Summary Report\n(Pass / Fail Table)"]
-        
-        Dev --> GH
-        GH -->|Triggers on push/PR| GHA
-        GHA --> DISCOVER --> LINT --> SUMMARY
-    end
-
-    subgraph Stage2["Stage 2: Continuous Deployment (CD / GitOps)"]
-        DH["Dockhand Server\n(Primary Node: Ubuntu Server)"]
-        SYNC["Scheduled Git Pull & Sync Engine"]
-        VAULT["Dockhand Encrypted Secrets Vault\n(Injected at deploy time)"]
-        COMPOSE["Production Compose Stacks\n(Traefik, PG18, Authentik, etc.)"]
-        
-        SUMMARY -->|On Merge to main| SYNC
-        SYNC --> DH
-        DH --> VAULT --> COMPOSE
-    end
-
-    subgraph Node2["Auxiliary Node: ASUS X540SA (Home Assistant OS)"]
-        HAWSER["Hawser Agent (standard v0.2.52)"]
-        HA["Home Assistant Core & Add-ons\n(Native Lifecycle — No Git Sync)"]
-        AUX_DNS["Technitium DNS (Auxiliary)\nCatalog Zone Replica"]
-        
-        HAWSER -.->|Observes & Inspects| HA
-        HAWSER -.->|Observes & Inspects| AUX_DNS
-    end
-
-    DH <==|Remote Agent Link (Observation & Remediation Only)|==> HAWSER
-```
-
-- **Stage 1: Automated CI Validation via GitHub Actions:**
-  - Every commit or Pull Request modifying files under `compose/**` automatically triggers [`.github/workflows/validate-compose.yml`](.github/workflows/validate-compose.yml).
-  - **Dynamic Stack Discovery:** The runner dynamically discovers all stack directories in `compose/` at runtime rather than relying on a rigid, hardcoded list.
-  - **Pre-Deployment Linting:** Evaluates each stack's compose file against its `example.env` template using `docker compose config --quiet` to catch YAML syntax errors, broken schema declarations, and missing `${VAR:?error}` parameters.
-  - **Rich Status Reporting:** Compiles an executive Markdown summary table into `$GITHUB_STEP_SUMMARY`, preventing invalid configurations from ever merging into `main`.
-- **Stage 2: GitOps Continuous Delivery via Dockhand (Primary Node: Ubuntu Server):**
-  - Once validated code lands on `main`, **Dockhand** on the Ubuntu Server automatically syncs the repository on an automated schedule.
-  - Reconciles desired compose states with running containers, pulling updated images and executing zero-downtime container recreations.
-  - Injects production credentials directly from Dockhand's encrypted database at deploy time, ensuring zero plain-text `.env` files are stored on disk.
-- **Remote Node Observability via Hawser Agent (Auxiliary Node: ASUS X540SA / HAOS):**
-  - The auxiliary server runs **Home Assistant OS (HAOS)** and is connected to Dockhand via a **Hawser agent (standard v0.2.52)**.
-  - **Important Architectural Boundary:** The Git repository is **not** synced to or run on the HAOS server (Home Assistant natively manages its own add-on lifecycles). The Hawser agent is strictly utilized for **remote multi-node observability, container health monitoring, log inspection, and troubleshooting** directly from the centralized Dockhand management console.
-
-#### 🛠️ Manual CLI Deployment (Fallback / Disaster Recovery)
-
-If bootstrapping from scratch or performing off-grid emergency recovery:
-
-```bash
-# Clone
-git clone https://github.com/Dr20Ervin/205hlab.git /opt/205hlab
-cd /opt/205hlab
-
-# For each stack:
-cd compose/<stack-name>
-cp example.env .env
-bash setup_secrets.sh   # generates random secrets where available
-nano .env               # fill in FQDN, hosts, API keys, etc.
-docker compose up -d
-```
-
-### Recommended Stack Startup Order
-
-```
-1.  traefik          → Core ingress, must start first
-2.  postgres         → Central database (required by most apps)
-3.  databasus        → Decoupled backup orchestrator + databasus-verifier agent
-4.  authentik        → SSO IdP (required by all WAN services)
-5.  technitium       → Internal DNS
-6.  prometheus       → Metrics storage
-7.  prom-exporters   → Metric scrapers
-8.  grafana          → Dashboards (needs prometheus + authentik)
-9.  paperless        → Document archive
-10. mealie           → Recipe manager
-11. freshrss         → RSS reader
-12. reactive-resume  → Resume builder (needs postgres + valkey + authentik)
-13. vikunja          → Task management & maintenance reminders (needs postgres + authentik)
-14. changedetection  → Change monitoring
-15. searxng          → Privacy metasearch (Gluetun VPN + Valkey)
-16. jelly            → Jellyfin + Seerr
-17. kavita           → Kavita digital library & reader (eBooks, comics, manga)
-18. servarr          → Automation suite (Sonarr, Radarr, Lidarr, Chaptarr, etc.)
-19. downloaderr      → Gluetun VPN + qBittorrent + qui
-20. tracearr         → Media analytics (needs TimescaleDB)
-21. network-mon      → Network performance auditing & diagnostics (needs postgres + authentik)
-22. web-tools        → Client-side utilities (IT-Tools, Omni-Tools, Draw.io, BentoPDF)
-```
-
----
-
-### 💾 Backup Strategy, Data Resilience & Storage Roadmap
-
-> [!NOTE]
-> **Engineering Transparency & Intermediate State:**  
-> The homelab currently operates in an acknowledged **intermediate backup state**. While a fully automated, immutable 3-2-1 backup pipeline is not yet fully in place, all critical, irreplaceable files and databases are actively protected through a combination of automated database dumping and manual multi-device redundancy. See [**`docs/runbooks/disaster-recovery.md`**](docs/runbooks/disaster-recovery.md) for the complete RPO/RTO recovery matrix and step-by-step restore drill procedures.
+### 🔄 Production CI/CD Pipeline (GitHub Actions & Dockhand GitOps)
 
 ```mermaid
 flowchart LR
-    subgraph Current["Current State (Intermediate)"]
-        DB["PostgreSQL Databases"] -->|Daily Snapshots (24h RPO)| Databasus["Databasus + databasus-verifier\n(Automated Restore Check · RTO <15m)"]
-        Files["Critical Documents & Configs"] -->|Manual Backups| Offline["Secondary Physical Devices\n(External Media / PCs)"]
-        CloudStaging["Cloud Storage Integration\n(In Progress)"]
+    subgraph CI["1. GitHub Actions CI"]
+        Push["Git Push / PR"] --> Lint["validate-compose.yml\nDynamic stack discovery &\ndocker compose config lint"]
     end
 
-    subgraph Roadmap["Future Evolution (3-2-1 Architecture)"]
-        ZFS["Expanded OpenZFS Storage Pool\n(Higher Capacity & Auto-Snapshots)"]
-        AutoSync["Automated Backup Engine\n(3 Copies · 2 Media Types · 1 Offsite Cloud)"]
-        ZFS --> AutoSync
+    subgraph CD["2. Dockhand GitOps (Ubuntu Server)"]
+        Lint -->|Merge to main| Sync["Scheduled Git Sync"]
+        Sync --> Secrets["Inject Encrypted Secrets"]
+        Secrets --> Deploy["Recreate Changed Containers"]
     end
+
+    subgraph Aux["3. HAOS Node (ASUS X540SA)"]
+        Hawser["Hawser Agent (v0.2.52)\nRead-only health & log inspection"]
+    end
+
+    CD <-.->|Telemetry only| Aux
 ```
 
-#### Current Protection Posture
-- **Automated Database Backups & Restore Verification via Databasus:**  
-  All application relational databases hosted on PostgreSQL 18 (Authentik, Paperless-ngx, Mealie, FreshRSS, the Servarr suite, qui, Reactive Resume, Speedtest Tracker, and Vikunja) are backed up **daily** (`24h RPO`) using **Databasus** (`databasus.internal.205hlab.com`), paired with the official containerized **`databasus-verifier`** (`verification-agent run`) worker in a dedicated decoupled stack ([`compose/databasus/`](compose/databasus/)). Backups are written to dedicated datasets on the OpenZFS mirror pool **`BinPool`** (`${DATABASUS_BACKUP}`), automatically tested into ephemeral PostgreSQL 18 containers after each run (comparing schema and per-table row counts against production), and manually replicated from `BinPool` to secondary offline LAN storage.
-- **Manual Redundancy for Appliances & File Assets:**  
-  High-value configuration and non-reproducible assets are manually backed up across secondary physical devices:
-  - **OpenWrt Router (Xiaomi AX6S):** LuCI `.tar.gz` configuration exports (VLANs, firewall zones, Cloudflare `iptables` rules, port forwards).
-  - **Home Assistant OS (ASUS X540SA):** Full HAOS `.tar` appliance snapshots (HA Core, SONOFF Zigbee pairing state, NUT server configuration).
-  - **Technitium DNS:** Authoritative zone records replicated in real-time via RFC Catalog Zone; complete settings archives (`.zip`) exported periodically via admin console.
-  - **Dockhand:** Container management state and built-in encrypted secrets vault (`dockhand_data:/app/data`) archived to `BinPool`, with master encryption keys kept in personal password manager.
-  - **Paperless-ngx:** Raw source document PDFs in `media/` reside on `BinPool` and are copied to secondary media.
-- **Automated Power Failure Protection (NUT Server & Client):**  
-  The APC Back-UPS XS 950U connects via USB to the ASUS X540SA appliance running Network UPS Tools (NUT) Server. When battery drops below 65% or runtime drops below 300 seconds, the NUT client on the Ubuntu Server executes a clean shutdown—halting Docker containers, checkpointing PostgreSQL 18, and exporting `BinPool` cleanly before battery power exhausts, while the battery-backed ASUS laptop keeps smart home and auxiliary DNS online throughout the blackout.
-- **Offsite Cloud Storage Integration:**  
-  Encrypted offsite cloud storage integration is currently actively in progress to provide an initial remote safeguard for sensitive document archives and database dumps.
+1. **Continuous Integration ([`validate-compose.yml`](.github/workflows/validate-compose.yml)):** On every push or PR touching `compose/**`, GitHub Actions discovers all stack folders, generates mock environment variables from each stack's `example.env`, and runs `docker compose config --quiet` to catch YAML syntax errors or missing variable references before merge.
+2. **GitOps Deployment (Dockhand):** Dockhand on the primary Ubuntu server polls `main`, injects encrypted credentials from its internal vault, and updates modified stacks. The auxiliary HAOS laptop is linked via a **Hawser agent** strictly for container status/log monitoring (HAOS manages its own add-on lifecycle natively).
 
-#### Future Storage & Resilience Roadmap
-- **Dedicated Next-Gen OpenZFS Pool:**  
-  Planned hardware storage expansion to replace the current media pool with a larger-capacity, redundant OpenZFS pool featuring automated snapshot retention (`zfs-auto-snapshot`), continuous scrub schedules for silent bit rot prevention, and native dataset compression (`zstd`).
-- **Automated 3-2-1 Backup Implementation:**  
-  Implementation of a fully automated, schedule-driven enterprise backup tool (such as Restic, Borg, or Rclone) to enforce the gold-standard **3-2-1 rule**:
-  1. **3 Copies of Data:** Primary production storage, a dedicated local backup archive, and an offsite replica.
-  2. **2 Different Media Types:** Fast NVMe/SATA SSDs for production volumes and redundant mechanical OpenZFS disks for local backup retention.
-  3. **1 Offsite Replica:** Encrypted, immutable remote cloud backup (e.g., Backblaze B2, Cloudflare R2, or remote ZFS replication) immune to local disaster or physical hardware failure.
+<a id="-manual-cli-deployment-fallback--disaster-recovery"></a>
+<a id="recommended-stack-startup-order"></a>
+<details>
+<summary><strong>🛠️ Manual CLI Bootstrap & Startup Order (Disaster Recovery Fallback)</strong></summary>
+<br/>
+
+If bootstrapping from a fresh Ubuntu Server install without Dockhand:
+
+```bash
+# 1. Create shared external Docker networks
+for net in traefik_network postgres_network monitoring_network servarr_backend; do
+  docker network create "$net"
+done
+
+# 2. Configure and start a stack
+cd /opt/205hlab/compose/<stack-name>
+cp example.env .env && bash setup_secrets.sh
+nano .env && docker compose up -d
+```
+
+**Dependency Startup Sequence:**
+1. `traefik` → 2. `postgres` → 3. `databasus` → 4. `authentik` → 5. `technitium` → 6. `prometheus` & `prom-exporters` → 7. `grafana` → 8. Application & Media stacks (`paperless`, `mealie`, `freshrss`, `reactive-resume`, `vikunja`, `changedetection`, `searxng`, `jelly`, `kavita`, `servarr`, `downloaderr`, `tracearr`, `network-mon`, `web-tools`).
+
+</details>
 
 ---
 
-## 📄 License
+### 💾 Backup Strategy & Power Resilience
 
-This project is licensed under the **MIT License** — see [LICENSE](LICENSE) for details.
+> Step-by-step restore commands and RPO/RTO targets are maintained in [**`docs/runbooks/disaster-recovery.md`**](docs/runbooks/disaster-recovery.md) and [**`power-outage-and-storage-health.md`**](docs/runbooks/power-outage-and-storage-health.md).
 
-© 2026 [Vajda Ervin-Oliver](https://github.com/Dr20Ervin)
+- **Automated Database Backups & Restore Verification (`24h RPO`):** **Databasus** runs nightly `pg_dump` jobs for all databases on PostgreSQL 18 and writes them to the mirrored OpenZFS pool (`BinPool`). Immediately after each dump, the **`databasus-verifier`** agent spins up a temporary PostgreSQL 18 container, restores the backup, and verifies table schemas and row counts so broken backups are caught immediately.
+- **Appliance & Config Exports:** OpenWrt `.tar.gz` configs, HAOS `.tar` snapshots, Technitium `.zip` zone archives, Dockhand vault state, and Paperless document folders on `BinPool` are replicated to secondary offline storage devices.
+- **UPS Graceful Shutdown (NUT):** The **APC Back-UPS XS 950U** is monitored by the NUT server on the ASUS X540SA laptop. If battery charge drops below 65% (or runtime below 5 minutes) during a blackout, the Ubuntu Server NUT client cleanly stops Docker containers, checkpoints PostgreSQL, and exports `BinPool` before power loss, while the laptop's internal battery keeps HAOS and secondary DNS alive.
+- **Roadmap to Full 3-2-1 Backups:** Currently in an intermediate state (local ZFS mirror + manual offline copies + in-progress cloud sync). The next storage milestone is expanding the OpenZFS pool with automated `zstd` snapshot retention (`zfs-auto-snapshot`) and scheduled encrypted Restic/Rclone replication to immutable cloud object storage (Backblaze B2 / Cloudflare R2).
 
 ---
 
@@ -807,12 +344,66 @@ This project is licensed under the **MIT License** — see [LICENSE](LICENSE) fo
 
 <div align="center">
 
-**Vajda Ervin-Oliver**
-*Systems & Infrastructure Engineer · Homelab Enthusiast*
+**Vajda Ervin-Olivér**  
+*Aspiring DevOps & Infrastructure Engineer · Telecommunications Engineering Student @ UTCN*
 
 [![GitHub](https://img.shields.io/badge/GitHub-Dr20Ervin-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/Dr20Ervin)
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-ervin--vajda-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/ervin-vajda-970436152)
+[![Email](https://img.shields.io/badge/Email-dr20ervin%40outlook.com-0078D4?style=for-the-badge&logo=microsoftoutlook&logoColor=white)](mailto:dr20ervin@outlook.com)
 
-*If this repo is useful or interesting to you, consider giving it a ⭐ — it helps others find it!*
+<br>
+
+*Undergraduate ETTI student at the Technical University of Cluj-Napoca specializing in Communications. Focused on designing, deploying, and managing on-premises infrastructure.*
+
+**Core Competencies:** Bare-Metal Administration (Ubuntu, ZFS) • Container Orchestration (Docker Compose) • Edge Routing & Security (Traefik, Cloudflare) • Identity Management (Authentik) • Network Architecture (OpenWrt, WireGuard)
+
+</div>
+
+<br>
+
+### 🎓 About Me
+
+I am an undergraduate engineering student at the **Technical University of Cluj-Napoca (UTCN)** in the Faculty of Electronics, Telecommunications and Information Technology (**ETTI**), specializing in **Communications**. My coursework covers physical-layer communications, signal processing, networking protocols, and telecommunications systems.
+
+Outside of university, I spend my time building and operating **real Linux, networking, and container infrastructure**. For me, running a 24/7 production homelab is the best way to bridge academic theory with hands-on systems engineering—dealing with real constraints like RAM budgeting, silent disk corruption, DNS failover, TLS lifecycle automation, and disaster recovery drills.
+
+### 🧠 My Homelab Evolution (3–4 Years of Iteration)
+
+While `205hlab` represents my current bare-metal Ubuntu Server baseline, it is the result of 3–4 years of building, breaking, and iterating through different stacks in my homelab and virtualized test environments (documented in detail across [`docs/adr/`](docs/adr/README.md)):
+
+- **Virtualization & Hypervisors (`Proxmox VE` & `PBS`):** Built and operated **Proxmox VE** clusters—working with KVM virtual machines, unprivileged LXC containers, PCIe/GPU passthrough, Software-Defined Networking (SDN with VLANs and VNet overlays), HA cluster fencing, live migration, and automated backups via **Proxmox Backup Server (PBS)**.
+- **Enterprise Storage (`TrueNAS` & `OpenZFS`):** Designed and managed ZFS storage pools on **TrueNAS (Core & SCALE)** and Linux—testing RAID-Z1/Z2/Z3 and mirrored vdev topologies, tuning dataset `recordsize` per workload, configuring L2ARC/ZIL SSD caching, setting up SSH snapshot replication, and running scheduled bit-rot scrubs.
+- **OS & Container Orchestration (`CLI` → `Portainer` → `Dockge & Unraid` → `Ubuntu + Dockhand`):** Progressed from raw Docker CLI to **Portainer**, and then to **Dockge on Unraid** (monitored alongside **Beszel**). While Unraid was convenient as a consumer NAS, it abstracted away too much of the underlying OS—limiting direct control over `systemd`, raw OpenZFS, kernel tuning, and `iptables`. I moved back to **bare-metal Ubuntu Server LTS** paired with **Dockhand GitOps** and encrypted deploy-time secret injection ([ADR-004](docs/adr/ADR-004-dockhand-gitops-continuous-deployment.md)).
+- **Databases (`SQLite / phpMyAdmin / pgAdmin` → `Centralized PostgreSQL 18`):** Earlier lab generations mixed default **SQLite** files with scattered SQL/PostgreSQL instances managed first through **phpMyAdmin** and later via a desktop **pgAdmin** client on my laptop. Consolidating onto a single **PostgreSQL 18** (`--data-checksums`) cluster solved SQLite concurrency lock errors, saved gigabytes of idle RAM, enabled browser-based inspection via **Adminer**, and unified nightly backups and restore verification under **Databasus** ([ADR-001](docs/adr/ADR-001-centralized-postgresql-18.md)).
+- **Directory Services & IAM (`Windows AD DS` → `OpenLDAP` → `FreeIPA` → `Authentik`):** Started with **Windows Server Active Directory (AD DS)** in a VM (GPO, Kerberos, DNS, DHCP), migrated to **OpenLDAP**, and then adopted Red Hat **FreeIPA** to govern centralized POSIX UID/GID permissions across **OpenZFS datasets and NFS shares** (intentionally omitted from this single-node bare-metal host, and ready to re-deploy when scaling to a multi-node cluster). For web apps, I moved from selective SSO to 100% mandatory **Authentik** OIDC and Traefik ForwardAuth across every service ([ADR-002](docs/adr/ADR-002-authentik-unified-iam.md)).
+- **Ingress & Perimeter (`NPM + Cloudflared` → `Cloudflared Only` → `Traefik v3 + WAF + iptables`):** Early labs combined **Nginx Proxy Manager (NPM)** with **Cloudflare Tunnels (`cloudflared`)**, then used Cloudflare Tunnels exclusively. For `205hlab`, I retired tunnels in favor of **Traefik Proxy v3** (DNS-01 ACME TLS, dynamic providers, middleware chaining) behind **Cloudflare Proxy/WAF** and strict OpenWrt/Ubuntu **`iptables` Cloudflare origin IP allowlisting** ([ADR-002](docs/adr/ADR-002-authentik-unified-iam.md)).
+- **DNS Progression (`Pi-hole` → `AdGuard Home` → `ISC BIND9` → `Technitium DNS`):** Iterated through four DNS setups: **Pi-hole** (with external multi-node sync scripts), **AdGuard Home** (with sync), raw **ISC BIND9** (authoritative text zonefiles and AXFR transfers), and finally dual-node **Technitium DNS**—combining BIND9-style authoritative zones, DNSSEC, and native **RFC Catalog Zone** automatic replication with built-in ad/malware blocklists and an OIDC web UI ([ADR-003](docs/adr/ADR-003-split-horizon-technitium-dns.md)).
+- **Observability (`InfluxDB + Telegraf` / `Uptime Kuma` / `Loki & Alloy` → `Prometheus + Grafana`):** Built monitoring stacks with **InfluxDB + Telegraf**, **Uptime Kuma**, **Grafana Loki**, and **Grafana Alloy** (evaluated and deferred until multi-node expansion), currently standardized on **Prometheus v3** and **Grafana 13**.
+- **Smart Home Fault Isolation (`Main-Server VM` → `Dedicated HAOS Appliance`):** After running Home Assistant inside a **VM on my main server** for years—where every host reboot or maintenance window took down apartment lighting and Zigbee sensors—I moved **Home Assistant OS (HAOS)**, the **NUT UPS server**, and the **auxiliary Technitium DNS replica** onto the dedicated, battery-backed **ASUS X540SA** appliance ([ADR-005](docs/adr/ADR-005-decouple-smart-home-haos-appliance.md)).
+- **Current Staging / R&D Lab:** In isolated VMs on separate test hardware, I actively experiment with **Kubernetes (K3s)**, **ArgoCD**, **HashiCorp Vault**, **Terraform**, and **Ansible**.
+
+### 🛠️ Technical Toolkit
+
+| Area | Tools & Technologies |
+| :--- | :--- |
+| **Linux & Storage** | Ubuntu Server LTS, Debian, OpenZFS, TrueNAS Core/SCALE, systemd, Bash scripting, S.M.A.R.T. & UPS (NUT) monitoring |
+| **Containers & CI/CD** | Docker, Docker Compose v2, GitHub Actions, Dockhand GitOps, Kubernetes (K3s in staging), Terraform & Ansible (learning/lab) |
+| **Networking & Security** | OpenWrt, VLANs, `iptables`/`nftables`, WireGuard (Gluetun), Traefik v3, Cloudflare (WAF, CDN, DNS-01 ACME), Technitium DNS, BIND9 |
+| **Identity & Databases** | Authentik (OIDC/OAuth2/ForwardAuth), FreeIPA, Active Directory, PostgreSQL 18, TimescaleDB, Valkey / Redis, Databasus |
+| **Observability & Virtualization** | Prometheus, Grafana, Node/cAdvisor/ZFS/PG Exporters, Grafana Loki, Proxmox VE (KVM, LXC, PBS) |
+
+### 🎯 Looking for Opportunities
+
+I am actively looking for **Internships or Junior roles** in **DevOps, Infrastructure Engineering, Systems Administration, or Network/Cloud Engineering**. If you need someone who enjoys digging into how networks, Linux hosts, and containers work under the hood—feel free to reach out!
+
+<div align="center">
+
+[![Connect on LinkedIn](https://img.shields.io/badge/Connect_on_LinkedIn-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/ervin-vajda-970436152)
+[![Email Me](https://img.shields.io/badge/Send_an_Email-0078D4?style=for-the-badge&logo=microsoftoutlook&logoColor=white)](mailto:dr20ervin@outlook.com)
+
+<br>
+
+**License:** [MIT](LICENSE) · © 2026 [Vajda Ervin-Olivér](https://github.com/Dr20Ervin)  
+*If you found this repository useful or interesting, consider giving it a ⭐!*
 
 </div>
