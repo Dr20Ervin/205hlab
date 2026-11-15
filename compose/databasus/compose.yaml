@@ -5,6 +5,8 @@ services:
     restart: unless-stopped
     container_name: databasus
     hostname: 205hlab-databasus
+    ports:
+      - "127.0.0.1:4005:4005"
     deploy:
       resources:
         limits:
@@ -15,7 +17,6 @@ services:
     networks:
       - postgres_network
       - traefik_network
-      - databasus_internal
     volumes:
       - databasus_data:/databasus-data
       - ${DATABASUS_BACKUP:?DATABASUS_BACKUP Not defined}:/databasus-data/backups
@@ -38,9 +39,9 @@ services:
     restart: unless-stopped
     container_name: databasus-verifier
     hostname: 205hlab-databasus-verifier
+    network_mode: host
     depends_on:
-      databasus:
-        condition: service_healthy
+      - databasus
     deploy:
       resources:
         limits:
@@ -58,13 +59,13 @@ services:
     entrypoint: ["/bin/sh", "-c"]
     command:
       - |
-        until wget -q -O /tmp/verification-agent "http://databasus:4005/api/v1/system/verification-agent?arch=amd64"; do
+        until wget -q -O /tmp/verification-agent "http://127.0.0.1:4005/api/v1/system/verification-agent?arch=amd64"; do
           echo "Waiting for Databasus API to serve verification-agent binary..."
           sleep 5
         done
         chmod +x /tmp/verification-agent
         exec /tmp/verification-agent run \
-          --databasus-host=http://databasus:4005 \
+          --databasus-host=http://127.0.0.1:4005 \
           --allow-insecure-http \
           --agent-id="$${DATABASUS_AGENT_ID}" \
           --token="$${DATABASUS_AGENT_TOKEN}" \
@@ -72,9 +73,6 @@ services:
           --max-ram-mb="$${DATABASUS_MAX_RAM_MB}" \
           --max-disk-gb="$${DATABASUS_MAX_DISK_GB}" \
           --max-concurrent-jobs="$${DATABASUS_MAX_CONCURRENT_JOBS}"
-    networks:
-      - databasus_internal
-      - postgres_network
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - databasus_verifier_data:/data
@@ -86,9 +84,6 @@ services:
       start_period: 30s
 
 networks:
-  databasus_internal:
-    name: databasus_internal
-    driver: bridge
   postgres_network:
     external: true
   traefik_network:

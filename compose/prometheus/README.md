@@ -95,7 +95,7 @@ labels:
 ## 💾 Backup & Data Persistence
 
 - **TSDB Blocks:** Stored at `${PROMETHEUS_DATA}` (WAL and compressed 2h chunk blocks).
-- **Scrape Configuration:** Managed in [`prometheus.yaml`](prometheus.yaml) under version control.
+- **Scrape Configuration:** Managed in [`config/prometheus.yaml`](config/prometheus.yaml) under version control.
 
 ---
 

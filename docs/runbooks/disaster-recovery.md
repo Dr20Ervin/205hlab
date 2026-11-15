@@ -58,13 +58,13 @@ The homelab combines automated database snapshots, Git-tracked infrastructure, a
 ```mermaid
 flowchart TD
     subgraph DatabasusStack["compose/databasus/ (Failure-Independent Backup & Verification Stack)"]
-        DBU["Databasus (v3.65.0)\ndatabasus.internal.205hlab.com"]
-        VER["databasus-verifier\n./verification-agent run\n(Budget: 2 CPU · 2 GB RAM · 25 GB Disk · 1 Job)"]
-        EPHEM[("Ephemeral PG 18 Container\nCreated & Destroyed per Job")]
-        STORE["${DATABASUS_BACKUP}\nDaily PostgreSQL Dumps"]
+        DBU["Databasus (v3.65.0)\ndatabasus.internal.205hlab.com\n(Bound to 127.0.0.1:4005)"]
+        VER["databasus-verifier (network_mode: host)\n./verification-agent run\n(Budget: 2 CPU · 2 GB RAM · 25 GB Disk · 1 Job)"]
+        EPHEM[("Ephemeral PG 18 Container\nHost Loopback: 127.0.0.1:random-port\nCreated & Destroyed per Job")]
+        STORE["${DATABASUS_BACKUP} (BinPool)\nDaily PostgreSQL Dumps"]
         
         DBU -->|Scheduled Backups| STORE
-        VER <-->|"databasus_internal\n(--allow-insecure-http)"| DBU
+        VER <-->|"Host Loopback: 127.0.0.1:4005\n(--allow-insecure-http)"| DBU
         VER -->|"Spins up / Tears down\n(/var/run/docker.sock)"| EPHEM
     end
 
@@ -81,7 +81,7 @@ flowchart TD
 **Why Databasus + `databasus-verifier` follow this design:**
 1. **Availability During Outages:** Stopping or upgrading `postgres` (`205hlab-pgdb`) never stops `databasus` — backup archives and the restore UI remain accessible during database recovery.
 2. **Proof Beyond Checksums:** Checksums only prove archive bits didn't flip; **`databasus-verifier`** automatically restores each backup into an ephemeral `postgres:18` container, validates schema and per-table row counts against the source, tears the throwaway container down (zero idle DB RAM wasted), and logs every attempt in Databasus's **Restore verifications** tab.
-3. **Strict Ingress Security:** `databasus-verifier` communicates over the private `databasus_internal` Docker bridge (`http://databasus:4005 --allow-insecure-http`) so `https://databasus.internal.205hlab.com` stays 100% locked behind Authentik `ForwardAuth` without auth bypasses.
+3. **Strict Ingress Security & DooD Loopback Resolution:** `databasus-verifier` runs with `network_mode: host` to eliminate Docker-out-of-Docker network isolation timeouts when connecting to ephemeral PostgreSQL test containers on `127.0.0.1:<random-port>`. It communicates with Databasus over host loopback (`http://127.0.0.1:4005 --allow-insecure-http`), completely bypassing Traefik/Authentik without exposing port 4005 to LAN or WAN.
 
 ---
 

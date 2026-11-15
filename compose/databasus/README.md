@@ -24,20 +24,26 @@ This stack deliberately decouples **Databasus** (the automated PostgreSQL backup
                    [ Databasus (:4005) ]
                      • Volume: databasus-data
                      • Backups: ${DATABASUS_BACKUP} (BinPool dataset)
+                     • Local Bind: 127.0.0.1:4005:4005 (Safe host loopback)
                               │
          ┌────────────────────┴────────────────────────┐
-         │ (postgres_network)                          │ (databasus_internal · HTTP internal)
+         │ (postgres_network)                          │ (Host Loopback · 127.0.0.1)
          ▼                                             ▼
 [ Primary PostgreSQL 18 ]                   [ databasus-verifier ]
-(compose/postgres/stack)                    • Docker CLI + /tmp/verification-agent run
-• Scheduled daily pg_dump                   • Spins up ephemeral postgres:18 container
-• Remains independent of Databasus          • Restores backup -> counts per-table rows
+(compose/postgres/stack)                    • network_mode: host (shares host loopback)
+• Scheduled daily pg_dump                   • Reaches Databasus at http://127.0.0.1:4005
+• Remains independent of Databasus          • Launches ephemeral throwaway PG:18 container
+                                            • Connects to 127.0.0.1:<random-port> without timeout
+                                            • Restores backup -> counts per-table rows
                                             • Destroys throwaway container when finished
 ```
 
 - **Failure Independence:** If the primary `postgres` container in `compose/postgres/` goes down or is stopped for major maintenance/recovery, **Databasus stays online** so you still have full UI access to backup snapshots and restore workflows.
-- **Native Automated Restore Verification (`databasus-verifier`):** Rather than wasting idle DDR3 RAM on a permanently running second PostgreSQL container or trusting archive checksums alone, `databasus-verifier` downloads the exact matching `verification-agent` Go binary directly from `http://databasus:4005/api/v1/system/verification-agent?arch=amd64` on startup and executes `./verification-agent run` as `PID 1`.
-  - Uses **`--allow-insecure-http` over the private `databasus_internal` Docker bridge** (`http://databasus:4005`), keeping `https://databasus.internal.205hlab.com` 100% locked behind Authentik `ForwardAuth` with zero auth bypass rules.
+- **Docker-out-of-Docker (DooD) Loopback Resolution (`network_mode: host`):**  
+  When `databasus-verifier` uses the host's `/var/run/docker.sock` to spin up a temporary PostgreSQL test container, Docker binds that test database to the **host's** loopback interface (`127.0.0.1:<random-port>`). If the verifier container ran inside an isolated bridge network, `127.0.0.1` would resolve to the verifier's own container namespace where nothing is listening (causing connection timeouts). Running `databasus-verifier` in `network_mode: host` allows the verification agent to connect seamlessly to the ephemeral container on host loopback.
+- **Safe Internal API Exposure (`127.0.0.1:4005:4005`):**  
+  Because the public Traefik route is protected by Authentik ForwardAuth (`authentik@docker`), the verification agent cannot call the public FQDN (Authentik would challenge the API call). By binding `databasus` to `127.0.0.1:4005:4005`, the agent accesses the Databasus API over unencrypted host loopback (`--allow-insecure-http`) completely isolated from the local LAN and the WAN.
+- **Native Automated Restore Verification:** `databasus-verifier` downloads the exact matching `verification-agent` Go binary from `http://127.0.0.1:4005/api/v1/system/verification-agent?arch=amd64` on startup and executes `./verification-agent run` as foreground `PID 1`.
   - Uses **`./verification-agent run`** (foreground process) instead of `start` (background daemon fork) so Docker monitors `PID 1`, streams live verification logs to Dockhand, and avoids restart loops.
   - Allocates **`--max-cpu=2`**, **`--max-ram-mb=2048`**, **`--max-disk-gb=25`**, and **`--max-concurrent-jobs=1`** so sequential *"After backup"* jobs run at full speed within Databasus's 1 CPU / 512 MB floor + 5 GB disk headroom requirement.
   - Note on least-privilege boundary: Only `databasus-verifier` mounts `/var/run/docker.sock` to spawn and tear down throwaway PostgreSQL containers; the core `databasus` backup server has zero Docker socket access.

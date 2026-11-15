@@ -51,7 +51,7 @@ flowchart LR
 | **Date** | `YYYY-MM` |
 | **Deciders** | Vajda Ervin-Oliver |
 | **Domain** | `[Data Tier \| Security & IAM \| Networking & DNS \| CI/CD & Ops \| Hardware]` |
-| **Related Stacks** | [`compose/<stack>/`](../../compose/<stack>/) |
+| **Related Stacks** | [`compose/<stack>/`](../../compose/) |
 
 ---
 
