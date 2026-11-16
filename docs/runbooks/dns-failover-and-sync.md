@@ -21,10 +21,10 @@ flowchart LR
 2. `internal.205hlab.com` *(Primary — resolves all `*.internal.205hlab.com` LAN-only routes)*
 3. `dns.205hlab.com` *(Primary — DNSSEC-signed resolver infrastructure zone)*
 4. `lan.205hlab.com` *(Primary — local LAN client DHCP/static records)*
-5. `mngt.205hlab.com` *(Primary — Management VLAN `10.14.0.0/24` interfaces)*
+5. `mngt.205hlab.com` *(Primary — Management VLAN `MNGT_VLAN` interfaces)*
 6. `cluster-catalog.dns.205hlab.com` *(Catalog zone automating member-zone discovery & replication)*
-7. `0.10.10.in-addr.arpa` *(Primary — reverse PTR for `10.10.0.0/24`)*
-8. `0.14.10.in-addr.arpa` *(Primary — reverse PTR for `10.14.0.0/24`)*
+7. Primary reverse PTR for LAN
+8. Primary reverse PTR for `MNGT_VLAN`
 
 **Service Level Objectives:**
 - **RPO:** `~0 minutes` *(Continuous DNS `NOTIFY` + `AXFR`/`IXFR` replication)*
@@ -116,7 +116,7 @@ If **Traefik** or **Authentik OIDC** (`https://technitium.internal.205hlab.com`)
    - **HTTP:** `http://${MNGT_IP}:5380`
    - **HTTPS:** `https://${MNGT_IP}:53443`
 2. Log in using the local fallback `admin` account (`DNS_SERVER_ADMIN_PASSWORD` stored in Dockhand's encrypted vault / `.env`).
-3. Keep port `5380`/`53443` bound **exclusively** to `${MNGT_IP}` (`10.14.0.0/24`) as defined in [`compose/technitium/compose.yaml`](../../compose/technitium/compose.yaml#L11-L12).
+3. Keep port `5380`/`53443` bound **exclusively** to `${MNGT_IP}` (`MNGT_VLAN`) as defined in [`compose/technitium/compose.yaml`](../../compose/technitium/compose.yaml#L11-L12).
 
 ---
 

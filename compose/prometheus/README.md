@@ -57,7 +57,7 @@ labels:
 | Variable | Description | Default / Example |
 | :--- | :--- | :--- |
 | `FQDN` | Base domain name | `205hlab.com` |
-| `MNGT_IP` | Out-of-band management IP address | `10.14.0.x` |
+| `MNGT_IP` | Out-of-band management IP address | `MNGT_VLAN` |
 | `RETENTION_TIME` | Time-series data retention duration | `30d` |
 | `RETENTION_SIZE` | Maximum storage volume size | `50GB` |
 | `PROMETHEUS_DATA` | Host path for TSDB data files | `/srv/prometheus/data` |

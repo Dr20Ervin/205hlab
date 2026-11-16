@@ -35,7 +35,7 @@ flowchart TD
 
 ## 🛠️ Emergency Break-Glass Management VLAN (`${MNGT_IP}`) Endpoints
 
-When **Traefik** (`traefik.205hlab.com`), **Authentik SSO** (`authentik.205hlab.com`), or internal **DNS** (`*.internal.205hlab.com`) is degraded, administrative consoles remain directly reachable over the isolated Management VLAN (`10.14.0.0/24`):
+When **Traefik** (`traefik.205hlab.com`), **Authentik SSO** (`authentik.205hlab.com`), or internal **DNS** (`*.internal.205hlab.com`) is degraded, administrative consoles remain directly reachable over the isolated Management VLAN (`MNGT_VLAN`):
 
 | Service | Direct Break-Glass URL | Stack | Governing Runbook |
 | :--- | :--- | :--- | :--- |

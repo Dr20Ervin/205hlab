@@ -68,7 +68,7 @@ Traefik trusts forwarded headers strictly from verified Cloudflare IP blocks and
 | Variable | Description | Default / Example |
 | :--- | :--- | :--- |
 | `TZ` | Container timezone | `UTC` |
-| `MNGT_IP` | Management VLAN interface IP | `10.14.0.x` |
+| `MNGT_IP` | Management VLAN interface IP | `MNGT_VLAN` |
 | `ACME_EMAIL` | Let's Encrypt registration email | `admin@205hlab.com` |
 | `CF_DNS_API_TOKEN` | Cloudflare API token (`Zone:DNS:Edit`) | *(secret Cloudflare token)* |
 | `DYNAMIC_PATH` | Host path for dynamic file configs | `/srv/traefik/dynamic` |

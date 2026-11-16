@@ -17,7 +17,7 @@ flowchart TD
     Traefik -->|"ForwardAuth middleware\n(authentik@docker)"| Outpost["Authentik Embedded Outpost\nauthentik-server:9000"]
     Outpost -->|200 OK + X-authentik-* headers| AppsFA["20 ForwardAuth Apps\n(Databasus, Adminer, Servarr, etc.)"]
 
-    Admin["Admin on Management VLAN (10.14.0.0/24)"] -.->|"Break-Glass Direct IP Access\n(Bypasses DNS & SSO)"| MNGT["${MNGT_IP}:8080 (Traefik)\n${MNGT_IP}:5380 (Technitium)\n${MNGT_IP}:18966 (MyIP)"]
+    Admin["Admin on Management VLAN (MNGT_VLAN)"] -.->|"Break-Glass Direct IP Access\n(Bypasses DNS & SSO)"| MNGT["${MNGT_IP}:8080 (Traefik)\n${MNGT_IP}:5380 (Technitium)\n${MNGT_IP}:18966 (MyIP)"]
 ```
 
 **Service Level Objectives:**
@@ -88,7 +88,7 @@ Verify core dependencies:
 
 ## 🛠️ Procedure 3: Break-Glass Management VLAN (`${MNGT_IP}`) Access
 
-When **Traefik TLS routing**, **Cloudflare Proxy**, or **Authentik SSO** is unavailable, core network and routing interfaces bind directly to the private Management VLAN IP (`${MNGT_IP}`, `10.14.0.0/24`):
+When **Traefik TLS routing**, **Cloudflare Proxy**, or **Authentik SSO** is unavailable, core network and routing interfaces bind directly to the private Management VLAN IP (`${MNGT_IP}`, `MNGT_VLAN`):
 
 | Service | Break-Glass Endpoint | Authentication | Compose Definition |
 | :--- | :--- | :--- | :--- |

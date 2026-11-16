@@ -77,7 +77,7 @@ Users must authenticate with an account belonging to `jellyfin-users` or `authen
 | `FQDN` | Base domain name | `205hlab.com` |
 | `TZ` | Container timezone | `UTC` |
 | `PUID` / `PGID` | Non-root media file permissions | `1000` / `1000` |
-| `LAN_IP` | Primary host LAN IP (for direct discovery) | `10.10.0.x` |
+| `LAN_IP` | Primary host LAN IP (for direct discovery) | `LAN_IP` |
 | `MEDIA_DIR` | Host base path for media storage | `/srv/media` (OpenZFS pool) |
 | `JELLYFIN_CONFIG_DIR`| Host path for Jellyfin metadata & database | `/srv/jellyfin/config` |
 | `LOG_LEVEL` | Seerr log verbosity | `debug` |

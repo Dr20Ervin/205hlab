@@ -12,7 +12,7 @@
 
 ## Context and Problem Statement
 
-`205hlab` operates two distinct categories of FQDNs: public-facing services (`*.205hlab.com`) routed through Cloudflare WAF, and strictly private infrastructure interfaces (`*.internal.205hlab.com` — Adminer, Databasus, Dockhand, Prometheus, Technitium UI, ChangeDetection, OpenSpeedTest, MyIP) plus dedicated LAN/management reverse-DNS subnets (`10.10.0.0/24`, `10.14.0.0/24`).
+`205hlab` operates two distinct categories of FQDNs: public-facing services (`*.205hlab.com`) routed through Cloudflare WAF, and strictly private infrastructure interfaces (`*.internal.205hlab.com` — Adminer, Databasus, Dockhand, Prometheus, Technitium UI, ChangeDetection, OpenSpeedTest, MyIP) plus dedicated LAN/management reverse-DNS subnets (LAN and `MNGT_VLAN`).
 
 Internal management hostnames must **never exist in public DNS**, while LAN clients accessing public `*.205hlab.com` domains should resolve locally to Traefik to avoid hairpinning traffic out through the WAN gateway. Furthermore, because DNS is a foundational dependency for every device in the apartment, rebooting or maintaining the primary Ubuntu Server must not take down household internet resolution.
 
@@ -74,7 +74,7 @@ DNS infrastructure is split across two physically independent hosts:
 1. **Primary Authoritative Server (`compose/technitium/`):**  
    Runs `docker.io/technitium/dns-server:15.6.2` on the Ubuntu Server (`cpus: '1.0'`, `memory: 1G`), binding `53/tcp` & `53/udp` for LAN queries and restricting admin ports (`:5380`, `:53443`) to `${MNGT_IP}` plus Traefik (`technitium.internal.205hlab.com`). Recursion is strictly locked (`DNS_SERVER_RECURSION=AllowOnlyForPrivateNetworks`) and upstream non-local queries forward to Cloudflare (`1.1.1.1`) and Quad9 (`9.9.9.9`).
 2. **8-Zone Authoritative Layout + DNSSEC:**  
-   Manages `205hlab.com` (Forwarder with split-horizon LAN overrides), `internal.205hlab.com`, `lan.205hlab.com`, `mngt.205hlab.com`, `dns.205hlab.com` (**DNSSEC-signed**), `0.10.10.in-addr.arpa`, `0.14.10.in-addr.arpa`, and `cluster-catalog.dns.205hlab.com` (**Catalog Zone**).
+   Manages `205hlab.com` (Forwarder with split-horizon LAN overrides), `internal.205hlab.com`, `lan.205hlab.com`, `mngt.205hlab.com`, `dns.205hlab.com` (**DNSSEC-signed**), reverse PTR zones (LAN and `MNGT_VLAN`), and `cluster-catalog.dns.205hlab.com` (**Catalog Zone**).
 3. **Zero-Touch Auxiliary Failover (`technitium-aux` on HAOS):**  
    Runs natively on the separate **ASUS X540SA** appliance ([ADR-005](ADR-005-decouple-smart-home-haos-appliance.md)), subscribed as a Secondary member to `cluster-catalog.dns.205hlab.com`. Any zone change on the Ubuntu Server replicates automatically to HAOS without manual duplication.
 

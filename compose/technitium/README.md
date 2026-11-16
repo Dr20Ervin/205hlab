@@ -41,8 +41,8 @@ Technitium DNS Server is the primary internal nameserver for the `205hlab` infra
   4. `lan.205hlab.com` (Primary — local client dynamic DHCP records)
   5. `mngt.205hlab.com` (Primary — out-of-band management interfaces)
   6. `cluster-catalog.dns.205hlab.com` (Catalog zone driving automated replication)
-  7. `0.10.10.in-addr.arpa` (Primary — reverse PTR lookup for `10.10.0.0/24`)
-  8. `0.14.10.in-addr.arpa` (Primary — reverse PTR lookup for `10.14.0.0/24`)
+  7. Primary reverse PTR lookup zone for LAN
+  8. Primary reverse PTR lookup zone for `MNGT_VLAN`
 - **Resource Constraints:** Governed with `limits: cpus: '1.0'`, `memory: 1G`.
 - **Ephemeral Port Range:** Configured via `sysctls: net.ipv4.ip_local_port_range=1024 65535` for high-concurrency recursive query throughput.
 
@@ -100,7 +100,7 @@ Technitium evaluates group membership via the `roles` claim.
 | Variable | Description | Default / Example |
 | :--- | :--- | :--- |
 | `FQDN` | Base domain name | `205hlab.com` |
-| `MNGT_IP` | Out-of-band management IP address | `10.14.0.x` |
+| `MNGT_IP` | Out-of-band management IP address | `MNGT_VLAN` |
 | `DNS_SERVER_DOMAIN` | Primary nameserver domain | `technitium.dns.205hlab.com` |
 | `DNS_SERVER_ADMIN_PASSWORD` | Fallback emergency console password | *(generated via `setup_secrets.sh`)* |
 

@@ -59,8 +59,8 @@ Network monitoring interfaces are secured at the Traefik perimeter by Authentik:
 | `FQDN` | Base domain name | `205hlab.com` |
 | `TZ` | Container timezone | `UTC` |
 | `PUID` / `PGID` | Non-root file permissions | `1000` / `1000` |
-| `LAN_IP` | Primary server LAN IP | `10.10.0.x` |
-| `MNGT_IP` | Management VLAN interface IP | `10.14.0.x` |
+| `LAN_IP` | Primary server LAN IP | `LAN_IP` |
+| `MNGT_IP` | Management VLAN interface IP | `MNGT_VLAN` |
 | `POSTGRES_HOST` | Database host | `postgres` |
 | `POSTGRES_PORT` | Database port | `5432` |
 | `POSTGRES_DB` | Database name | `speedtest_tracker` |

@@ -166,7 +166,7 @@ Services are split into two routing tiers enforced by **Technitium DNS** and **T
 | `*.205hlab.com` | **WAN + LAN** | Routed through Cloudflare Proxy and gated by **Authentik** (native OIDC or Traefik `ForwardAuth` middleware). |
 | `*.internal.205hlab.com` | **LAN Only** | Authoritative only inside the local `internal.205hlab.com` Technitium zone. These records do not exist in public Cloudflare DNS. |
 
-To prevent LAN DNS outages when rebooting the primary Ubuntu server, **Technitium DNS** runs in an active/secondary pair. The primary instance on Ubuntu Server is authoritative for 8 zones (`205hlab.com` forwarder, `internal`, `dns` with DNSSEC, `lan`, `mngt`, reverse PTR zones for `10.10.0.0/24` and `10.14.0.0/24`, and `cluster-catalog.dns.205hlab.com`). Any zone update automatically replicates to the auxiliary Technitium instance on the HAOS appliance via RFC Catalog Zones, with `1.1.1.1` and `9.9.9.9` as upstream resolvers and network-wide ad/malware blocklists.
+To prevent LAN DNS outages when rebooting the primary Ubuntu server, **Technitium DNS** runs in an active/secondary pair. The primary instance on Ubuntu Server is authoritative for 8 zones (`205hlab.com` forwarder, `internal`, `dns` with DNSSEC, `lan`, `mngt`, reverse PTR zones for LAN and `MNGT_VLAN`, and `cluster-catalog.dns.205hlab.com`). Any zone update automatically replicates to the auxiliary Technitium instance on the HAOS appliance via RFC Catalog Zones, with `1.1.1.1` and `9.9.9.9` as upstream resolvers and network-wide ad/malware blocklists.
 
 ---
 
