@@ -18,6 +18,26 @@
 
 ---
 
+## 📅 Operational Maintenance & Drill Cadence
+
+To guarantee that recovery procedures are tested and validated before emergencies occur, operational maintenance and failure drills are scheduled on recurring cycles tracked in **Vikunja** (`vikunja.internal.205hlab.com`):
+
+| Cadence | Domain / Type | Activity & Objective | Governing Runbook | Target Verification |
+| :--- | :--- | :--- | :--- | :--- |
+| **Monthly** | 🐧 *Maintenance* | **Host OS Security Updates & Dockhand Audit** | [`stack-upgrade-and-rollback.md`](stack-upgrade-and-rollback.md) | Ubuntu kernel security patches, apt cleanup, Dockhand image scan review |
+| **Monthly** | 🗄️ *Maintenance* | **Post-Scrub Storage & S.M.A.R.T. Health Audit** | [`power-outage-and-storage-health.md`](power-outage-and-storage-health.md) | Auto-scrub `0 errors`, drive SMART attributes, NVMe wear level, pool capacity |
+| **Monthly** | 💾 *Maintenance* | **Databasus Backup Retention & Health Review** | [`disaster-recovery.md`](disaster-recovery.md) | Green backup status across all tenants, `databasus-verifier` row matches |
+| **Monthly** | 🌐 *Drill* | **Technitium Split-Horizon Failover Drill** | [`dns-failover-and-sync.md`](dns-failover-and-sync.md) | Stop primary DNS; confirm zero LAN downtime via `technitium-aux` on HAOS |
+| **Monthly** | 💾 *Drill* | **PostgreSQL Isolated Restore Test** | [`disaster-recovery.md`](disaster-recovery.md) | Live dump restore into an ephemeral test DB; table & row count match |
+| **Quarterly** | ⚡ *Maintenance* | **APC UPS Self-Test & Battery Telemetry Inspection** | [`power-outage-and-storage-health.md`](power-outage-and-storage-health.md) | NUT battery state, > 15m runtime under load, self-test routine execution |
+| **Quarterly** | 📦 *Maintenance* | **Appliance Out-of-Band Config Exports** | [`disaster-recovery.md`](disaster-recovery.md) | Download OpenWrt `.tar.gz`, HAOS `.tar`, Technitium `.zip` to `/BinPool/backup-manual/` |
+| **Quarterly** | 🚪 *Drill* | **Management VLAN (`MNGT_VLAN`) Bypass Audit** | [`iam-and-ingress-recovery.md`](iam-and-ingress-recovery.md) | Direct `${MNGT_IP}` console access without Traefik, Cloudflare, or Authentik SSO |
+| **Semi-Annual** | 🔑 *Drill* | **Authentik Admin CLI Recovery Key Test** | [`iam-and-ingress-recovery.md`](iam-and-ingress-recovery.md) | `ak create_recovery_key` generates working incognito admin session |
+| **Semi-Annual** | ⏪ *Drill* | **GitOps Fast Rollback & Revert Test** | [`stack-upgrade-and-rollback.md`](stack-upgrade-and-rollback.md) | Git revert on `main` triggers zero-downtime Dockhand rollback |
+| **Annual** | 🧊 *Drill* | **Cold Bare-Metal Rebuild Readiness Dry-Run** | [`disaster-recovery.md`](disaster-recovery.md) | Verify offline USB boot, external passwords, and bootstrap script readiness |
+
+---
+
 ## 🧭 Incident Triage Flowchart
 
 ```mermaid
