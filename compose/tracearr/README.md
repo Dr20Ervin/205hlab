@@ -1,7 +1,7 @@
 # Tracearr — Media Analytics & Playback Telemetry Platform
 
 [![Tracearr](https://img.shields.io/badge/Tracearr-latest-4A148C?style=for-the-badge&logo=prometheus&logoColor=white)](https://github.com/connorgallopo/tracearr)
-[![TimescaleDB](https://img.shields.io/badge/Database-TimescaleDB%20(pg18)-FDB515?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.timescale.com/)
+[![TimescaleDB](https://img.shields.io/badge/Database-TimescaleDB%20(pg18)-FDB515?style=for-the-badge&logo=postgresql&logoColor=white)](https://github.com/timescale/timescaledb)
 [![Redis](https://img.shields.io/badge/Broker-Redis%208-DC382D?style=for-the-badge&logo=redis&logoColor=white)](https://redis.io/)
 [![Auth](https://img.shields.io/badge/Auth-Authentik%20ForwardAuth-fd4b2d?style=for-the-badge&logo=authentik&logoColor=white)](https://goauthentik.io)
 

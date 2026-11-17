@@ -15,6 +15,7 @@ exclude = [
   # Social / bot-restricted sites that return HTTP 403 / 999 to CI runners
   '^https?://(www\.)?linkedin\.com.*',
   '^https?://docs\.paperless-ngx\.com.*',
+  '^https?://(www\.)?qbittorrent\.org.*',
   '^mailto:.*'
 ]
 

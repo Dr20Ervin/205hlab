@@ -8,4 +8,5 @@
 ^https?://127\.0\.0\.1.*
 ^https?://(www\.)?linkedin\.com.*
 ^https?://docs\.paperless-ngx\.com.*
+^https?://(www\.)?qbittorrent\.org.*
 ^mailto:.*
