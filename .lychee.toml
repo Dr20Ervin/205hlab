@@ -1,0 +1,27 @@
+# Lychee Link Checker Configuration for 205hlab
+# Upstream Docs: https://lychee.cli.rs/configuration/
+
+# Exclude internal homelab routes, placeholders, and bot-gated sites
+exclude = [
+  # Internal homelab domains and environment placeholders
+  '^https?://.*\.205hlab\.com.*',
+  '^https?://.*\.internal.*',
+  '^https?://\$\{.*',
+  '^https?://10\..*',
+  '^https?://192\.168\..*',
+  '^https?://localhost.*',
+  '^https?://127\.0\.0\.1.*',
+
+  # Social / bot-restricted sites that return HTTP 999 to CI runners
+  '^https?://(www\.)?linkedin\.com.*',
+  '^mailto:.*'
+]
+
+# Max retries on network timeout
+max_retries = 3
+
+# Request timeout in seconds
+timeout = 20
+
+# Accept standard successful response codes and valid redirects
+accept = [200, 204, 301, 302, 307, 308]

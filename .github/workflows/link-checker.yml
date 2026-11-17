@@ -1,0 +1,42 @@
+name: "Documentation: Link Checker"
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - "**/*.md"
+      - ".github/workflows/link-checker.yml"
+      - ".lychee.toml"
+      - ".lycheeignore"
+  pull_request:
+    branches: [ "main" ]
+    paths:
+      - "**/*.md"
+      - ".github/workflows/link-checker.yml"
+      - ".lychee.toml"
+      - ".lycheeignore"
+  schedule:
+    # Run every Sunday at 4:00 AM UTC to detect external link rot over time
+    - cron: "0 4 * * 0"
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  link-checker:
+    name: "Lychee Markdown Link Audit"
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: "Checkout Repository"
+        uses: actions/checkout@v4
+
+      - name: "Run Lychee Link Checker"
+        uses: lycheeverse/lychee-action@v2
+        with:
+          args: --config .lychee.toml --verbose --no-progress './**/*.md'
+          fail: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
