@@ -7,7 +7,7 @@
 [![Reverse Proxy](https://img.shields.io/badge/Ingress-Traefik%20v3-24A1C1?style=for-the-badge&logo=traefikproxy&logoColor=white)](https://traefik.io)
 
 > **Ingress URL:** `https://resume.205hlab.com`  
-> **Upstream Project:** [AmruthPillai/Reactive-Resume](https://github.com/AmruthPillai/Reactive-Resume)  
+> **Upstream Project:** [reactive-resume/reactive-resume](https://github.com/reactive-resume/reactive-resume)  
 > **Category:** Household SaaS / Career Utilities
 
 Reactive Resume is a free, open-source, privacy-respecting resume builder. It enables building structured, multi-page resumes, tailoring dynamic versions for specific job postings, exporting print-ready PDFs, and sharing public portfolio links without user tracking or telemetry. In this homelab, Reactive Resume runs alongside a dedicated Valkey 9 broker, central PostgreSQL 18 persistence, and native Authentik OpenID Connect (OIDC) authentication.

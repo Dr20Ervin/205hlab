@@ -3,7 +3,7 @@
 > [!NOTE]
 > **Operational Purpose:**  
 > Procedures for verifying **automatic LAN DNS failover** to **`technitium-aux`** (HAOS on ASUS X540SA), auditing and resynchronizing the **RFC Catalog Zone (`cluster-catalog.dns.205hlab.com`)**, validating **DNSSEC signatures**, and accessing the console via **Management VLAN bypass (`${MNGT_IP}:5380`)**.  
-> **Navigation:** [`Runbooks Index`](README.md) · **Related Architecture:** [`ADR-003`](../adr/ADR-003-split-horizon-technitium-dns.md) · [`ADR-005`](../adr/ADR-005-decouple-smart-home-haos-appliance.md) · [`compose/technitium/`](../../compose/technitium/) · [Technitium Dashboard JSON](../../grafana-dashboards/core/technitium-dns-dashbaord.json)
+> **Navigation:** [`Runbooks Index`](README.md) · **Related Architecture:** [`ADR-003`](../adr/ADR-003-split-horizon-technitium-dns.md) · [`ADR-005`](../adr/ADR-005-decouple-smart-home-haos-appliance.md) · [`compose/technitium/`](../../compose/technitium/) · [Technitium Dashboard JSON](../../grafana-dashboards/core/technitium-dns-dashboard.json)
 
 ---
 
@@ -59,7 +59,7 @@ Run these checks before performing scheduled maintenance on the primary Ubuntu S
    dig @<AUX_DNS_IP> github.com +short
    ```
 
-4. **Check Grafana Telemetry:** Open [`technitium-dns-dashbaord.json`](../../grafana-dashboards/core/technitium-dns-dashbaord.json) (`technitium-exporter`, scraping `technitium.dns.205hlab.com` and `technitium-aux.dns.205hlab.com`) and verify both nodes show active metrics without spike in `SERVFAIL` / `REFUSED` responses.
+4. **Check Grafana Telemetry:** Open [`technitium-dns-dashboard.json`](../../grafana-dashboards/core/technitium-dns-dashboard.json) (`technitium-exporter`, scraping `technitium.dns.205hlab.com` and `technitium-aux.dns.205hlab.com`) and verify both nodes show active metrics without spike in `SERVFAIL` / `REFUSED` responses.
 
 ---
 
@@ -125,4 +125,4 @@ If **Traefik** or **Authentik OIDC** (`https://technitium.internal.205hlab.com`)
 - [ ] SOA serials match between `technitium` and `technitium-aux` across all member zones under `cluster-catalog.dns.205hlab.com`.
 - [ ] `internal.205hlab.com` returns private IPs inside LAN and remains unresolvable from public resolvers (`@1.1.1.1`).
 - [ ] `dns.205hlab.com` returns valid `RRSIG` records and Ubuntu Server host clock (`timedatectl status`) is NTP-synchronized.
-- [ ] [`technitium-dns-dashbaord.json`](../../grafana-dashboards/core/technitium-dns-dashbaord.json) shows healthy query/cache activity on both nodes.
+- [ ] [`technitium-dns-dashboard.json`](../../grafana-dashboards/core/technitium-dns-dashboard.json) shows healthy query/cache activity on both nodes.

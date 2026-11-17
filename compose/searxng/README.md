@@ -1,7 +1,7 @@
 # SearXNG — Privacy-Respecting Metasearch Engine
 
 [![SearXNG](https://img.shields.io/badge/SearXNG-latest-0080FF?style=for-the-badge&logo=search&logoColor=white)](https://searxng.org/)
-[![VPN](https://img.shields.io/badge/VPN-Gluetun%20WireGuard%20(CH)-008080?style=for-the-badge&logo=wireguard&logoColor=white)](https://github.com/qdm12/gluetun)
+[![VPN](https://img.shields.io/badge/VPN-Gluetun%20WireGuard%20(CH)-008080?style=for-the-badge&logo=wireguard&logoColor=white)](https://github.com/passteque/gluetun)
 [![Cache](https://img.shields.io/badge/Cache-Valkey%209%20(In--Memory)-CC342D?style=for-the-badge&logo=redis&logoColor=white)](https://valkey.io)
 [![Auth](https://img.shields.io/badge/Auth-Authentik%20ForwardAuth-fd4b2d?style=for-the-badge&logo=authentik&logoColor=white)](https://goauthentik.io)
 

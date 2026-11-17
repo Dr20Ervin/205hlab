@@ -147,4 +147,4 @@ Technitium evaluates group membership via the `roles` claim.
 ## 🩺 Healthcheck & Monitoring
 
 - **Container Health**: Built-in HTTP probe checking `http://localhost:5380/` every 30s.
-- **Prometheus Telemetry**: Scraped continuously by `technitium_exporter` on port `:9105`, feeding query volume, cache hit ratios, and ad-blocking rate metrics into the [Technitium Grafana Dashboard](../../grafana-dashboards/core/technitium-dns-dashbaord.json).
+- **Prometheus Telemetry**: Scraped continuously by `technitium_exporter` on port `:9105`, feeding query volume, cache hit ratios, and ad-blocking rate metrics into the [Technitium Grafana Dashboard](../../grafana-dashboards/core/technitium-dns-dashboard.json).

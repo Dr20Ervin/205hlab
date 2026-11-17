@@ -138,4 +138,4 @@ Each application maintains an isolated database and restricted user. Provisionin
 
 - **PostgreSQL Health**: Continuously probed every 10s via `pg_isready -U ${POSTGRES_USER}`.
 - **Adminer Health**: Probed every 30s via `wget --spider http://localhost:8080/`.
-- **Prometheus Telemetry**: Scraped by `postgres-exporter` on port `:9187` with database auto-discovery enabled, visualized in the pre-configured [PostgreSQL Grafana Dashboard](../../grafana-dashboards/core/postgresql-dashbaord.json).
+- **Prometheus Telemetry**: Scraped by `postgres-exporter` on port `:9187` with database auto-discovery enabled, visualized in the pre-configured [PostgreSQL Grafana Dashboard](../../grafana-dashboards/core/postgresql-dashboard.json).

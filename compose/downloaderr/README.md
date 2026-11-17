@@ -1,6 +1,6 @@
 # Downloaderr — VPN Tunnel, BitTorrent & Media Acquisition Subsystem
 
-[![Gluetun](https://img.shields.io/badge/VPN-Gluetun%20WireGuard-008080?style=for-the-badge&logo=wireguard&logoColor=white)](https://github.com/qdm12/gluetun)
+[![Gluetun](https://img.shields.io/badge/VPN-Gluetun%20WireGuard-008080?style=for-the-badge&logo=wireguard&logoColor=white)](https://github.com/passteque/gluetun)
 [![qBittorrent](https://img.shields.io/badge/BitTorrent-qBittorrent-2F6792?style=for-the-badge&logo=qbittorrent&logoColor=white)](https://www.qbittorrent.org/)
 [![qui](https://img.shields.io/badge/WebUI-qui-FF6B6B?style=for-the-badge)](https://github.com/autobrr/qui)
 [![MeTube](https://img.shields.io/badge/YouTube-MeTube-FF0000?style=for-the-badge&logo=youtube&logoColor=white)](https://github.com/alexta69/metube)
