@@ -20,7 +20,7 @@
 
 ## 📅 Operational Maintenance & Drill Cadence
 
-To guarantee that recovery procedures are tested and validated before emergencies occur, operational maintenance and failure drills are scheduled on recurring cycles tracked in **Vikunja** (`vikunja.internal.205hlab.com`):
+To guarantee that recovery procedures are tested and validated before emergencies occur, operational maintenance and failure drills are scheduled on recurring cycles tracked in **Vikunja** (`vikunja.205hlab.com`):
 
 | Cadence | Domain / Type | Activity & Objective | Governing Runbook | Target Verification |
 | :--- | :--- | :--- | :--- | :--- |
