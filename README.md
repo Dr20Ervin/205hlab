@@ -4,11 +4,16 @@
 
 **Production Homelab Infrastructure & Engineering Portfolio**
 
+[![CI: Validate Compose](https://github.com/Dr20Ervin/205hlab/actions/workflows/validate-compose.yml/badge.svg)](https://github.com/Dr20Ervin/205hlab/actions/workflows/validate-compose.yml)
+[![Security: Gitleaks](https://github.com/Dr20Ervin/205hlab/actions/workflows/security-gitleaks.yml/badge.svg)](https://github.com/Dr20Ervin/205hlab/actions/workflows/security-gitleaks.yml)
+[![Docs: Link Checker](https://github.com/Dr20Ervin/205hlab/actions/workflows/link-checker.yml/badge.svg)](https://github.com/Dr20Ervin/205hlab/actions/workflows/link-checker.yml)
+
+<br/>
+
 [![Release](https://img.shields.io/badge/Release-2026--11--14-0d1117?style=for-the-badge&labelColor=238636&color=238636)](https://github.com/Dr20Ervin/205hlab/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-0d1117?style=for-the-badge&labelColor=1f6feb&color=1f6feb)](LICENSE)
 [![Host OS](https://img.shields.io/badge/Ubuntu%20Server%20LTS-E95420?style=for-the-badge&logo=ubuntu&logoColor=white)](https://ubuntu.com)
 [![Docker Compose](https://img.shields.io/badge/Docker%20Compose%20v2-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://docs.docker.com/compose/)
-[![CI: Validate Compose](https://github.com/Dr20Ervin/205hlab/actions/workflows/validate-compose.yml/badge.svg)](https://github.com/Dr20Ervin/205hlab/actions/workflows/validate-compose.yml)
 [![Traefik v3](https://img.shields.io/badge/Traefik%20v3-24A1C1?style=for-the-badge&logo=traefikproxy&logoColor=white)](https://traefik.io)
 [![Authentik SSO](https://img.shields.io/badge/Authentik%20SSO-fd4b2d?style=for-the-badge)](https://goauthentik.io)
 [![Cloudflare](https://img.shields.io/badge/Cloudflare%20Proxy-F38020?style=for-the-badge&logo=cloudflare&logoColor=white)](https://www.cloudflare.com)
