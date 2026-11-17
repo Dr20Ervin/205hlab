@@ -1,7 +1,7 @@
 # Authentik — Identity & Access Management (IAM) Hub
 
 [![Authentik](https://img.shields.io/badge/Authentik-2026.8.5-fd4b2d?style=for-the-badge&logo=authentik&logoColor=white)](https://goauthentik.io)
-[![Architecture](https://img.shields.io/badge/Architecture-Server%20%2B%20Worker-blue?style=for-the-badge)](https://docs.goauthentik.io/core-concepts/architecture)
+[![Architecture](https://img.shields.io/badge/Architecture-Server%20%2B%20Worker-blue?style=for-the-badge)](../../docs/adr/ADR-002-authentik-unified-iam.md)
 [![Zero Trust](https://img.shields.io/badge/Policy-Zero--Trust%20Gateway-green?style=for-the-badge)](https://docs.goauthentik.io/add-secure-apps/providers/proxy/)
 [![Database](https://img.shields.io/badge/Database-PostgreSQL%2018-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org)
 
