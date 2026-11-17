@@ -1,0 +1,20 @@
+# Gitleaks Configuration for 205hlab
+# Inherits standard detection rules with safe allowlists for example configs and CI dummies
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Allowlist safe example templates, CI dummy values, and documentation assets"
+paths = [
+  '''(^|/)example\.env$''',
+  '''(^|/)\.env\.ci$''',
+  '''(^|/)setup_secrets\.sh$''',
+  '''assets/.*''',
+  '''\.github/scripts/prepare-test-env\.py$'''
+]
+
+stopwords = [
+  "ci_test_dummy_value",
+  "your_secure_password"
+]
