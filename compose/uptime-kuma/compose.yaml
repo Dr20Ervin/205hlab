@@ -1,0 +1,121 @@
+---
+services:
+  uptime-kuma:
+    image: docker.io/louislam/uptime-kuma:2
+    restart: unless-stopped
+    container_name: uptime-kuma
+    security_opt:
+      - no-new-privileges:true
+    ports:
+      - "${MNGT_IP:?MNGT_IP Not defined}:${UPTIME_KUMA_PORT:-3001}:3001"
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+    depends_on:
+      uptime-kuma-db:
+        condition: service_healthy
+    environment:
+      - TZ=${TZ:-UTC}
+      - UPTIME_KUMA_PORT=3001
+      - UPTIME_KUMA_DB_TYPE=mariadb
+      - UPTIME_KUMA_DB_HOSTNAME=uptime-kuma-db
+      - UPTIME_KUMA_DB_PORT=3306
+      - UPTIME_KUMA_DB_NAME=${KUMA_DB_NAME:-uptime_kuma}
+      - UPTIME_KUMA_DB_USERNAME=${KUMA_DB_USER:-kuma_app}
+      - UPTIME_KUMA_DB_PASSWORD=${KUMA_DB_PASSWORD:?KUMA_DB_PASSWORD Not defined}
+      - UPTIME_KUMA_DB_POOL_MAX_CONNECTIONS=10
+    networks:
+      - traefik_network
+      - postgres_network
+      - monitoring_network
+      - uptime_kuma_backend
+    volumes:
+      - uptime_kuma_data:/app/data
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    healthcheck:
+      test: ["CMD-SHELL", "node extra/healthcheck.js || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=traefik_network
+      - traefik.http.services.uptime_kuma_web.loadBalancer.server.port=3001
+
+      # Public Status Page Router
+      # STRICT STEALTH WHITELIST: Only permits public status page endpoints.
+      # Any admin path (/dashboard, /settings, /manage-status-page, /socket.io) returns a dead-end 404 without redirect.
+      - traefik.http.routers.uptime_kuma_status_http.service=uptime_kuma_web
+      - "traefik.http.routers.uptime_kuma_status_http.rule=Host(`status.${FQDN}`) && (Path(`/`) || PathPrefix(`/status`) || PathPrefix(`/status-page`) || PathPrefix(`/assets`) || PathPrefix(`/api/status-page`) || PathPrefix(`/api/badge`) || Path(`/icon.svg`) || PathPrefix(`/upload`))"
+      - traefik.http.routers.uptime_kuma_status_http.entrypoints=web
+      - traefik.http.routers.uptime_kuma_status_https.service=uptime_kuma_web
+      - "traefik.http.routers.uptime_kuma_status_https.rule=Host(`status.${FQDN}`) && (Path(`/`) || PathPrefix(`/status`) || PathPrefix(`/status-page`) || PathPrefix(`/assets`) || PathPrefix(`/api/status-page`) || PathPrefix(`/api/badge`) || Path(`/icon.svg`) || PathPrefix(`/upload`))"
+      - traefik.http.routers.uptime_kuma_status_https.entrypoints=websecure
+      - traefik.http.routers.uptime_kuma_status_https.tls=true
+      - traefik.http.routers.uptime_kuma_status_https.tls.certresolver=cloudflare
+
+      # Protected Admin Dashboard
+      - traefik.http.routers.uptime_kuma_admin_http.service=uptime_kuma_web
+      - traefik.http.routers.uptime_kuma_admin_http.rule=Host(`uptime.${FQDN}`)
+      - traefik.http.routers.uptime_kuma_admin_http.entrypoints=web
+      - traefik.http.routers.uptime_kuma_admin_https.service=uptime_kuma_web
+      - traefik.http.routers.uptime_kuma_admin_https.rule=Host(`uptime.${FQDN}`)
+      - traefik.http.routers.uptime_kuma_admin_https.entrypoints=websecure
+      - traefik.http.routers.uptime_kuma_admin_https.tls=true
+      - traefik.http.routers.uptime_kuma_admin_https.tls.certresolver=cloudflare
+      - traefik.http.routers.uptime_kuma_admin_https.middlewares=authentik@docker
+
+  uptime-kuma-db:
+    image: docker.io/library/mariadb:11.6
+    restart: unless-stopped
+    container_name: uptime-kuma-db
+    security_opt:
+      - no-new-privileges:true
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --innodb-buffer-pool-size=128M
+      - --max-connections=50
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 384M
+    environment:
+      - TZ=${TZ:-UTC}
+      - MYSQL_DATABASE=${KUMA_DB_NAME:-uptime_kuma}
+      - MYSQL_USER=${KUMA_DB_USER:-kuma_app}
+      - MYSQL_PASSWORD=${KUMA_DB_PASSWORD:?KUMA_DB_PASSWORD Not defined}
+      - MYSQL_ROOT_PASSWORD=${KUMA_DB_ROOT_PASSWORD:?KUMA_DB_ROOT_PASSWORD Not defined}
+    networks:
+      - uptime_kuma_backend
+    volumes:
+      - uptime_kuma_db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+networks:
+  uptime_kuma_backend:
+    name: uptime_kuma_backend
+    driver: bridge
+  traefik_network:
+    external: true
+  postgres_network:
+    external: true
+  monitoring_network:
+    external: true
+
+volumes:
+  uptime_kuma_data:
+    name: uptime-kuma-data
+    driver: local
+  uptime_kuma_db_data:
+    name: uptime-kuma-db-data
+    driver: local

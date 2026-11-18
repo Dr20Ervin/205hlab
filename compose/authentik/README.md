@@ -51,7 +51,7 @@ flowchart TD
         Servarr["Sonarr · Radarr · Lidarr · Bazarr · Prowlarr · Chaptarr"]
         WebTools["IT-Tools · Omni-Tools · Draw.io · BentoPDF"]
         NetMon["Speedtest Tracker · MyIP"]
-        InternalOps["Adminer · Databasus · Prometheus · ChangeDetection · SearXNG · Seerr · Tracearr"]
+        InternalOps["Adminer · Databasus · Prometheus · ChangeDetection · SearXNG · Seerr · Tracearr · Uptime Kuma"]
     end
 
     Traefik -->|2a. Authenticated Header Injection| ProxyAuth
@@ -177,6 +177,7 @@ These services do not implement native OIDC or are hardened by enforcing zero-tr
 | **Sonarr** | `sonarr.205hlab.com` | ForwardAuth | `servarr_users` | [`compose/servarr/`](../servarr/) |
 | **Speedtest Tracker**| `speedtest.205hlab.com` | ForwardAuth | `speedtest_users` | [`compose/network-mon/`](../network-mon/) |
 | **Tracearr** | `tracearr.205hlab.com` | ForwardAuth | `jellyfin-users` | [`compose/tracearr/`](../tracearr/) |
+| **Uptime Kuma** | `uptime.205hlab.com` | ForwardAuth | `kuma_admins` | [`compose/uptime-kuma/`](../uptime-kuma/) |
 
 ---
 

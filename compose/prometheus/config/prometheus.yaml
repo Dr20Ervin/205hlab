@@ -85,6 +85,12 @@ scrape_configs:
     static_configs:
       - targets: ['zfs-exporter:9134']
 
+  - job_name: 'uptime-kuma'
+    scrape_interval: 30s
+    metrics_path: /metrics
+    static_configs:
+      - targets: ['uptime-kuma:3001']
+
   - job_name: 'smartctl-exporter'
     scrape_interval: 60s
     scrape_timeout: 15s

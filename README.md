@@ -175,7 +175,7 @@ To prevent LAN DNS outages when rebooting the primary Ubuntu server, **Technitiu
 
 ---
 
-### Service Catalog (22 Compose Stacks)
+### Service Catalog (23 Compose Stacks)
 
 > Full stack configurations, environment templates, and per-service documentation live in **[`compose/`](compose/README.md)**.
 
@@ -198,6 +198,7 @@ To prevent LAN DNS outages when rebooting the primary Ubuntu server, **Technitiu
 | [`grafana`](compose/grafana/) | **Grafana 13.0** — Dashboards with Authentik OIDC role mapping (`Admin`, `Editor`, `Viewer`). | `grafana.205hlab.com` | OIDC |
 | [`prom-exporters`](compose/prom-exporters/) | **6 Metric Exporters** — `node-exporter`, `cadvisor`, `postgres`, `technitium`, `zfs`, `smartctl` (+ OpenWrt & NUT scrapes). | Internal scrape network | Internal |
 | [`network-mon`](compose/network-mon/) | **Speedtest Tracker** (3-hour WAN tests on PG18), **OpenSpeedTest** (LAN throughput on `:3000`), and **MyIP** (leak diagnostics on `:18966`). | `speedtest.205hlab.com`<br>`openspeed.internal.205hlab.com`<br>`myip.internal.205hlab.com` | ForwardAuth<br>LAN-only<br>LAN + ForwardAuth |
+| [`uptime-kuma`](compose/uptime-kuma/) | **Uptime Kuma v2** + **MariaDB 11.6** — Blackbox service sentinel, container healthchecks, and public status page. Probed out-of-band by HAOS watchdog. | `uptime.205hlab.com`<br>`status.205hlab.com` | ForwardAuth<br>Public (No Auth) |
 
 <details>
 <summary><strong>📈 Version-Controlled Grafana Dashboards (<code>grafana-dashboards/</code>)</strong></summary>
@@ -271,7 +272,7 @@ Security is handled in layers from the Cloudflare edge down to individual contai
 │   ├── workflows/validate-compose.yml    # GitHub Actions CI: validates all compose stacks
 │   └── ISSUE_TEMPLATE/ & PR_TEMPLATE     # Repository contribution templates
 ├── assets/                               # Custom SVG/PNG icons & branding for Authentik/dashboards
-├── compose/                              # 22 Docker Compose stacks (compose.yaml, example.env, db-init.sql)
+├── compose/                              # 23 Docker Compose stacks (compose.yaml, example.env, db-init.sql)
 ├── docs/
 │   ├── adr/                              # Architecture Decision Records (ADR-001 .. ADR-005)
 │   └── runbooks/                         # Disaster recovery & operational SOPs
