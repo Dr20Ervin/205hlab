@@ -10,7 +10,7 @@
 
 <br/>
 
-[![Release](https://img.shields.io/badge/Release-2026--11--14-0d1117?style=for-the-badge&labelColor=238636&color=238636)](https://github.com/Dr20Ervin/205hlab/releases)
+[![Release](https://img.shields.io/badge/Release-2026--11--18-0d1117?style=for-the-badge&labelColor=238636&color=238636)](https://github.com/Dr20Ervin/205hlab/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-0d1117?style=for-the-badge&labelColor=1f6feb&color=1f6feb)](LICENSE)
 [![Host OS](https://img.shields.io/badge/Ubuntu%20Server%20LTS-E95420?style=for-the-badge&logo=ubuntu&logoColor=white)](https://ubuntu.com)
 [![Docker Compose](https://img.shields.io/badge/Docker%20Compose%20v2-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://docs.docker.com/compose/)
@@ -27,7 +27,7 @@
 
 <br/>
 
-> *Snapshot Release `2026-11-14` — Production architecture baseline, running 24/7 at home.*
+> *Snapshot Release `2026-11-18` — Production architecture baseline, running 24/7 at home.*
 
 </div>
 
