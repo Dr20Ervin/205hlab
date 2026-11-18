@@ -67,12 +67,7 @@ All exporters communicate over the isolated `monitoring_network` and expose stan
 ### 7. `cloudflare-exporter` (Port: `:8080`)
 - **Image:** `ghcr.io/lablabs/cloudflare_exporter:latest`
 - **Scope:** Exposes Cloudflare Analytics dashboard data on a per-zone basis, colocation stats, edge HTTP status codes, bandwidth, threat mitigation, Worker metrics (CPU time, duration, errors), and R2 storage usage.
-- **Authentication:** Account-Scoped API Token (`CF_API_TOKEN`) with `CF_ACCOUNTS` set to your Cloudflare Account ID (located in the dashboard URL `https://dash.cloudflare.com/<ACCOUNT_ID>/...`). Required token scopes:
-  - `Zone / Analytics / Read` (zone-level metrics)
-  - `Account / Account Analytics / Read` (Worker & account usage metrics)
-  - `Account / Account Settings / Read` (discovering accessible accounts)
-  - `Zone / Firewall Services / Read` (firewall event rule names)
-  - *(Optional)* `Account / Load Balancing: Monitors and Pools / Read`, `Cloudflare Tunnel / Read`
+- **Authentication:** Account-Scoped API Token (`CF_API_TOKEN`) with `CF_ACCOUNTS` set to your Cloudflare Account ID (located in the dashboard URL `https://dash.cloudflare.com/<ACCOUNT_ID>/...`). See [Step 2: Provision Cloudflare Account API Token](#2-provision-cloudflare-account-api-token) below for detailed permission setup.
 - **Grafana Dashboard:** Visualized via community dashboard [13133](https://grafana.com/grafana/dashboards/13133).
 
 ---
@@ -114,17 +109,46 @@ All exporters communicate over the isolated `monitoring_network` and expose stan
    GRANT pg_monitor TO postgres_exporter;
    ```
 
-2. **Initialize Secrets & Environment**:
+2. **Provision Cloudflare API Token**:
+   > [!IMPORTANT]
+   > **User API Token vs Account-Owned Token:**
+   > The exporter's Go SDK client performs an initial token validation by calling Cloudflare's `GET /user/tokens/verify` endpoint. Cloudflare's newly introduced Account-owned tokens (`cfat_...`) do not have user context and will fail with `Invalid API Token (1000)`.
+   > **You must create a User API Token** under **My Profile → API Tokens**, scoped to your account and zone.
+
+   1. Navigate to **Cloudflare Dashboard** → **My Profile** (top-right avatar) → **[API Tokens](https://dash.cloudflare.com/profile/api-tokens)** (or use the [Pre-configured shortcut](https://dash.cloudflare.com/profile/api-tokens?permissionGroupKeys=%5B%7B%22key%22%3A%22account_analytics%22%2C%22type%22%3A%22read%22%7D%2C%7B%22key%22%3A%22account_settings%22%2C%22type%22%3A%22read%22%7D%2C%7B%22key%22%3A%22analytics%22%2C%22type%22%3A%22read%22%7D%2C%7B%22key%22%3A%22firewall_services%22%2C%22type%22%3A%22read%22%7D%5D&name=Cloudflare+Exporter&accountId=*&zoneId=all)).
+   2. Click **Create Token** → Select **Create Custom Token** (at the bottom).
+   3. Configure basic settings:
+      - **Token name:** `Prometheus Exporter` (or `prom-cloudflare-exporter`)
+      - **Token expiration:** `No expiration`
+   4. Configure **Permissions**:
+      - `Account` → `Account Analytics` → `Read`
+      - `Account` → `Account Settings` → `Read`
+      - `Zone` → `Analytics` → `Read`
+      - `Zone` → `Firewall Services` → `Read`
+   5. Configure **Account & Zone Resources**:
+      - **Account Resources:** `Include` → `Specific account` → Select your account
+      - **Zone Resources:** `Include` → `Specific zone` → Select `205hlab.com` (or `All zones`)
+   6. Click **Continue to summary** → Click **Create token**.
+   7. Copy the generated secret token string (Cloudflare only displays it once).
+   8. Retrieve your **Account ID** from the Cloudflare URL (`https://dash.cloudflare.com/<ACCOUNT_ID>/...`).
+
+3. **Initialize Secrets & Environment**:
    ```bash
    cd compose/prom-exporters
    cp example.env .env
    chmod +x setup_secrets.sh && ./setup_secrets.sh
-   nano .env # Set TECHNITIUM_TOKEN, database password, and CF_API_TOKEN
+   nano .env # Set TECHNITIUM_TOKEN, database password, CF_API_TOKEN, and CF_ACCOUNTS
    ```
 
-3. **Start Exporters**:
+4. **Start Exporters**:
    ```bash
    docker compose up -d
+   ```
+
+5. **Reload Prometheus Scrape Engine**:
+   Reload Prometheus configuration dynamically without downtime:
+   ```bash
+   curl -X POST http://localhost:9096/-/reload
    ```
 
 ---

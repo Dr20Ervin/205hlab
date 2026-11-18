@@ -155,7 +155,7 @@ services:
           memory: 128M
     environment:
       - CF_API_TOKEN=${CF_API_TOKEN:?CF_API_TOKEN Not defined}
-      - CF_ACCOUNTS=${CF_ACCOUNTS:?CF_ACCOUNTS Not defined}
+      - CF_ACCOUNTS=${CF_ACCOUNTS:-}
       - CF_ZONES=${CF_ZONES:-}
       - CF_EXCLUDE_ZONES=${CF_EXCLUDE_ZONES:-}
       - FREE_TIER=${CF_FREE_TIER:-false}
