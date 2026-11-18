@@ -184,6 +184,16 @@ Both Uptime Kuma instances dispatch alerts to private Discord channels via Disco
    ```
 3. Follow the [Authentik Integration Guide](#-authentik-integration-method-2-traefik-forwardauth--proxy-provider) to link `https://uptime.205hlab.com` and disable local authentication.
 
+### PostgreSQL Cluster Healthcheck Setup
+To enable synthetic PostgreSQL probing from Uptime Kuma without exposing superuser privileges:
+1. Initialize the unprivileged role in PostgreSQL using [`monitor/db-mon.sql`](monitor/db-mon.sql):
+   ```bash
+   docker exec -i postgres psql -U postgres_admin -d postgres_admin < monitor/db-mon.sql
+   ```
+2. In Uptime Kuma, add a monitor of type **PostgreSQL**:
+   - **Connection String:** `postgres://kuma_healthcheck:<password>@postgres:5432/postgres_admin`
+   - **Interval:** `60s` \| **Retries:** `2` \| **Tags:** `critical`, `db`, `core`
+
 ### Database Backup & Maintenance
 MariaDB data persists in the Docker volume `uptime-kuma-db-data`. To take an ad-hoc dump:
 ```bash
