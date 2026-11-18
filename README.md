@@ -196,7 +196,7 @@ To prevent LAN DNS outages when rebooting the primary Ubuntu server, **Technitiu
 | :--- | :--- | :--- | :--- |
 | [`prometheus`](compose/prometheus/) | **Prometheus v3.11** — Central TSDB (30-day retention, 50 GB cap). | `prometheus.internal.205hlab.com` | LAN-only |
 | [`grafana`](compose/grafana/) | **Grafana 13.0** — Dashboards with Authentik OIDC role mapping (`Admin`, `Editor`, `Viewer`). | `grafana.205hlab.com` | OIDC |
-| [`prom-exporters`](compose/prom-exporters/) | **6 Metric Exporters** — `node-exporter`, `cadvisor`, `postgres`, `technitium`, `zfs`, `smartctl` (+ OpenWrt & NUT scrapes). | Internal scrape network | Internal |
+| [`prom-exporters`](compose/prom-exporters/) | **7 Metric Exporters** — `node-exporter`, `cadvisor`, `postgres`, `technitium`, `zfs`, `smartctl`, `cloudflare` (+ OpenWrt & NUT scrapes). | Internal scrape network | Internal |
 | [`network-mon`](compose/network-mon/) | **Speedtest Tracker** (3-hour WAN tests on PG18), **OpenSpeedTest** (LAN throughput on `:3000`), and **MyIP** (leak diagnostics on `:18966`). | `speedtest.205hlab.com`<br>`openspeed.internal.205hlab.com`<br>`myip.internal.205hlab.com` | ForwardAuth<br>LAN-only<br>LAN + ForwardAuth |
 | [`uptime-kuma`](compose/uptime-kuma/) | **Uptime Kuma v2** + **MariaDB 11.6** — Blackbox service sentinel, container healthchecks, and public status page. Probed out-of-band by HAOS watchdog. | `uptime.205hlab.com`<br>`status.205hlab.com` | ForwardAuth<br>Public (No Auth) |
 

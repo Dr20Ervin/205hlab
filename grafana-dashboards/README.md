@@ -29,6 +29,7 @@ flowchart TD
         HA_UPS["Home Assistant (HAOS)\nAPC UPS Battery & Voltage"]
         OpenWrt["OpenWrt Router\nBandwidth & Wireless Stats"]
         Qui["qui / qBittorrent\nDownload/Upload Rates"]
+        CFExp["cloudflare-exporter (:8080)\nEdge Analytics & WAF Events"]
     end
 
     subgraph TSDB["Time-Series Engine"]

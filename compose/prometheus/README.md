@@ -29,7 +29,7 @@ Prometheus v3 is the central time-series database (TSDB) and monitoring engine f
 • ZFS Exporter                                 • Traefik Ingress (:9090)
 • Smartctl Exporter (:9633)                    • qui Exporter (:9074)
 • OpenWrt Router Exporter                      • Speedtest Tracker
-• APC UPS Exporter
+• APC UPS Exporter                             • Cloudflare Exporter (:8080)
 ```
 
 - **Retention Quotas:** Governed with strict boundaries (`--storage.tsdb.retention.time=30d`, `--storage.tsdb.retention.size=50GB`) to prevent database bloat from impacting host disk health.

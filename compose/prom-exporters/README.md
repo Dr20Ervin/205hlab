@@ -5,6 +5,7 @@
 [![ZFS Exporter](https://img.shields.io/badge/Collector-OpenZFS%20Exporter-005C8A?style=for-the-badge)](https://github.com/pdf/zfs_exporter)
 [![Smartctl](https://img.shields.io/badge/Collector-smartctl--exporter-orange?style=for-the-badge)](https://github.com/prometheus-community/smartctl_exporter)
 [![PostgreSQL](https://img.shields.io/badge/Collector-Postgres%20Exporter-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)](https://github.com/prometheus-community/postgres_exporter)
+[![Cloudflare](https://img.shields.io/badge/Collector-Cloudflare%20Exporter-F38020?style=for-the-badge&logo=cloudflare&logoColor=white)](https://github.com/lablabs/cloudflare-exporter)
 
 > **Network Scope:** Operates on isolated `monitoring_network` and `postgres_network`.  
 > **Category:** Infrastructure Telemetry Collection
@@ -30,6 +31,7 @@ All exporters communicate over the isolated `monitoring_network` and expose stan
 │  • smartctl-exporter (:9633)   ──► Drive S.M.A.R.T. Health  │
 │  • technitium-exporter (:9105) ──► DNS Query Statistics     │
 │  • postgres-exporter (:9187)   ──► PostgreSQL Internal DBs  │
+│  • cloudflare-exporter (:8080) ──► Cloudflare Edge & Zones  │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -62,6 +64,17 @@ All exporters communicate over the isolated `monitoring_network` and expose stan
 - **Image:** `quay.io/prometheuscommunity/postgres-exporter:latest`
 - **Scope:** Active connections, table locks, buffer cache hit rates, deadlocks, and transactions per second with `PG_EXPORTER_AUTO_DISCOVER_DATABASES=true`.
 
+### 7. `cloudflare-exporter` (Port: `:8080`)
+- **Image:** `ghcr.io/lablabs/cloudflare_exporter:latest`
+- **Scope:** Exposes Cloudflare Analytics dashboard data on a per-zone basis, colocation stats, edge HTTP status codes, bandwidth, threat mitigation, Worker metrics (CPU time, duration, errors), and R2 storage usage.
+- **Authentication:** Account-Scoped API Token (`CF_API_TOKEN`) with `CF_ACCOUNTS` set to your Cloudflare Account ID (located in the dashboard URL `https://dash.cloudflare.com/<ACCOUNT_ID>/...`). Required token scopes:
+  - `Zone / Analytics / Read` (zone-level metrics)
+  - `Account / Account Analytics / Read` (Worker & account usage metrics)
+  - `Account / Account Settings / Read` (discovering accessible accounts)
+  - `Zone / Firewall Services / Read` (firewall event rule names)
+  - *(Optional)* `Account / Load Balancing: Monitors and Pools / Read`, `Cloudflare Tunnel / Read`
+- **Grafana Dashboard:** Visualized via community dashboard [13133](https://grafana.com/grafana/dashboards/13133).
+
 ---
 
 ## ⚙️ Environment Configuration
@@ -75,6 +88,15 @@ All exporters communicate over the isolated `monitoring_network` and expose stan
 | `TECHNITIUM_BASE_URL` | Technitium admin endpoint | `http://technitium:5380` |
 | `TECHNITIUM_TOKEN` | Technitium API session token | *(from Technitium settings)* |
 | `TECHNITIUM_NODES` | Cluster node names | `technitium.dns.205hlab.com,...` |
+| `CF_API_TOKEN` | Cloudflare Account API Token | `...` |
+| `CF_ACCOUNTS` | Cloudflare Account ID (find in dashboard URL: `https://dash.cloudflare.com/<ACCOUNT_ID>/...`) | `abc123def456` |
+| `CF_ZONES` | Comma-delimited list of zone IDs to export | *(all accessible)* |
+| `CF_EXCLUDE_ZONES` | Comma-delimited list of zone IDs to exclude | *(none)* |
+| `CF_FREE_TIER` | Scrape only metrics included in Cloudflare free plan | `false` |
+| `CF_SCRAPE_INTERVAL` | Cloudflare query interval in seconds | `60` |
+| `CF_SCRAPE_DELAY` | Cloudflare data ingestion scrape delay in seconds | `300` |
+| `CF_ENABLE_EDGE_ERRORS_BY_PATH` | Enable normalized path edge error metrics | `false` |
+| `CF_ENABLE_ACCOUNT_USAGE_METRICS` | Enable current calendar month data transfer metrics | `false` |
 
 ---
 
@@ -97,7 +119,7 @@ All exporters communicate over the isolated `monitoring_network` and expose stan
    cd compose/prom-exporters
    cp example.env .env
    chmod +x setup_secrets.sh && ./setup_secrets.sh
-   nano .env # Set TECHNITIUM_TOKEN and database password
+   nano .env # Set TECHNITIUM_TOKEN, database password, and CF_API_TOKEN
    ```
 
 3. **Start Exporters**:
@@ -109,5 +131,5 @@ All exporters communicate over the isolated `monitoring_network` and expose stan
 
 ## 🩺 Healthcheck & Monitoring
 
-- Every exporter implements built-in HTTP healthchecks via `wget` (e.g. `http://localhost:9100/`, `http://localhost:9187/`, `http://localhost:9633/metrics`).
-- Prometheus continuously scrapes all exporters on 15s intervals.
+- Local services (`node-exporter`, `cadvisor`, `postgres-exporter`, `smartctl-exporter`) implement container healthchecks via `wget` or native HTTP probes.
+- Prometheus continuously scrapes internal host metrics every 30s and Cloudflare edge telemetry on a dedicated 60s interval (`scrape_interval: 60s`).
