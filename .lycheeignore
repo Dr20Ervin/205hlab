@@ -9,4 +9,5 @@
 ^https?://(www\.)?linkedin\.com.*
 ^https?://docs\.paperless-ngx\.com.*
 ^https?://(www\.)?qbittorrent\.org.*
+^https?://dash\.cloudflare\.com.*
 ^mailto:.*

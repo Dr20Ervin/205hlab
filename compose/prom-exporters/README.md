@@ -67,8 +67,8 @@ All exporters communicate over the isolated `monitoring_network` and expose stan
 ### 7. `cloudflare-exporter` (Port: `:8080`)
 - **Image:** `ghcr.io/lablabs/cloudflare_exporter:latest`
 - **Scope:** Exposes Cloudflare Analytics dashboard data on a per-zone basis, colocation stats, edge HTTP status codes, bandwidth, threat mitigation, Worker metrics (CPU time, duration, errors), and R2 storage usage.
-- **Authentication:** Account-Scoped API Token (`CF_API_TOKEN`) with `CF_ACCOUNTS` set to your Cloudflare Account ID (located in the dashboard URL `https://dash.cloudflare.com/<ACCOUNT_ID>/...`). See [Step 2: Provision Cloudflare Account API Token](#2-provision-cloudflare-account-api-token) below for detailed permission setup.
-- **Grafana Dashboard:** Visualized via community dashboard [13133](https://grafana.com/grafana/dashboards/13133).
+- **Authentication:** Scoped User API Token (`CF_API_TOKEN`) with optional `CF_ACCOUNTS` account filtering. See [Step 2: Provision Cloudflare API Token](#step-2-provision-cloudflare-api-token) below for detailed permission setup.
+- **Grafana Dashboard:** Visualized via community dashboard [13133](https://grafana.com/grafana/dashboards/13133-cloudflare-zone-analytics/).
 
 ---
 
@@ -109,6 +109,7 @@ All exporters communicate over the isolated `monitoring_network` and expose stan
    GRANT pg_monitor TO postgres_exporter;
    ```
 
+<a id="step-2-provision-cloudflare-api-token"></a>
 2. **Provision Cloudflare API Token**:
    > [!IMPORTANT]
    > **User API Token vs Account-Owned Token:**
