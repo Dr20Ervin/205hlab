@@ -126,8 +126,8 @@ All release feeds are version-controlled in the repository under `compose/freshr
 | File | Purpose | Management Tier | Target Workloads |
 | :--- | :--- | :--- | :--- |
 | **`dynamic-subscriptions.opml`** | Master Dynamic OPML index | Git-Driven Dynamic Feed | Root feed referencing the automated and manual OPML files via `frss:opmlUrl`. |
-| **`github-automatic-releases.opml`** | Routine & standard service updates | Dockhand / Automated Notification | Media automation (Radarr, Sonarr, Bazarr, Jellyfin), utilities (BentoPDF, Draw.io, IT-Tools, Mealie, Paperless-ngx), Prometheus exporters. |
-| **`github-manual-releases.opml`** | Mission-critical infrastructure | Manual Runbook & Verification | Database engines (PostgreSQL 18, TimescaleDB, Redis, Valkey), IAM (Authentik), Ingress (Traefik v3), DNS (Technitium), Core Monitoring (Prometheus, Grafana), VPN (Gluetun). |
+| **`github-automatic-releases.opml`** | Routine & standard service updates | Dockhand / Automated Notification | Media automation (Radarr, Sonarr, Bazarr, Jellyfin), utilities (BentoPDF, Draw.io, IT-Tools, Mealie, Paperless-ngx, Uptime Kuma), cache brokers (Valkey), Prometheus exporters. |
+| **`github-manual-releases.opml`** | Mission-critical infrastructure | Manual Runbook & Verification | Database engines (PostgreSQL 18, TimescaleDB), IAM (Authentik), Ingress (Traefik v3), DNS (Technitium), Core Monitoring (Prometheus, Grafana), VPN (Gluetun), GitOps & Agents (Dockhand, Hawser). |
 
 > [!TIP]
 > **CDN Brand Icons:** Each feed outline in the OPML files references its official brand SVG icon located in `assets/icons/` via the jsDelivr CDN (`https://cdn.jsdelivr.net/gh/Dr20Ervin/205hlab@main/assets/icons/<app>.svg`). This gives instant visual recognition in both the FreshRSS web interface and native mobile clients (e.g., NetNewsWire, Reeder).

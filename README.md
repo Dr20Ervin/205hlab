@@ -119,7 +119,7 @@ flowchart TD
         subgraph Data["Data Tier"]
             PG[("PostgreSQL 18\n--data-checksums\n9 Isolated App DBs")]
             TSB[("TimescaleDB pg18\nTracearr TSDB")]
-            VLK[("Valkey 9 / Redis\nIn-Memory Queues")]
+            VLK[("Valkey 9\nIn-Memory Queues")]
         end
 
         subgraph InternalApps["🔒 Internal Only — *.internal.205hlab.com"]
@@ -232,7 +232,7 @@ To prevent LAN DNS outages when rebooting the primary Ubuntu server, **Technitiu
 | [`kavita`](compose/kavita/) | **Kavita** — Digital reader for eBooks, manga, and comics mounted read-only from `BinPool`. | `kavita.205hlab.com` | OIDC |
 | [`servarr`](compose/servarr/) | **Sonarr** (TV) · **Radarr** (Movies) · **Lidarr** (Music) · **Chaptarr** (Books/Audiobooks) · **Bazarr** (Subtitles) · **Prowlarr** (Indexers) · **Profilarr** (Quality profiles) · **FlareSolverr**. Migrated to PostgreSQL 18. | `sonarr` · `radarr` · `lidarr`<br>`chaptarr` · `bazarr` · `prowlarr`<br>`profilarr` `(.205hlab.com)` | ForwardAuth<br>(Profilarr: OIDC) |
 | [`downloaderr`](compose/downloaderr/) | **qBittorrent** bound inside **Gluetun WireGuard VPN** (`network_mode: service:gluetun` with kill-switch) + **qui** web UI + **MeTube** downloader. | `qui.205hlab.com`<br>`metube.205hlab.com` | OIDC<br>ForwardAuth |
-| [`tracearr`](compose/tracearr/) | **Tracearr** + **TimescaleDB (PG18)** + **Redis 8** — Playback analytics and streaming telemetry. | `tracearr.205hlab.com` | ForwardAuth |
+| [`tracearr`](compose/tracearr/) | **Tracearr** + **TimescaleDB (PG18)** + **Valkey 9** — Playback analytics and streaming telemetry. | `tracearr.205hlab.com` | ForwardAuth |
 
 ---
 

@@ -33,7 +33,7 @@ This directory houses the **23 production Docker Compose stacks** powering the `
 | **[`kavita`](kavita/)** | Digital Reading Library | `https://kavita.205hlab.com` | Method 1 (Native OIDC) | Read-only Book/Manga ZFS Mounts | [Runbook](kavita/README.md) |
 | **[`servarr`](servarr/)** | Media Automation Suite | `https://*.205hlab.com` (sonarr, radarr...) | Method 1 (Profilarr) / Method 2 | PostgreSQL 18 (`*-main`), SQLite | [Runbook](servarr/README.md) |
 | **[`downloaderr`](downloaderr/)** | Acquisition Engine | `https://qui.205hlab.com`, `metube...` | Method 1 (qui) / Method 2 | PostgreSQL 18, AirVPN WireGuard | [Runbook](downloaderr/README.md) |
-| **[`tracearr`](tracearr/)** | Stream Analytics | `https://tracearr.205hlab.com` | Method 2 (ForwardAuth) | TimescaleDB Hypertables, Redis 8 | [Runbook](tracearr/README.md) |
+| **[`tracearr`](tracearr/)** | Stream Analytics | `https://tracearr.205hlab.com` | Method 2 (ForwardAuth) | TimescaleDB Hypertables, Valkey 9 | [Runbook](tracearr/README.md) |
 | **[`searxng`](searxng/)** | Private Metasearch | `https://search.205hlab.com` | Method 2 (ForwardAuth) | Valkey 9 Cache, AirVPN WireGuard | [Runbook](searxng/README.md) |
 | **[`network-mon`](network-mon/)** | Network Diagnostics | `https://speedtest.205hlab.com` | Method 2 (ForwardAuth) / LAN | PostgreSQL 18, Host Port Binds | [Runbook](network-mon/README.md) |
 | **[`uptime-kuma`](uptime-kuma/)** | Observability & Sentinel | `https://uptime.205hlab.com`<br>`https://status.205hlab.com` | Method 2 (ForwardAuth) / Public | MariaDB 11.6, Docker Socket, MNGT Port Bind | [Runbook](uptime-kuma/README.md) |

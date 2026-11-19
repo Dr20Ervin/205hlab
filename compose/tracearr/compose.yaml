@@ -1,10 +1,10 @@
 ---
 services:
-  tracearr-redis:
-    image: redis:8-alpine
+  tracearr-valkey:
+    image: docker.io/valkey/valkey:9-alpine
     restart: unless-stopped
-    container_name: tracearr-redis
-    command: redis-server --appendonly yes
+    container_name: tracearr-valkey
+    command: valkey-server --appendonly yes
     deploy:
       resources:
         limits:
@@ -15,7 +15,7 @@ services:
     volumes:
       - tracearr_redis_data:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD", "valkey-cli", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -64,7 +64,7 @@ services:
       - PORT=3000
       - TZ=${TZ:-UTC}
       - DATABASE_URL=postgres://${TRACEARR_DB_USER:-tracearr_app}:${TRACEARR_DB_PASSWORD:?TRACEARR_DB_PASSWORD Not defined}@tracearr-db:5432/${TRACEARR_DB_NAME:-tracearr-main}
-      - REDIS_URL=redis://tracearr-redis:6379
+      - REDIS_URL=redis://tracearr-valkey:6379
       - JWT_SECRET=${TRACEARR_JWT_SECRET:?TRACEARR_JWT_SECRET Not defined}
       - COOKIE_SECRET=${TRACEARR_COOKIE_SECRET:?TRACEARR_COOKIE_SECRET Not defined}
       - CORS_ORIGIN=${CORS_ORIGIN:-*}
@@ -79,7 +79,7 @@ services:
       - tracearr_backups:/data/backup
       - tracearr_images:/data/tracearr/image-cache
     depends_on:
-      tracearr-redis:
+      tracearr-valkey:
         condition: service_healthy
       tracearr-db:
         condition: service_healthy

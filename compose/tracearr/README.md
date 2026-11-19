@@ -2,14 +2,14 @@
 
 [![Tracearr](https://img.shields.io/badge/Tracearr-latest-4A148C?style=for-the-badge&logo=prometheus&logoColor=white)](https://github.com/connorgallopo/tracearr)
 [![TimescaleDB](https://img.shields.io/badge/Database-TimescaleDB%20(pg18)-FDB515?style=for-the-badge&logo=postgresql&logoColor=white)](https://github.com/timescale/timescaledb)
-[![Redis](https://img.shields.io/badge/Broker-Redis%208-DC382D?style=for-the-badge&logo=redis&logoColor=white)](https://redis.io/)
+[![Broker](https://img.shields.io/badge/Broker-Valkey%209-CC342D?style=for-the-badge&logo=redis&logoColor=white)](https://valkey.io)
 [![Auth](https://img.shields.io/badge/Auth-Authentik%20ForwardAuth-fd4b2d?style=for-the-badge&logo=authentik&logoColor=white)](https://goauthentik.io)
 
 > **Ingress URL:** `https://tracearr.205hlab.com`  
 > **Upstream Project:** [connorgallopo/tracearr](https://github.com/connorgallopo/tracearr)  
 > **Category:** Media Analytics & Telemetry
 
-Tracearr is a dedicated analytics and watch-history tracking engine for media servers. It captures real-time playback sessions, stream durations, device usage, transcoding vs. direct-play ratios, and user consumption habits. In this homelab, Tracearr pairs with a tuned **TimescaleDB** time-series database (PostgreSQL 18 engine with hypertables and compression), a **Redis 8** caching broker, and Authentik ForwardAuth security.
+Tracearr is a dedicated analytics and watch-history tracking engine for media servers. It captures real-time playback sessions, stream durations, device usage, transcoding vs. direct-play ratios, and user consumption habits. In this homelab, Tracearr pairs with a tuned **TimescaleDB** time-series database (PostgreSQL 18 engine with hypertables and compression), a **Valkey 9** caching broker, and Authentik ForwardAuth security.
 
 ---
 
@@ -23,17 +23,17 @@ Tracearr is a dedicated analytics and watch-history tracking engine for media se
              │ ForwardAuth Gate (Authentik)
              ▼
 [ Tracearr Application (:3000) ]
-   ├── Session Caching & Job Queues ──► [ Redis 8 Broker ]
+   ├── Session Caching & Job Queues ──► [ Valkey 9 Broker ]
    ├── Time-Series Hypertables ──► [ TimescaleDB HA (pg18.4) ]
    └── Media Server Synchronization ──► [ servarr_backend ]
 ```
 
 - **TimescaleDB (`tracearr-db`)**: Runs `timescale/timescaledb-ha:pg18.4-ts2.29.1` with custom tuning parameters (`timescaledb.max_tuples_decompressed_per_dml_transaction=100000`, `max_locks_per_transaction=4096`, `nofile: 65536`) to ingest high-frequency playback ticks efficiently.
-- **Message Broker (`tracearr-redis`)**: Runs Redis 8 Alpine with append-only persistence enabled (`redis-server --appendonly yes`).
+- **Message Broker (`tracearr-valkey`)**: Runs Valkey 9 Alpine with append-only persistence enabled (`valkey-server --appendonly yes`).
 - **Resource Constraints:**
   - `tracearr`: Governed with `limits: cpus: '1.5'`, `memory: 2G`.
   - `tracearr-db`: Governed with `limits: cpus: '1.5'`, `memory: 2G`.
-  - `tracearr-redis`: Governed with `limits: cpus: '0.5'`, `memory: 512M`.
+  - `tracearr-valkey`: Governed with `limits: cpus: '0.5'`, `memory: 512M`.
 
 ---
 
@@ -101,5 +101,5 @@ labels:
 ## 🩺 Healthcheck & Monitoring
 
 - **TimescaleDB Health**: Verified every 10s via `pg_isready -U tracearr_app`.
-- **Redis Broker Health**: Verified every 10s via `redis-cli ping`.
+- **Valkey Broker Health**: Verified every 10s via `valkey-cli ping`.
 - **Web Application**: Evaluated via Traefik ingress metrics and internal HTTP endpoints.
