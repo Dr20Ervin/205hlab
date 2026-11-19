@@ -42,7 +42,7 @@ services:
       start_period: 15s
 
   tika:
-    image: docker.io/apache/tika:3.3.1.0
+    image: docker.io/apache/tika:4.2.0-1
     restart: unless-stopped
     container_name: paperless-tika
     deploy:
