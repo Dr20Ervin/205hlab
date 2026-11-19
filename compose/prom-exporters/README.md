@@ -5,12 +5,15 @@
 [![ZFS Exporter](https://img.shields.io/badge/Collector-OpenZFS%20Exporter-005C8A?style=for-the-badge)](https://github.com/pdf/zfs_exporter)
 [![Smartctl](https://img.shields.io/badge/Collector-smartctl--exporter-orange?style=for-the-badge)](https://github.com/prometheus-community/smartctl_exporter)
 [![PostgreSQL](https://img.shields.io/badge/Collector-Postgres%20Exporter-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)](https://github.com/prometheus-community/postgres_exporter)
-[![Cloudflare](https://img.shields.io/badge/Collector-Cloudflare%20Exporter-F38020?style=for-the-badge&logo=cloudflare&logoColor=white)](https://github.com/lablabs/cloudflare-exporter)
 
 > **Network Scope:** Operates on isolated `monitoring_network` and `postgres_network`.  
 > **Category:** Infrastructure Telemetry Collection
 
 This stack houses the dedicated metric scrapers and agent daemons that extract raw hardware, kernel, container cgroup, storage, and database statistics across the bare-metal Ubuntu Server host, transforming them into Prometheus-formatted time-series data.
+
+> [!NOTE]
+> **Cloudflare Exporter Evaluation:**
+> The Cloudflare Prometheus Exporter (`lablabs/cloudflare-exporter`) was tested and evaluated for edge telemetry collection. It was retired from active production deployment because granular zone analytics, colocation response metrics, and firewall events require a Cloudflare Pro/Business subscription plan; the Cloudflare Free tier provides limited GraphQL data points that do not justify a dedicated exporter daemon.
 
 ---
 
@@ -31,7 +34,6 @@ All exporters communicate over the isolated `monitoring_network` and expose stan
 │  • smartctl-exporter (:9633)   ──► Drive S.M.A.R.T. Health  │
 │  • technitium-exporter (:9105) ──► DNS Query Statistics     │
 │  • postgres-exporter (:9187)   ──► PostgreSQL Internal DBs  │
-│  • cloudflare-exporter (:8080) ──► Cloudflare Edge & Zones  │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -64,12 +66,6 @@ All exporters communicate over the isolated `monitoring_network` and expose stan
 - **Image:** `quay.io/prometheuscommunity/postgres-exporter:latest`
 - **Scope:** Active connections, table locks, buffer cache hit rates, deadlocks, and transactions per second with `PG_EXPORTER_AUTO_DISCOVER_DATABASES=true`.
 
-### 7. `cloudflare-exporter` (Port: `:8080`)
-- **Image:** `ghcr.io/lablabs/cloudflare_exporter:latest`
-- **Scope:** Exposes Cloudflare Analytics dashboard data on a per-zone basis, colocation stats, edge HTTP status codes, bandwidth, threat mitigation, Worker metrics (CPU time, duration, errors), and R2 storage usage.
-- **Authentication:** Scoped User API Token (`CF_API_TOKEN`) with optional `CF_ACCOUNTS` account filtering. See [Step 2: Provision Cloudflare API Token](#step-2-provision-cloudflare-api-token) below for detailed permission setup.
-- **Grafana Dashboard:** Visualized via community dashboard [13133](https://grafana.com/grafana/dashboards/13133-cloudflare-zone-analytics/).
-
 ---
 
 ## ⚙️ Environment Configuration
@@ -83,15 +79,6 @@ All exporters communicate over the isolated `monitoring_network` and expose stan
 | `TECHNITIUM_BASE_URL` | Technitium admin endpoint | `http://technitium:5380` |
 | `TECHNITIUM_TOKEN` | Technitium API session token | *(from Technitium settings)* |
 | `TECHNITIUM_NODES` | Cluster node names | `technitium.dns.205hlab.com,...` |
-| `CF_API_TOKEN` | Cloudflare Account API Token | `...` |
-| `CF_ACCOUNTS` | Cloudflare Account ID (find in dashboard URL: `https://dash.cloudflare.com/<ACCOUNT_ID>/...`) | `abc123def456` |
-| `CF_ZONES` | Comma-delimited list of zone IDs to export | *(all accessible)* |
-| `CF_EXCLUDE_ZONES` | Comma-delimited list of zone IDs to exclude | *(none)* |
-| `CF_FREE_TIER` | Scrape only metrics included in Cloudflare free plan | `false` |
-| `CF_SCRAPE_INTERVAL` | Cloudflare query interval in seconds | `60` |
-| `CF_SCRAPE_DELAY` | Cloudflare data ingestion scrape delay in seconds | `300` |
-| `CF_ENABLE_EDGE_ERRORS_BY_PATH` | Enable normalized path edge error metrics | `false` |
-| `CF_ENABLE_ACCOUNT_USAGE_METRICS` | Enable current calendar month data transfer metrics | `false` |
 
 ---
 
@@ -109,52 +96,22 @@ All exporters communicate over the isolated `monitoring_network` and expose stan
    GRANT pg_monitor TO postgres_exporter;
    ```
 
-<a id="step-2-provision-cloudflare-api-token"></a>
-2. **Provision Cloudflare API Token**:
-   > [!IMPORTANT]
-   > **User API Token vs Account-Owned Token:**
-   > The exporter's Go SDK client performs an initial token validation by calling Cloudflare's `GET /user/tokens/verify` endpoint. Cloudflare's newly introduced Account-owned tokens (`cfat_...`) do not have user context and will fail with `Invalid API Token (1000)`.
-   > **You must create a User API Token** under **My Profile → API Tokens**, scoped to your account and zone.
-
-   1. Navigate to **Cloudflare Dashboard** → **My Profile** (top-right avatar) → **[API Tokens](https://dash.cloudflare.com/profile/api-tokens)** (or use the [Pre-configured shortcut](https://dash.cloudflare.com/profile/api-tokens?permissionGroupKeys=%5B%7B%22key%22%3A%22account_analytics%22%2C%22type%22%3A%22read%22%7D%2C%7B%22key%22%3A%22account_settings%22%2C%22type%22%3A%22read%22%7D%2C%7B%22key%22%3A%22analytics%22%2C%22type%22%3A%22read%22%7D%2C%7B%22key%22%3A%22firewall_services%22%2C%22type%22%3A%22read%22%7D%5D&name=Cloudflare+Exporter&accountId=*&zoneId=all)).
-   2. Click **Create Token** → Select **Create Custom Token** (at the bottom).
-   3. Configure basic settings:
-      - **Token name:** `Prometheus Exporter` (or `prom-cloudflare-exporter`)
-      - **Token expiration:** `No expiration`
-   4. Configure **Permissions**:
-      - `Account` → `Account Analytics` → `Read`
-      - `Account` → `Account Settings` → `Read`
-      - `Zone` → `Analytics` → `Read`
-      - `Zone` → `Firewall Services` → `Read`
-   5. Configure **Account & Zone Resources**:
-      - **Account Resources:** `Include` → `Specific account` → Select your account
-      - **Zone Resources:** `Include` → `Specific zone` → Select `205hlab.com` (or `All zones`)
-   6. Click **Continue to summary** → Click **Create token**.
-   7. Copy the generated secret token string (Cloudflare only displays it once).
-   8. Retrieve your **Account ID** from the Cloudflare URL (`https://dash.cloudflare.com/<ACCOUNT_ID>/...`).
-
-3. **Initialize Secrets & Environment**:
+2. **Initialize Secrets & Environment**:
    ```bash
    cd compose/prom-exporters
    cp example.env .env
    chmod +x setup_secrets.sh && ./setup_secrets.sh
-   nano .env # Set TECHNITIUM_TOKEN, database password, CF_API_TOKEN, and CF_ACCOUNTS
+   nano .env # Set TECHNITIUM_TOKEN and database password
    ```
 
-4. **Start Exporters**:
+3. **Start Exporters**:
    ```bash
    docker compose up -d
-   ```
-
-5. **Reload Prometheus Scrape Engine**:
-   Reload Prometheus configuration dynamically without downtime:
-   ```bash
-   curl -X POST http://localhost:9096/-/reload
    ```
 
 ---
 
 ## 🩺 Healthcheck & Monitoring
 
-- Local services (`node-exporter`, `cadvisor`, `postgres-exporter`, `smartctl-exporter`) implement container healthchecks via `wget` or native HTTP probes.
-- Prometheus continuously scrapes internal host metrics every 30s and Cloudflare edge telemetry on a dedicated 60s interval (`scrape_interval: 60s`).
+- Every exporter implements built-in HTTP healthchecks via `wget` (e.g. `http://localhost:9100/`, `http://localhost:9187/`, `http://localhost:9633/metrics`).
+- Prometheus continuously scrapes all exporters on 15s intervals.

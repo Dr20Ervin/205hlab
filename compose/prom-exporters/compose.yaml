@@ -144,30 +144,6 @@ services:
       retries: 3
       start_period: 15s
 
-  cloudflare-exporter:
-    image: ghcr.io/lablabs/cloudflare_exporter:latest
-    restart: unless-stopped
-    container_name: cloudflare-exporter
-    deploy:
-      resources:
-        limits:
-          cpus: '0.2'
-          memory: 128M
-    environment:
-      - CF_API_TOKEN=${CF_API_TOKEN:?CF_API_TOKEN Not defined}
-      - CF_ACCOUNTS=${CF_ACCOUNTS:-}
-      - CF_ZONES=${CF_ZONES:-}
-      - CF_EXCLUDE_ZONES=${CF_EXCLUDE_ZONES:-}
-      - FREE_TIER=${CF_FREE_TIER:-false}
-      - SCRAPE_INTERVAL=${CF_SCRAPE_INTERVAL:-60}
-      - SCRAPE_DELAY=${CF_SCRAPE_DELAY:-300}
-      - LISTEN=:8080
-      - METRICS_PATH=/metrics
-      - ENABLE_ACCOUNT_USAGE_METRICS=${CF_ENABLE_ACCOUNT_USAGE_METRICS:-false}
-      - ENABLE_EDGE_ERRORS_BY_PATH=${CF_ENABLE_EDGE_ERRORS_BY_PATH:-false}
-    networks:
-      - monitoring_network
-
 networks:
   monitoring_network:
     external: true

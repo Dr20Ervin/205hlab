@@ -23,7 +23,7 @@ This directory houses the **23 production Docker Compose stacks** powering the `
 | **[`postgres`](postgres/)** | Relational Data Tier | `https://adminer.internal.205hlab.com` | Method 2 (ForwardAuth) | PostgreSQL 18 (`--data-checksums`), Adminer | [Runbook](postgres/README.md) |
 | **[`databasus`](databasus/)** | Backup & Verification | `https://databasus.internal.205hlab.com` | Method 2 (ForwardAuth) | Automated `pg_dump`, `databasus-verifier` Agent | [Runbook](databasus/README.md) |
 | **[`prometheus`](prometheus/)** | Metrics TSDB | `https://prometheus.internal.205hlab.com` | Internal LAN Only | 30d TSDB Retention (50 GB cap) | [Runbook](prometheus/README.md) |
-| **[`prom-exporters`](prom-exporters/)** | Telemetry Scrapers | *(Internal Scrape Targets)* | Internal Scrape Network | Host `/proc`, `/sys`, `/dev/zfs`, S.M.A.R.T., Cloudflare Edge | [Runbook](prom-exporters/README.md) |
+| **[`prom-exporters`](prom-exporters/)** | Telemetry Scrapers | *(Internal Scrape Targets)* | Internal Scrape Network | Host `/proc`, `/sys`, `/dev/zfs`, S.M.A.R.T. | [Runbook](prom-exporters/README.md) |
 | **[`grafana`](grafana/)** | Observability UI | `https://grafana.205hlab.com` | Method 1 (Native OIDC) | Provisioned Dashboards, SQLite | [Runbook](grafana/README.md) |
 | **[`paperless`](paperless/)** | Document OCR Archive | `https://paperless.205hlab.com` | Method 1 (Native OIDC) | PostgreSQL 18, Valkey 9, Tika, Gotenberg | [Runbook](paperless/README.md) |
 | **[`mealie`](mealie/)** | Recipe & Meal Planner | `https://mealie.205hlab.com` | Method 1 (Native OIDC) | PostgreSQL 18, Named Volume | [Runbook](mealie/README.md) |
@@ -64,7 +64,7 @@ flowchart TD
 
     subgraph Layer2["Tier 2: Observability & Telemetry"]
         Prometheus["prometheus (v3.11.3)\nCentral TSDB Engine"]
-        Exporters["prom-exporters\n(Node, cAdvisor, ZFS, S.M.A.R.T., Cloudflare)"]
+        Exporters["prom-exporters\n(Node, cAdvisor, ZFS, S.M.A.R.T.)"]
         Grafana["grafana (13.0.1)\nTelemetry Dashboards"]
         UptimeKuma["uptime-kuma (v2)\nMariaDB & Ingress Sentinel"]
         Exporters -->|Scrape| Prometheus
