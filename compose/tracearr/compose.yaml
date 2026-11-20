@@ -13,7 +13,7 @@ services:
     networks:
       - tracearr_backend
     volumes:
-      - tracearr_redis_data:/data
+      - tracearr_valkey_data:/data
     healthcheck:
       test: ["CMD", "valkey-cli", "ping"]
       interval: 10s
@@ -110,8 +110,8 @@ volumes:
   tracearr_data:
     name: tracearr-data
     driver: local
-  tracearr_redis_data:
-    name: tracearr-redis-data
+  tracearr_valkey_data:
+    name: tracearr-valkey-data
     driver: local
   tracearr_backups:
     name: tracearr-backups
