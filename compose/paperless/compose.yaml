@@ -12,7 +12,7 @@ services:
     networks:
       - paperless_network
     volumes:
-      - redis_data:/data
+      - valkey_data:/data
     healthcheck:
       test: ["CMD", "valkey-cli", "ping"]
       interval: 10s
@@ -132,6 +132,6 @@ volumes:
   paperless_consume:
     name: paperless-consume
     driver: local
-  redis_data:
-    name: paperless-redis-data
+  valkey_data:
+    name: paperless-valkey-data
     driver: local

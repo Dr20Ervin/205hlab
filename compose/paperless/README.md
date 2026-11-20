@@ -135,7 +135,7 @@ environment:
 - **Document Archive**: Bound from host `${DOCS_PATH}/media` (original and archive PDFs) and `${DOCS_PATH}/export`.
 - **Database Metadata**: Tags, correspondents, document types, and OCR text reside in PostgreSQL (`paperless` database).
 - **Consuming Ingest Directory**: Bound to named volume `paperless_consume` (or network share) for dropping scanned invoices.
-- **Application State**: Stored in `paperless_data` and Valkey queue volume `redis_data`.
+- **Application State**: Stored in `paperless_data` and Valkey queue volume `valkey_data`.
 
 ---
 
