@@ -45,25 +45,29 @@ services:
       - traefik.docker.network=traefik_network
       - traefik.http.services.uptime_kuma_web.loadBalancer.server.port=3001
 
-      # Public Status Page Router
-      # STRICT STEALTH WHITELIST: Only permits public status page endpoints.
-      # Any admin path (/dashboard, /settings, /manage-status-page, /socket.io) returns a dead-end 404 without redirect.
+      # Public Status Page Router (Slug-Restricted on uptime.${FQDN})
+      # Strictly permits only /status/${KUMA_STATUS_SLUG:-205hlab} and its required API/static assets without Authentik SSO.
+      # All other paths (/, /dashboard, /settings, /manage-status-page, /socket.io, or other status slugs) fall through to the Authentik-protected admin router.
       - traefik.http.routers.uptime_kuma_status_http.service=uptime_kuma_web
-      - "traefik.http.routers.uptime_kuma_status_http.rule=Host(`status.${FQDN}`) && (Path(`/`) || PathPrefix(`/status`) || PathPrefix(`/status-page`) || PathPrefix(`/assets`) || PathPrefix(`/api/status-page`) || PathPrefix(`/api/badge`) || Path(`/icon.svg`) || PathPrefix(`/upload`))"
+      - "traefik.http.routers.uptime_kuma_status_http.rule=Host(`uptime.${FQDN}`) && (Path(`/status/${KUMA_STATUS_SLUG:-205hlab}`) || Path(`/status/${KUMA_STATUS_SLUG:-205hlab}/`) || PathPrefix(`/api/status-page/${KUMA_STATUS_SLUG:-205hlab}`) || PathPrefix(`/api/status-page/heartbeat/${KUMA_STATUS_SLUG:-205hlab}`) || PathPrefix(`/assets`) || PathPrefix(`/api/badge`) || Path(`/icon.svg`) || PathPrefix(`/upload`))"
       - traefik.http.routers.uptime_kuma_status_http.entrypoints=web
+      - traefik.http.routers.uptime_kuma_status_http.priority=100
       - traefik.http.routers.uptime_kuma_status_https.service=uptime_kuma_web
-      - "traefik.http.routers.uptime_kuma_status_https.rule=Host(`status.${FQDN}`) && (Path(`/`) || PathPrefix(`/status`) || PathPrefix(`/status-page`) || PathPrefix(`/assets`) || PathPrefix(`/api/status-page`) || PathPrefix(`/api/badge`) || Path(`/icon.svg`) || PathPrefix(`/upload`))"
+      - "traefik.http.routers.uptime_kuma_status_https.rule=Host(`uptime.${FQDN}`) && (Path(`/status/${KUMA_STATUS_SLUG:-205hlab}`) || Path(`/status/${KUMA_STATUS_SLUG:-205hlab}/`) || PathPrefix(`/api/status-page/${KUMA_STATUS_SLUG:-205hlab}`) || PathPrefix(`/api/status-page/heartbeat/${KUMA_STATUS_SLUG:-205hlab}`) || PathPrefix(`/assets`) || PathPrefix(`/api/badge`) || Path(`/icon.svg`) || PathPrefix(`/upload`))"
       - traefik.http.routers.uptime_kuma_status_https.entrypoints=websecure
+      - traefik.http.routers.uptime_kuma_status_https.priority=100
       - traefik.http.routers.uptime_kuma_status_https.tls=true
       - traefik.http.routers.uptime_kuma_status_https.tls.certresolver=cloudflare
 
-      # Protected Admin Dashboard
+      # Protected Admin Dashboard & Catch-All Router
       - traefik.http.routers.uptime_kuma_admin_http.service=uptime_kuma_web
       - traefik.http.routers.uptime_kuma_admin_http.rule=Host(`uptime.${FQDN}`)
       - traefik.http.routers.uptime_kuma_admin_http.entrypoints=web
+      - traefik.http.routers.uptime_kuma_admin_http.priority=10
       - traefik.http.routers.uptime_kuma_admin_https.service=uptime_kuma_web
       - traefik.http.routers.uptime_kuma_admin_https.rule=Host(`uptime.${FQDN}`)
       - traefik.http.routers.uptime_kuma_admin_https.entrypoints=websecure
+      - traefik.http.routers.uptime_kuma_admin_https.priority=10
       - traefik.http.routers.uptime_kuma_admin_https.tls=true
       - traefik.http.routers.uptime_kuma_admin_https.tls.certresolver=cloudflare
       - traefik.http.routers.uptime_kuma_admin_https.middlewares=authentik@docker

@@ -198,7 +198,7 @@ To prevent LAN DNS outages when rebooting the primary Ubuntu server, **Technitiu
 | [`grafana`](compose/grafana/) | **Grafana 13.0** — Dashboards with Authentik OIDC role mapping (`Admin`, `Editor`, `Viewer`). | `grafana.205hlab.com` | OIDC |
 | [`prom-exporters`](compose/prom-exporters/) | **6 Metric Exporters** — `node-exporter`, `cadvisor`, `postgres`, `technitium`, `zfs`, `smartctl` (+ OpenWrt & NUT scrapes). | Internal scrape network | Internal |
 | [`network-mon`](compose/network-mon/) | **Speedtest Tracker** (3-hour WAN tests on PG18), **OpenSpeedTest** (LAN throughput on `:3000`), and **MyIP** (leak diagnostics on `:18966`). | `speedtest.205hlab.com`<br>`openspeed.internal.205hlab.com`<br>`myip.internal.205hlab.com` | ForwardAuth<br>LAN-only<br>LAN + ForwardAuth |
-| [`uptime-kuma`](compose/uptime-kuma/) | **Uptime Kuma v2** + **MariaDB 11.6** — Blackbox service sentinel, container healthchecks, and public status page. Probed out-of-band by HAOS watchdog. | `uptime.205hlab.com`<br>`status.205hlab.com` | ForwardAuth<br>Public (No Auth) |
+| [`uptime-kuma`](compose/uptime-kuma/) | **Uptime Kuma v2** + **MariaDB 11.6** — Blackbox service sentinel, container healthchecks, and slug-whitelisted public status page. Probed out-of-band by HAOS watchdog. | `uptime.205hlab.com`<br>`uptime.205hlab.com/status/205hlab` | ForwardAuth<br>Public (`/status/205hlab`) |
 | [`umami`](compose/umami/) | **Umami v3** — Self-hosted, privacy-first web analytics backed by PostgreSQL 18 (stealth collector + Traefik `umami-feeder` plugin). | `umami.internal.205hlab.com`<br>`analytics.205hlab.com` | LAN + ForwardAuth<br>Public Stealth (`/pulse.js`, `/api/collect`) |
 
 <details>
@@ -257,7 +257,7 @@ Security is handled in layers from the Cloudflare edge down to individual contai
 | :--- | :--- |
 | **Perimeter Firewall** | OpenWrt `iptables` and Ubuntu host rules drop all inbound WAN packets unless they originate from official **Cloudflare IP ranges**. Direct-to-IP scans on ports 80/443 are silently dropped. |
 | **Zero-Port-80 TLS** | Traefik obtains wildcard certificates via Let's Encrypt **DNS-01 ACME** (Cloudflare API token), avoiding HTTP-01 port 80 exposure. |
-| **Mandatory WAN SSO** | Every `*.205hlab.com` route requires **Authentik** authentication—either via native OIDC with JWT entitlement claims or Traefik's `authentik@docker` ForwardAuth middleware (with strict path-whitelisted public exceptions for `status.205hlab.com` and `analytics.205hlab.com`). |
+| **Mandatory WAN SSO** | Every `*.205hlab.com` route requires **Authentik** authentication—either via native OIDC with JWT entitlement claims or Traefik's `authentik@docker` ForwardAuth middleware (with strict path-whitelisted public exceptions for `uptime.205hlab.com/status/205hlab` and `analytics.205hlab.com`). |
 | **Network Microsegmentation** | Stacks communicate over scoped bridge networks (`traefik_network`, `postgres_network`, `monitoring_network`, `servarr_backend`). Database ports are never published to the host. |
 | **Container Hardening** | Containers run with `no-new-privileges:true`, non-root `PUID`/`PGID` mappings, read-only Docker sockets (`:ro`), and explicit CPU/RAM limits (`deploy.resources.limits`) so a runaway process cannot starve the host. |
 | **No Plaintext `.env` Files** | Production credentials live encrypted inside **Dockhand's** database and are injected into container memory at deploy time. No production `.env` files sit on the host SSD, and repository `example.env` files use strict `${VAR:?error}` validation guards with dummy placeholders. |

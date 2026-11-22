@@ -17,7 +17,7 @@
 ## 🏗️ Hybrid Telemetry Architecture & Stealth Isolation
 
 ```
-[ Portfolio Visitor (me.205hlab.com) ]         [ Public App Visitor (e.g. status.205hlab.com) ]
+[ Portfolio Visitor (me.205hlab.com) ]         [ Public App Visitor (e.g. uptime.205hlab.com/status/205hlab) ]
                  │                                                      │
                  │ GET /pulse.js & POST /api/collect                    │ HTTPS Request
                  ▼                                                      ▼
@@ -54,7 +54,7 @@
 - **Stealth Path Whitelist:** The public Traefik router (`umami_collector_https`) matches **only** `Path('/pulse.js') || Path('/api/collect')` (matching the configured `UMAMI_TRACKER_SCRIPT_NAME` and `UMAMI_COLLECT_API_ENDPOINT`) and enforces per-IP rate limiting (`30 req/s` average, `60` burst keyed by `CF-Connecting-IP`). Any probe to `/login`, `/dashboard`, or `/api/auth` returns a dead-end `404` without revealing or redirecting to the internal admin hostname.
 
 ### 2. Server-Side Traefik Middleware (`traefik-umami-feeder`)
-- For other homelab services (`status.205hlab.com`, etc.), [`github.com/astappiev/traefik-umami-feeder`](https://github.com/astappiev/traefik-umami-feeder) forwards request metadata directly over the internal `traefik_network` to `http://umami:3000` (`/api/send` / `/api/batch`) without modifying container HTML or relaxing upstream CSP headers.
+- For other homelab services (`uptime.205hlab.com`, etc.), [`github.com/astappiev/traefik-umami-feeder`](https://github.com/astappiev/traefik-umami-feeder) forwards request metadata directly over the internal `traefik_network` to `http://umami:3000` (`/api/send` / `/api/batch`) without modifying container HTML or relaxing upstream CSP headers.
 - See [`../traefik/dynamic/umami.example.yml`](../traefik/dynamic/umami.example.yml) and [`../traefik/README.md`](../traefik/README.md) for setup and middleware chaining rules.
 - **Double-Counting Prevention:** Never attach `umami-feeder@file` to `me.205hlab.com` (already tracked client-side), `analytics.205hlab.com`, `umami.internal.205hlab.com`, or `authentik.205hlab.com`.
 
@@ -120,7 +120,7 @@
    docker compose up -d
    ```
 5. **First Login & Password Rotation**:
-   Open `https://umami.internal.205hlab.com` (after Authentik SSO), sign in with default `admin` / `umami`, and **change the password immediately**. Then add your websites (`me.205hlab.com`, `status.205hlab.com`, etc.) to generate their Website UUIDs.
+   Open `https://umami.internal.205hlab.com` (after Authentik SSO), sign in with default `admin` / `umami`, and **change the password immediately**. Then add your websites (`me.205hlab.com`, `uptime.205hlab.com`, etc.) to generate their Website UUIDs.
 6. **Wire Up `traefik-umami-feeder` (Optional)**:
    Copy [`../traefik/dynamic/umami.example.yml`](../traefik/dynamic/umami.example.yml) to `${DYNAMIC_PATH}/umami.yml` with your real Website UUIDs **before** attaching `umami-feeder@file` to any Traefik router labels.
 

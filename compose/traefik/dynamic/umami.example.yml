@@ -19,5 +19,5 @@ http:
           # DO NOT include me.205hlab.com (uses client-side pulse.js -> avoids double-counting),
           # analytics.205hlab.com, umami.internal.205hlab.com, or authentik.205hlab.com.
           websites:
-            "status.205hlab.com": "00000000-0000-0000-0000-000000000001"
+            "uptime.205hlab.com": "00000000-0000-0000-0000-000000000001"
             # "example.205hlab.com": "00000000-0000-0000-0000-000000000002"

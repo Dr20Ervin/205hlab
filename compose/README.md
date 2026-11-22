@@ -36,7 +36,7 @@ This directory houses the **24 production Docker Compose stacks** powering the `
 | **[`tracearr`](tracearr/)** | Stream Analytics | `https://tracearr.205hlab.com` | Method 2 (ForwardAuth) | TimescaleDB Hypertables, Valkey 9 | [Runbook](tracearr/README.md) |
 | **[`searxng`](searxng/)** | Private Metasearch | `https://search.205hlab.com` | Method 2 (ForwardAuth) | Valkey 9 Cache, AirVPN WireGuard | [Runbook](searxng/README.md) |
 | **[`network-mon`](network-mon/)** | Network Diagnostics | `https://speedtest.205hlab.com` | Method 2 (ForwardAuth) / LAN | PostgreSQL 18, Host Port Binds | [Runbook](network-mon/README.md) |
-| **[`uptime-kuma`](uptime-kuma/)** | Observability & Sentinel | `https://uptime.205hlab.com`<br>`https://status.205hlab.com` | Method 2 (ForwardAuth) / Public | MariaDB 11.6, Docker Socket, MNGT Port Bind | [Runbook](uptime-kuma/README.md) |
+| **[`uptime-kuma`](uptime-kuma/)** | Observability & Sentinel | `https://uptime.205hlab.com`<br>`/status/205hlab` (Public Slug) | Method 2 (ForwardAuth) / Public Slug | MariaDB 11.6, Docker Socket, MNGT Port Bind | [Runbook](uptime-kuma/README.md) |
 | **[`umami`](umami/)** | Privacy Analytics | `https://umami.internal.205hlab.com`<br>`https://analytics.205hlab.com` | Method 2 (ForwardAuth) / Stealth Public | PostgreSQL 18 (`umami`), Zero Local Volumes | [Runbook](umami/README.md) |
 | **[`changedetection`](changedetection/)** | Web Diff & Alerting | `https://changedetection.internal...` | Method 2 (ForwardAuth) | Playwright Stealth Chrome Engine | [Runbook](changedetection/README.md) |
 | **[`vikunja`](vikunja/)** | Task & Maintenance Reminders | `https://vikunja.205hlab.com` | Method 1 (Native OIDC) | PostgreSQL 18 (`vikunja`), `vikunja-data` | [Runbook](vikunja/README.md) |

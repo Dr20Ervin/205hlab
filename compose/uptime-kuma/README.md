@@ -7,7 +7,7 @@
 [![Telemetry](https://img.shields.io/badge/Metrics-Prometheus%20Scrape-E6522C?style=for-the-badge&logo=prometheus&logoColor=white)](https://prometheus.io)
 
 > **Admin Dashboard:** `https://uptime.205hlab.com` *(Protected by Authentik SSO · Group: `kuma_admins`)*  
-> **Public Status Page:** `https://status.205hlab.com` *(Public / Unauthenticated)*  
+> **Public Status Page:** `https://uptime.205hlab.com/status/205hlab` *(Public / Slug-Whitelisted via `KUMA_STATUS_SLUG`)*  
 > **Direct Management Port:** `${MNGT_IP}:3001` *(Out-of-band LAN probe for HAOS watchdog)*  
 > **Access Group:** `kuma_admins`  
 > **Category:** Observability & Uptime Sentinel  
@@ -22,10 +22,13 @@ Uptime Kuma serves as the primary blackbox monitoring sentinel and status report
 ```
 [ Public / Household Visitors ]               [ Administrator ]
                │                                       │
-               │ HTTPS (status.205hlab.com)             │ HTTPS (uptime.205hlab.com)
+               │ HTTPS (uptime.205hlab.com             │ HTTPS (uptime.205hlab.com
+               │        /status/205hlab)               │        /, /dashboard, /socket.io)
                ▼                                       ▼
   ┌──────────────────────────────────────────────────────────────┐
   │                 Traefik v3 Reverse Proxy                     │
+  │  • Priority 100: Slug-Whitelisted Public Status Router       │
+  │  • Priority 10:  Catch-All Admin Router (authentik@docker)   │
   └───────────────┬────────────────────────────┬─────────────────┘
                   │ (Public Ingress)           │ (ForwardAuth Gate)
                   │                            ▼
@@ -99,15 +102,15 @@ Uptime Kuma does not provide native OIDC. It integrates with Authentik via a **P
    - **External host**: `https://uptime.205hlab.com`
    - **Internal host**: `http://uptime-kuma:3001`
    - **Advanced protocol settings** > **Unauthenticated Paths**:
-     Add the following regex patterns to permit public access to status pages, badges, push monitor endpoints, and static assets without requiring an Authentik session:
+     Add the following regex patterns to permit public access to the whitelisted status page slug (`205hlab`), badges, push monitor endpoints, and static assets without requiring an Authentik session:
      ```text
-     ^/status(/.*)?$
-     ^/status-page$
+     ^/status/205hlab(/)?$
      ^/assets/.*
      ^/api/push/.*
      ^/api/badge/.*
-     ^/api/status-page/.*
-     ^/icon.svg$
+     ^/api/status-page/205hlab(/.*)?$
+     ^/api/status-page/heartbeat/205hlab$
+     ^/icon\.svg$
      ^/upload/.*
      ```
 5. Click **Submit** to save the application and provider.
@@ -132,16 +135,15 @@ Uptime Kuma does not provide native OIDC. It integrates with Authentik via a **P
 3. Under **Advanced**, click **Disable Auth** and confirm with the administrator password (delegating all authentication to Authentik).
 4. Navigate to **Settings** > **Reverse Proxy** and set **Trust Proxy** to **Yes**.
 
-### Step 5: Public Status Page Configuration & Admin UI Isolation
+### Step 5: Public Status Page Configuration & Slug-Restricted Admin Isolation
 
 1. In Uptime Kuma, click **Status Pages** > **New Status Page** (or edit existing).
-2. Under status page settings, set **Domain Name / Custom Domain** to `status.205hlab.com`.
-3. Visitors accessing `https://status.205hlab.com` are served the public status page directly via Traefik without ever being prompted by Authentik.
-4. **Strict Ingress Isolation & Attack Surface Prevention**:
-   - Because built-in authentication is disabled in favor of Authentik, exposing `status.205hlab.com` without path protection would allow anyone to browse to `/dashboard` unauthenticated.
-   - Traefik enforces a **Strict Path Whitelist** on `status.205hlab.com` allowing only `Path(/)` and `PathPrefix(/status, /status-page, /assets, /api/status-page, /api/badge, /icon.svg, /upload)`.
-   - Traefik blocks administrative WebSocket traffic (`/socket.io`) from `status.205hlab.com`.
-   - **Stealth Mode (Zero-Leak Security)**: Traefik does not redirect admin attempts to `uptime.205hlab.com`. Any request to non-whitelisted paths (`/dashboard`, `/settings`, `/manage-status-page`, `/socket.io`, or arbitrary endpoints) returns a dead-end **`404 Not Found`**, completely hiding the admin hostname from external visitors. Administrative access is only possible by explicitly navigating to `https://uptime.205hlab.com` through Authentik SSO.
+2. Set the **Slug** to `205hlab` (matching `KUMA_STATUS_SLUG=205hlab` in `.env`). Leave **Domain Name** empty so everything is served under the unified `uptime.205hlab.com` hostname.
+3. Visitors accessing `https://uptime.205hlab.com/status/205hlab` are served the public status page directly via Traefik without ever being prompted by Authentik.
+4. **Priority-Ordered Single-Host Ingress Isolation**:
+   - Because built-in authentication is disabled in favor of Authentik, `compose.yaml` defines two priority-ordered Traefik routers on `Host(uptime.${FQDN})`:
+     - **`uptime_kuma_status_https` (`priority=100`, No Auth)**: Matches only `Path(/status/${KUMA_STATUS_SLUG:-205hlab})`, its slug-specific API endpoints (`/api/status-page/${KUMA_STATUS_SLUG:-205hlab}`, `/api/status-page/heartbeat/${KUMA_STATUS_SLUG:-205hlab}`), and static display assets (`/assets`, `/api/badge`, `/icon.svg`, `/upload`). Because it bypasses `authentik@docker` at the Traefik edge, the public status page stays online even during Authentik maintenance.
+     - **`uptime_kuma_admin_https` (`priority=10`, `authentik@docker`)**: Acts as the protected catch-all for `Host(uptime.${FQDN})`. Any request to `/`, `/dashboard`, `/settings`, `/manage-status-page`, `/socket.io` (administrative WebSockets), or any non-whitelisted `/status/<other-slug>` falls through to this router and is strictly gated by Authentik SSO (`kuma_admins`).
 
 ---
 
@@ -162,6 +164,7 @@ Both Uptime Kuma instances dispatch alerts to private Discord channels via Disco
 | :--- | :--- | :--- |
 | `FQDN` | Base domain name | `205hlab.com` |
 | `TZ` | Container timezone | `UTC` |
+| `KUMA_STATUS_SLUG` | Publicly whitelisted status page slug (`/status/<slug>`) | `205hlab` |
 | `MNGT_IP` | Host management IP for direct out-of-band watchdog probe | `192.168.1.50` |
 | `UPTIME_KUMA_PORT` | Direct host port binding for Uptime Kuma | `3001` |
 | `KUMA_DB_NAME` | Dedicated MariaDB database name | `uptime_kuma` |
