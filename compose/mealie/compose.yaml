@@ -64,6 +64,7 @@ services:
       - traefik.http.routers.mealie_https.entrypoints=websecure
       - traefik.http.routers.mealie_https.tls=true
       - traefik.http.routers.mealie_https.tls.certresolver=cloudflare
+      - traefik.http.routers.mealie_https.middlewares=umami-feeder@file
 
 networks:
   traefik_network:

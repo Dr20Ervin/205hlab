@@ -38,6 +38,7 @@ services:
       - traefik.http.routers.kavita_https.entrypoints=websecure
       - traefik.http.routers.kavita_https.tls=true
       - traefik.http.routers.kavita_https.tls.certresolver=cloudflare
+      - traefik.http.routers.kavita_https.middlewares=umami-feeder@file
 
 networks:
   traefik_network:

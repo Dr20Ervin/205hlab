@@ -17,7 +17,7 @@
 ## 🏗️ Hybrid Telemetry Architecture & Stealth Isolation
 
 ```
-[ Portfolio Visitor (me.205hlab.com) ]         [ Public App Visitor (e.g. uptime.205hlab.com/status/205hlab) ]
+[ Portfolio Visitor (me.205hlab.com) ]         [ Public App Visitor (e.g. uptime.205hlab.com/status/public) ]
                  │                                                      │
                  │ GET /pulse.js & POST /api/collect                    │ HTTPS Request
                  ▼                                                      ▼
@@ -41,7 +41,7 @@
    │                              umami (:3000)                                    │
    │  • Renamed Script: TRACKER_SCRIPT_NAME=pulse.js                               │
    │  • Renamed Endpoint: COLLECT_API_ENDPOINT=/api/collect                        │
-   │  • LAN/VPN Exclusion: IGNORE_IP=10.0.0.0/8,172.16.0.0/12,192.168.0.0/16       │
+   │  • Docker/VPN Exclusion: IGNORE_IP=10.0.0.0/8,172.16.0.0/12                   │
    └───────────────────────────────────────┬───────────────────────────────────────┘
                                            │ postgres_network (:5432)
                                            ▼
@@ -83,7 +83,7 @@
 | `UMAMI_APP_SECRET` | Cryptographic secret signing Umami tokens | *(Generated via `setup_secrets.sh`)* |
 | `UMAMI_TRACKER_SCRIPT_NAME` | Public JS filename (no leading slash) | `pulse.js` |
 | `UMAMI_COLLECT_API_ENDPOINT` | Public ingestion path (leading slash required) | `/api/collect` |
-| `UMAMI_IGNORE_IP` | Comma-separated CIDRs excluded from analytics | `10.0.0.0/8,172.16.0.0/12,192.168.0.0/16` |
+| `UMAMI_IGNORE_IP` | Comma-separated CIDRs excluded from analytics | `10.0.0.0/8,172.16.0.0/12` |
 
 ---
 

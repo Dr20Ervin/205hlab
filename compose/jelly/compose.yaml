@@ -84,7 +84,7 @@ services:
       - traefik.http.routers.seerr_https.entrypoints=websecure
       - traefik.http.routers.seerr_https.tls=true
       - traefik.http.routers.seerr_https.tls.certresolver=cloudflare
-      - traefik.http.routers.seerr_https.middlewares=authentik@docker
+      - traefik.http.routers.seerr_https.middlewares=authentik@docker,umami-feeder@file
 
 networks:
   traefik_network:

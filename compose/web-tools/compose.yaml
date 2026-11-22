@@ -36,7 +36,7 @@ services:
       - traefik.http.routers.it_tools_https.entrypoints=websecure
       - traefik.http.routers.it_tools_https.tls=true
       - traefik.http.routers.it_tools_https.tls.certresolver=cloudflare
-      - traefik.http.routers.it_tools_https.middlewares=authentik@docker
+      - traefik.http.routers.it_tools_https.middlewares=authentik@docker,umami-feeder@file
 
   omni-tools:
     image: iib0011/omni-tools:latest
@@ -74,7 +74,7 @@ services:
       - traefik.http.routers.omni_tools_https.entrypoints=websecure
       - traefik.http.routers.omni_tools_https.tls=true
       - traefik.http.routers.omni_tools_https.tls.certresolver=cloudflare
-      - traefik.http.routers.omni_tools_https.middlewares=authentik@docker
+      - traefik.http.routers.omni_tools_https.middlewares=authentik@docker,umami-feeder@file
 
   drawio:
     image: jgraph/drawio:latest
@@ -113,7 +113,7 @@ services:
       - traefik.http.routers.drawio_https.entrypoints=websecure
       - traefik.http.routers.drawio_https.tls=true
       - traefik.http.routers.drawio_https.tls.certresolver=cloudflare
-      - traefik.http.routers.drawio_https.middlewares=authentik@docker
+      - traefik.http.routers.drawio_https.middlewares=authentik@docker,umami-feeder@file
 
   bentopdf:
     image: ghcr.io/alam00000/bentopdf-simple:latest
@@ -152,7 +152,7 @@ services:
       - traefik.http.routers.bentopdf_https.entrypoints=websecure
       - traefik.http.routers.bentopdf_https.tls=true
       - traefik.http.routers.bentopdf_https.tls.certresolver=cloudflare
-      - traefik.http.routers.bentopdf_https.middlewares=authentik@docker
+      - traefik.http.routers.bentopdf_https.middlewares=authentik@docker,umami-feeder@file
 
 networks:
   traefik_network:

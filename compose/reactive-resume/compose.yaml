@@ -82,6 +82,7 @@ services:
       - traefik.http.routers.reactive_resume_https.entrypoints=websecure
       - traefik.http.routers.reactive_resume_https.tls=true
       - traefik.http.routers.reactive_resume_https.tls.certresolver=cloudflare
+      - traefik.http.routers.reactive_resume_https.middlewares=umami-feeder@file
 
 networks:
   reactive-resume_backend:

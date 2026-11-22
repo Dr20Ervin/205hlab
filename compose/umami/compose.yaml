@@ -17,7 +17,7 @@ services:
       - APP_SECRET=${UMAMI_APP_SECRET:?UMAMI_APP_SECRET Not defined}
       - TRACKER_SCRIPT_NAME=${UMAMI_TRACKER_SCRIPT_NAME:-pulse.js}
       - COLLECT_API_ENDPOINT=${UMAMI_COLLECT_API_ENDPOINT:-/api/collect}
-      - IGNORE_IP=${UMAMI_IGNORE_IP:-10.0.0.0/8,172.16.0.0/12,192.168.0.0/16}
+      - IGNORE_IP=${UMAMI_IGNORE_IP:-10.0.0.0/8,172.16.0.0/12}
       - DISABLE_TELEMETRY=1
     networks:
       - traefik_network

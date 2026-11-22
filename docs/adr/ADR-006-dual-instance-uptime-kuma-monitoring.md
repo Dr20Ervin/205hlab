@@ -23,7 +23,7 @@ However, this architecture suffers from a foundational observability blind spot:
 ## Decision Drivers
 
 - **Out-of-Band Fault Isolation**: An auxiliary watchdog must run on physically isolated, battery-backed hardware ([ADR-005](ADR-005-decouple-smart-home-haos-appliance.md)) to detect and alert on primary server failure.
-- **Single-Domain Slug-Restricted Ingress Segregation**: Provide clean, unauthenticated public status visibility strictly at `https://uptime.205hlab.com/status/205hlab` (via `KUMA_STATUS_SLUG=205hlab`) while gating all administrative paths (`/`, `/dashboard`, `/settings`, `/socket.io`, and other status slugs) on `uptime.205hlab.com` behind Authentik SSO.
+- **Single-Domain Slug-Restricted Ingress Segregation**: Provide clean, unauthenticated public status visibility strictly at `https://uptime.205hlab.com/status/public` (via `KUMA_STATUS_SLUG=public`) while gating all administrative paths (`/`, `/dashboard`, `/settings`, `/socket.io`, and other status slugs) on `uptime.205hlab.com` behind Authentik SSO.
 - **Direct Management Port Accessibility**: Allow the auxiliary watchdog to directly probe the primary Uptime Kuma process over the LAN/management IP (`${MNGT_IP}:3001`), bypassing Traefik, Authentik, and Cloudflare.
 - **Database Durability & Concurrency**: Eliminate SQLite lock contention and database bloat without breaking the centralized PostgreSQL baseline.
 - **Immediate Incident Dispatch**: Push instant, actionable notifications to a private Discord channel via Discord Webhooks with differentiated severity.
@@ -40,7 +40,7 @@ However, this architecture suffers from a foundational observability blind spot:
 - **Pros:**
   - **True Out-of-Band Resilience**: The auxiliary instance runs on the battery-backed **ASUS X540SA** companion laptop. If the primary Fujitsu server crashes or loses power, the auxiliary watchdog immediately fires an emergency Discord alert (`#infrastructure-alerts`).
   - **MariaDB Concurrency & Zero SQLite Bloat**: Official MariaDB support in Uptime Kuma v2 provides InnoDB row-level locking, handling rapid concurrent heartbeat writes without `SQLITE_BUSY` errors or database corruption.
-  - **Clean Single-Domain Priority Routing**: `https://uptime.205hlab.com/status/205hlab` is public for household users (`priority=100`); all other paths on `uptime.205hlab.com` (`priority=10`) are gated behind Authentik Proxy Provider / ForwardAuth.
+  - **Clean Single-Domain Priority Routing**: `https://uptime.205hlab.com/status/public` is public for household users (`priority=100`); all other paths on `uptime.205hlab.com` (`priority=10`) are gated behind Authentik Proxy Provider / ForwardAuth.
   - **Decoupled HAOS Boundary**: Preserves [ADR-005](ADR-005-decouple-smart-home-haos-appliance.md) by running the auxiliary watchdog inside the native HAOS ecosystem, exposed via Cloudflare Tunnel with independent 2FA and zero Git repository entanglement.
 - **Cons:**
   - Introduces a second container (`uptime-kuma-db`) into `compose/uptime-kuma/` requiring ~180 MB of RAM.
@@ -72,7 +72,7 @@ The observability architecture is divided into two cooperative tiers:
    - **Direct Port Bind**: Binds `${MNGT_IP}:3001` on the host management interface for direct LAN scraping.
    - **Deep Monitoring**: Probes local container health via `/var/run/docker.sock:ro`, verifies Traefik HTTP routes and TLS certificate expiration across `*.205hlab.com` and `*.internal.205hlab.com`, and checks PostgreSQL `:5432` availability.
    - **Ingress & IAM (`uptime.205hlab.com`)**:
-     - **Public Slug-Whitelisted Router (`uptime_kuma_status_https`, `priority=100`)**: Routed directly via Traefik without Authentik strictly for `Path(/status/${KUMA_STATUS_SLUG:-205hlab})`, its slug-specific API endpoints (`/api/status-page/${KUMA_STATUS_SLUG:-205hlab}`, `/api/status-page/heartbeat/${KUMA_STATUS_SLUG:-205hlab}`), and static display assets (`/assets`, `/api/badge`, `/icon.svg`, `/upload`).
+     - **Public Slug-Whitelisted Router (`uptime_kuma_status_https`, `priority=100`)**: Routed directly via Traefik without Authentik strictly for `Path(/status/${KUMA_STATUS_SLUG:-public})`, its slug-specific API endpoints (`/api/status-page/${KUMA_STATUS_SLUG:-public}`, `/api/status-page/heartbeat/${KUMA_STATUS_SLUG:-public}`), and static display assets (`/assets`, `/api/badge`, `/icon.svg`, `/upload`), with `umami-feeder@file` attached for server-side status page analytics.
      - **Protected Admin & Catch-All Router (`uptime_kuma_admin_https`, `priority=10`)**: Protected by Authentik Proxy Provider (`authentik@docker`) bound to group `kuma_admins`. Any request to `/`, `/dashboard`, `/settings`, `/manage-status-page`, `/socket.io`, or non-whitelisted status slugs falls through to this router and requires Authentik SSO. Built-in auth is disabled in Kuma.
    - **Alert Channel**: Pushes application, container, and certificate alerts to Discord (`#homelab-monitoring`).
 2. **Auxiliary Out-of-Band Tier (`uptime-kuma-aux` on ASUS X540SA)**:
@@ -86,7 +86,7 @@ The observability architecture is divided into two cooperative tiers:
 ### Positive Consequences
 - **Zero Observability Blind Spot**: Complete out-of-band detection for catastrophic server outages, power failure, or network cuts.
 - **High Concurrency & Database Reliability**: MariaDB InnoDB row-level locking eliminates SQLite write deadlocks and corruption risks permanently.
-- **Household Transparency**: Public status page at `https://uptime.205hlab.com/status/205hlab` provides real-time service visibility without exposing internal topology or requiring Authentik credentials.
+- **Household Transparency**: Public status page at `https://uptime.205hlab.com/status/public` provides real-time service visibility without exposing internal topology or requiring Authentik credentials.
 - **Edge Security**: All administrative routes and WebSockets (`/`, `/dashboard`, `/socket.io`) on `uptime.205hlab.com` are protected by unified Authentik SSO.
 
 ### Negative Consequences & Mitigations
@@ -99,5 +99,5 @@ The observability architecture is divided into two cooperative tiers:
 
 - **Compose Validation**: `compose/uptime-kuma/compose.yaml` validates cleanly in CI (`validate-compose.yml`) with strict resource limits (`limits.cpus: '0.5'`, `limits.memory: 256M` for Kuma; `cpus: '0.5'`, `memory: 384M` for MariaDB).
 - **Network Isolation**: MariaDB is attached only to `uptime_kuma_backend`; port 3306 is never bound to host interfaces.
-- **Authentik Protection**: Traefik router `uptime_kuma_admin_https` (`priority=10`) enforces `authentik@docker` middleware across `uptime.205hlab.com`, while higher-priority router `uptime_kuma_status_https` (`priority=100`) serves unauthenticated public status traffic strictly for `/status/${KUMA_STATUS_SLUG:-205hlab}` and its required assets.
+- **Authentik Protection**: Traefik router `uptime_kuma_admin_https` (`priority=10`) enforces `authentik@docker` middleware across `uptime.205hlab.com`, while higher-priority router `uptime_kuma_status_https` (`priority=100`) serves unauthenticated public status traffic strictly for `/status/${KUMA_STATUS_SLUG:-public}` and its required assets.
 - **Prometheus Metric Scrape**: Prometheus scrapes `uptime-kuma:3001/metrics` every 30s for historical telemetry in Grafana.
