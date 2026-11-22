@@ -9,7 +9,6 @@ http:
           trackAllResources: false
           queueSize: 1000
           batchSize: 20
-          batchMaxWait: "5s"
           ignoreURLs:
             - "^/api/"
             - "^/assets/"
@@ -20,6 +19,7 @@ http:
             - "^/hubs/"
             - "^/imageproxy/"
             - "^/artboard/"
+            - "^/outpost\\.goauthentik\\.io/"
           ignoreUserAgents:
             - "Uptime-Kuma"
           ignoreIPs:
