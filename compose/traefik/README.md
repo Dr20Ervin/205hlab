@@ -117,6 +117,21 @@ Traefik trusts forwarded headers strictly from verified Cloudflare IP blocks and
 
 ---
 
+## 📊 Server-Side Analytics Middleware (`traefik-umami-feeder`)
+
+Traefik loads [`github.com/astappiev/traefik-umami-feeder`](https://github.com/astappiev/traefik-umami-feeder) (`v1.5.0`) via static `--experimental.plugins.umami-feeder.*` flags in [`compose.yaml`](compose.yaml) so non-portfolio services can stream server-side pageviews to the internal Umami collector (`http://umami:3000`) without altering upstream HTML or CSP policies. See [`../umami/README.md`](../umami/README.md) for the full hybrid telemetry topology.
+
+1. **Provision the Host Dynamic File First:**  
+   Copy [`dynamic/umami.example.yml`](dynamic/umami.example.yml) to `${DYNAMIC_PATH}/umami.yml` on the Ubuntu Server and populate the `websites:` hostname-to-UUID map after creating each site in Umami.
+   > [!IMPORTANT]
+   > Ensure `${DYNAMIC_PATH}/umami.yml` exists on the host **before** attaching `umami-feeder@file` to any router label; otherwise Traefik marks that router invalid until the file middleware is defined.
+2. **Middleware Chaining Rules:**
+   - **Public apps (non-portfolio):** `traefik.http.routers.<service>_https.middlewares=umami-feeder@file` (e.g., `status.205hlab.com`).
+   - **Authentik-protected apps:** Chain Authentik **first** (`authentik@docker,umami-feeder@file`) so unauthenticated probes bounced by SSO are never recorded.
+   - **Exclusions (never attach):** Do not attach `umami-feeder@file` to `me.205hlab.com` (uses client-side `pulse.js` — avoids double-counting), `analytics.205hlab.com`, `umami.internal.205hlab.com`, or `authentik.205hlab.com`.
+
+---
+
 ## 🩺 Healthcheck & Monitoring
 
 - **Ping Healthcheck:** Evaluated every 30s via `wget --spider -q http://127.0.0.1:8082/ping`.

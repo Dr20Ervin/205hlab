@@ -6,7 +6,7 @@
 [![Database](https://img.shields.io/badge/Database-PostgreSQL%2018-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org)
 
 > **Identity & Access Management (IAM) Hub** for the `205hlab` production homelab.  
-> Authentik acts as the centralized single sign-on (SSO), OAuth2/OIDC identity provider (IdP), and Traefik ForwardAuth security perimeter for **all 32 homelab services**.  
+> Authentik acts as the centralized single sign-on (SSO), OAuth2/OIDC identity provider (IdP), and Traefik ForwardAuth security perimeter for **all 35 homelab services**.  
 > **Architecture Decision Record:** See [**ADR-002: Enforce Unified Zero-Trust IAM with Authentik (Native OIDC & Traefik ForwardAuth)**](../../docs/adr/ADR-002-authentik-unified-iam.md) for the security rationale behind this stack.
 
 ---
@@ -51,7 +51,7 @@ flowchart TD
         Servarr["Sonarr · Radarr · Lidarr · Bazarr · Prowlarr · Chaptarr"]
         WebTools["IT-Tools · Omni-Tools · Draw.io · BentoPDF"]
         NetMon["Speedtest Tracker · MyIP"]
-        InternalOps["Adminer · Databasus · Prometheus · ChangeDetection · SearXNG · Seerr · Tracearr · Uptime Kuma"]
+        InternalOps["Adminer · Databasus · Prometheus · ChangeDetection · SearXNG · Seerr · Tracearr · Uptime Kuma · Umami"]
     end
 
     Traefik -->|2a. Authenticated Header Injection| ProxyAuth
@@ -60,7 +60,7 @@ flowchart TD
 ```
 
 1. **Tier 1 — Native OAuth2 / OIDC (12 Services)**: For applications with built-in SSO capabilities (e.g. Mealie, Grafana, Paperless-ngx, Kavita, Jellyfin, Vikunja). The user authenticates against Authentik directly via OIDC flows, and permissions are mapped using tokens, scopes, and group claims.
-2. **Tier 2 — Traefik ForwardAuth / Proxy Providers (20 Services)**: For applications without native OIDC or where uniform pre-authentication is required (e.g. Sonarr, Radarr, IT-Tools, Adminer). Traefik intercepts incoming HTTP/S requests and checks session validity with Authentik's embedded outpost before proxying the request to the upstream container.
+2. **Tier 2 — Traefik ForwardAuth / Proxy Providers (23 Services)**: For applications without native OIDC or where uniform pre-authentication is required (e.g. Sonarr, Radarr, IT-Tools, Adminer). Traefik intercepts incoming HTTP/S requests and checks session validity with Authentik's embedded outpost before proxying the request to the upstream container.
 
 ---
 
@@ -105,6 +105,7 @@ Access to applications, administrative privileges, and internal role mappings ar
 | **Observability** | `grafana_admins` | Mapped to Grafana **Admin** role via `entitlements` claim |
 | | `grafana_editors` | Mapped to Grafana **Editor** role (create/edit dashboards and alert rules) |
 | | `grafana_viewers` | Mapped to Grafana **Viewer** role (read-only telemetry viewing) |
+| | `umami_admins` | Access to self-hosted Umami v3 analytics admin dashboard (`umami.internal.205hlab.com`) |
 | **Household SaaS** | `mealie_admins` | Mapped to Mealie **Admin** role (system settings, recipe management, household control) |
 | | `mealie_users` | Mapped to Mealie **User** role (view recipes, generate shopping lists, log meals) |
 | | `paperless_admins` | Document management administrator (system settings, global tags, users) |
@@ -129,7 +130,7 @@ Access to applications, administrative privileges, and internal role mappings ar
 
 ---
 
-## 📑 Master Integration Matrix (All 32 Services)
+## 📑 Master Integration Matrix (All 35 Services)
 
 ### 1. Native OAuth2 / OpenID Connect (OIDC) Applications
 
@@ -177,6 +178,7 @@ These services do not implement native OIDC or are hardened by enforcing zero-tr
 | **Sonarr** | `sonarr.205hlab.com` | ForwardAuth | `servarr_users` | [`compose/servarr/`](../servarr/) |
 | **Speedtest Tracker**| `speedtest.205hlab.com` | ForwardAuth | `speedtest_users` | [`compose/network-mon/`](../network-mon/) |
 | **Tracearr** | `tracearr.205hlab.com` | ForwardAuth | `jellyfin-users` | [`compose/tracearr/`](../tracearr/) |
+| **Umami** | `umami.internal.205hlab.com` | ForwardAuth | `umami_admins` | [`compose/umami/`](../umami/) |
 | **Uptime Kuma** | `uptime.205hlab.com` | ForwardAuth | `kuma_admins` | [`compose/uptime-kuma/`](../uptime-kuma/) |
 
 ---

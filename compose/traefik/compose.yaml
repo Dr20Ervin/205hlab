@@ -41,6 +41,8 @@ services:
       - "--providers.docker.network=traefik_network"
       - "--providers.file.directory=/etc/traefik/dynamic"
       - "--providers.file.watch=true"
+      - "--experimental.plugins.umami-feeder.moduleName=github.com/astappiev/traefik-umami-feeder"
+      - "--experimental.plugins.umami-feeder.version=v1.5.0"
     deploy:
       resources:
         limits:

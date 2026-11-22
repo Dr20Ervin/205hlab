@@ -1,0 +1,23 @@
+# Copy to ${DYNAMIC_PATH}/umami.yml on the Ubuntu host after creating Websites in Umami
+# and replacing the placeholder UUIDs below. Keep real files out of Git if desired.
+# IMPORTANT: Ensure this file exists in ${DYNAMIC_PATH}/ BEFORE attaching
+# `umami-feeder@file` to any Traefik router label.
+http:
+  middlewares:
+    umami-feeder:
+      plugin:
+        umami-feeder:
+          umamiHost: "http://umami:3000"
+          # Traefik preserves/populates X-Forwarded-For using TRAEFIK_TRUSTED_IPS
+          # (covers both Cloudflare WAN and split-horizon LAN clients).
+          headerIp: "X-Forwarded-For"
+          trackErrors: false
+          queueSize: 1000
+          batchSize: 20
+          batchMaxWait: "5s"
+          # Manual hostname -> Umami Website UUID mapping (zero admin credentials in Traefik).
+          # DO NOT include me.205hlab.com (uses client-side pulse.js -> avoids double-counting),
+          # analytics.205hlab.com, umami.internal.205hlab.com, or authentik.205hlab.com.
+          websites:
+            "status.205hlab.com": "00000000-0000-0000-0000-000000000001"
+            # "example.205hlab.com": "00000000-0000-0000-0000-000000000002"

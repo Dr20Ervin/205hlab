@@ -175,7 +175,7 @@ To prevent LAN DNS outages when rebooting the primary Ubuntu server, **Technitiu
 
 ---
 
-### Service Catalog (23 Compose Stacks)
+### Service Catalog (24 Compose Stacks)
 
 > Full stack configurations, environment templates, and per-service documentation live in **[`compose/`](compose/README.md)**.
 
@@ -199,6 +199,7 @@ To prevent LAN DNS outages when rebooting the primary Ubuntu server, **Technitiu
 | [`prom-exporters`](compose/prom-exporters/) | **6 Metric Exporters** — `node-exporter`, `cadvisor`, `postgres`, `technitium`, `zfs`, `smartctl` (+ OpenWrt & NUT scrapes). | Internal scrape network | Internal |
 | [`network-mon`](compose/network-mon/) | **Speedtest Tracker** (3-hour WAN tests on PG18), **OpenSpeedTest** (LAN throughput on `:3000`), and **MyIP** (leak diagnostics on `:18966`). | `speedtest.205hlab.com`<br>`openspeed.internal.205hlab.com`<br>`myip.internal.205hlab.com` | ForwardAuth<br>LAN-only<br>LAN + ForwardAuth |
 | [`uptime-kuma`](compose/uptime-kuma/) | **Uptime Kuma v2** + **MariaDB 11.6** — Blackbox service sentinel, container healthchecks, and public status page. Probed out-of-band by HAOS watchdog. | `uptime.205hlab.com`<br>`status.205hlab.com` | ForwardAuth<br>Public (No Auth) |
+| [`umami`](compose/umami/) | **Umami v3** — Self-hosted, privacy-first web analytics backed by PostgreSQL 18 (stealth collector + Traefik `umami-feeder` plugin). | `umami.internal.205hlab.com`<br>`analytics.205hlab.com` | LAN + ForwardAuth<br>Public Stealth (`/pulse.js`, `/api/collect`) |
 
 <details>
 <summary><strong>📈 Version-Controlled Grafana Dashboards (<code>grafana-dashboards/</code>)</strong></summary>
@@ -256,7 +257,7 @@ Security is handled in layers from the Cloudflare edge down to individual contai
 | :--- | :--- |
 | **Perimeter Firewall** | OpenWrt `iptables` and Ubuntu host rules drop all inbound WAN packets unless they originate from official **Cloudflare IP ranges**. Direct-to-IP scans on ports 80/443 are silently dropped. |
 | **Zero-Port-80 TLS** | Traefik obtains wildcard certificates via Let's Encrypt **DNS-01 ACME** (Cloudflare API token), avoiding HTTP-01 port 80 exposure. |
-| **Mandatory WAN SSO** | Every `*.205hlab.com` route requires **Authentik** authentication—either via native OIDC with JWT entitlement claims or Traefik's `authentik@docker` ForwardAuth middleware. |
+| **Mandatory WAN SSO** | Every `*.205hlab.com` route requires **Authentik** authentication—either via native OIDC with JWT entitlement claims or Traefik's `authentik@docker` ForwardAuth middleware (with strict path-whitelisted public exceptions for `status.205hlab.com` and `analytics.205hlab.com`). |
 | **Network Microsegmentation** | Stacks communicate over scoped bridge networks (`traefik_network`, `postgres_network`, `monitoring_network`, `servarr_backend`). Database ports are never published to the host. |
 | **Container Hardening** | Containers run with `no-new-privileges:true`, non-root `PUID`/`PGID` mappings, read-only Docker sockets (`:ro`), and explicit CPU/RAM limits (`deploy.resources.limits`) so a runaway process cannot starve the host. |
 | **No Plaintext `.env` Files** | Production credentials live encrypted inside **Dockhand's** database and are injected into container memory at deploy time. No production `.env` files sit on the host SSD, and repository `example.env` files use strict `${VAR:?error}` validation guards with dummy placeholders. |
@@ -272,7 +273,7 @@ Security is handled in layers from the Cloudflare edge down to individual contai
 │   ├── workflows/validate-compose.yml    # GitHub Actions CI: validates all compose stacks
 │   └── ISSUE_TEMPLATE/ & PR_TEMPLATE     # Repository contribution templates
 ├── assets/                               # Custom SVG/PNG icons & branding for Authentik/dashboards
-├── compose/                              # 23 Docker Compose stacks (compose.yaml, example.env, db-init.sql)
+├── compose/                              # 24 Docker Compose stacks (compose.yaml, example.env, db-init.sql)
 ├── docs/
 │   ├── adr/                              # Architecture Decision Records (ADR-001 .. ADR-005)
 │   └── runbooks/                         # Disaster recovery & operational SOPs
@@ -329,7 +330,7 @@ nano .env && docker compose up -d
 ```
 
 **Dependency Startup Sequence:**
-1. `traefik` → 2. `postgres` → 3. `databasus` → 4. `authentik` → 5. `technitium` → 6. `prometheus` & `prom-exporters` → 7. `grafana` → 8. Application & Media stacks (`paperless`, `mealie`, `freshrss`, `reactive-resume`, `vikunja`, `changedetection`, `searxng`, `jelly`, `kavita`, `servarr`, `downloaderr`, `tracearr`, `network-mon`, `web-tools`).
+1. `traefik` → 2. `postgres` → 3. `databasus` → 4. `authentik` → 5. `technitium` → 6. `prometheus` & `prom-exporters` → 7. `grafana` & `umami` → 8. Application & Media stacks (`paperless`, `mealie`, `freshrss`, `reactive-resume`, `vikunja`, `changedetection`, `searxng`, `jelly`, `kavita`, `servarr`, `downloaderr`, `tracearr`, `network-mon`, `web-tools`).
 
 </details>
 

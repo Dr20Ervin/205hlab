@@ -38,7 +38,7 @@ This stack provides high-performance, centralized relational persistence for the
         │ lidarr-main / log       │ chaptarr-main/log/cache │
         │ prowlarr-main / log     │ qui                     │
         │ reactive-resume         │ speedtest_tracker       │
-        │ vikunja                 │ (spare tenant)          │
+        │ vikunja                 │ umami                   │
         └─────────────────────────┴─────────────────────────┘
 ```
 
@@ -80,6 +80,7 @@ Each application maintains an isolated database and restricted user. Provisionin
 | `qui` | `qui_app` | [`compose/downloaderr/`](../downloaderr/) |
 | `reactive-resume` | `reactive-resume_app`| [`compose/reactive-resume/`](../reactive-resume/) |
 | `speedtest_tracker` | `speedtest_app` | [`compose/network-mon/`](../network-mon/) |
+| `umami` | `umami_app` | [`compose/umami/`](../umami/) |
 
 ---
 

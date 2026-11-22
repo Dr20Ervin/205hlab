@@ -1,0 +1,65 @@
+---
+services:
+  umami:
+    image: docker.umami.is/umami-software/umami:latest
+    restart: unless-stopped
+    container_name: umami
+    security_opt:
+      - no-new-privileges:true
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+    environment:
+      - TZ=${TZ:-UTC}
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-umami_app}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD Not defined}@${POSTGRES_HOST:-postgres}:${POSTGRES_PORT:-5432}/${POSTGRES_DB:-umami}
+      - APP_SECRET=${UMAMI_APP_SECRET:?UMAMI_APP_SECRET Not defined}
+      - TRACKER_SCRIPT_NAME=${UMAMI_TRACKER_SCRIPT_NAME:-pulse.js}
+      - COLLECT_API_ENDPOINT=${UMAMI_COLLECT_API_ENDPOINT:-/api/collect}
+      - IGNORE_IP=${UMAMI_IGNORE_IP:-10.0.0.0/8,172.16.0.0/12,192.168.0.0/16}
+      - DISABLE_TELEMETRY=1
+    networks:
+      - traefik_network
+      - postgres_network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:3000/api/heartbeat || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=traefik_network
+      - traefik.http.services.umami_web.loadBalancer.server.port=3000
+      # Rate-limit public telemetry collection per real visitor IP (Cloudflare edge header)
+      - traefik.http.middlewares.umami_collector_ratelimit.ratelimit.average=30
+      - traefik.http.middlewares.umami_collector_ratelimit.ratelimit.burst=60
+      - traefik.http.middlewares.umami_collector_ratelimit.ratelimit.period=1s
+      - traefik.http.middlewares.umami_collector_ratelimit.ratelimit.sourcecriterion.requestheadername=CF-Connecting-IP
+      # Public Stealth Collector Router (analytics.${FQDN})
+      - traefik.http.routers.umami_collector_http.service=umami_web
+      - "traefik.http.routers.umami_collector_http.rule=Host(`analytics.${FQDN:?FQDN Not defined}`) && (Path(`/${UMAMI_TRACKER_SCRIPT_NAME:-pulse.js}`) || Path(`${UMAMI_COLLECT_API_ENDPOINT:-/api/collect}`))"
+      - traefik.http.routers.umami_collector_http.entrypoints=web
+      - traefik.http.routers.umami_collector_https.service=umami_web
+      - "traefik.http.routers.umami_collector_https.rule=Host(`analytics.${FQDN:?FQDN Not defined}`) && (Path(`/${UMAMI_TRACKER_SCRIPT_NAME:-pulse.js}`) || Path(`${UMAMI_COLLECT_API_ENDPOINT:-/api/collect}`))"
+      - traefik.http.routers.umami_collector_https.entrypoints=websecure
+      - traefik.http.routers.umami_collector_https.tls=true
+      - traefik.http.routers.umami_collector_https.tls.certresolver=cloudflare
+      - traefik.http.routers.umami_collector_https.middlewares=umami_collector_ratelimit@docker
+      # Protected LAN-Only Admin Dashboard (umami.internal.${FQDN})
+      - traefik.http.routers.umami_admin_http.service=umami_web
+      - traefik.http.routers.umami_admin_http.rule=Host(`umami.internal.${FQDN:?FQDN Not defined}`)
+      - traefik.http.routers.umami_admin_http.entrypoints=web
+      - traefik.http.routers.umami_admin_https.service=umami_web
+      - traefik.http.routers.umami_admin_https.rule=Host(`umami.internal.${FQDN:?FQDN Not defined}`)
+      - traefik.http.routers.umami_admin_https.entrypoints=websecure
+      - traefik.http.routers.umami_admin_https.tls=true
+      - traefik.http.routers.umami_admin_https.tls.certresolver=cloudflare
+      - traefik.http.routers.umami_admin_https.middlewares=authentik@docker
+
+networks:
+  traefik_network:
+    external: true
+  postgres_network:
+    external: true

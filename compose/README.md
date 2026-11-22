@@ -2,14 +2,14 @@
 
 [![Docker Compose](https://img.shields.io/badge/Docker%20Compose-v2.30+-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://docs.docker.com/compose/)
 [![CI: Validate Compose](https://github.com/Dr20Ervin/205hlab/actions/workflows/validate-compose.yml/badge.svg)](https://github.com/Dr20Ervin/205hlab/actions/workflows/validate-compose.yml)
-[![Stacks](https://img.shields.io/badge/Production%20Stacks-23%20Active-007ACC?style=for-the-badge)](https://github.com/Dr20Ervin/205hlab/tree/main/compose)
+[![Stacks](https://img.shields.io/badge/Production%20Stacks-24%20Active-007ACC?style=for-the-badge)](https://github.com/Dr20Ervin/205hlab/tree/main/compose)
 [![Network Isolation](https://img.shields.io/badge/Network-Microsegmented-2ea44f?style=for-the-badge&logo=wireguard&logoColor=white)](#-network-topology--microsegmentation)
 [![Resource Limits](https://img.shields.io/badge/Limits-Strict%20CPU%20%26%20RAM-9b51e0?style=for-the-badge)](#-production-engineering-standards)
 [![Central Database](https://img.shields.io/badge/Data%20Tier-PostgreSQL%2018%20%26%20TimescaleDB-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)](postgres/)
 [![ADRs](https://img.shields.io/badge/Architecture-ADRs%20001--006-blue?style=for-the-badge)](../docs/adr/README.md)
 [![Runbooks](https://img.shields.io/badge/Operations-5%20Runbooks-238636?style=for-the-badge)](../docs/runbooks/README.md)
 
-This directory houses the **23 production Docker Compose stacks** powering the `205hlab` bare-metal infrastructure. Every stack is engineered as an autonomous, self-contained unit adhering to uniform DevOps standards: strict cgroup resource constraints, standardized healthchecks, isolated bridge networks, centralized persistence, and zero-trust edge authentication.
+This directory houses the **24 production Docker Compose stacks** powering the `205hlab` bare-metal infrastructure. Every stack is engineered as an autonomous, self-contained unit adhering to uniform DevOps standards: strict cgroup resource constraints, standardized healthchecks, isolated bridge networks, centralized persistence, and zero-trust edge authentication.
 
 ---
 
@@ -37,6 +37,7 @@ This directory houses the **23 production Docker Compose stacks** powering the `
 | **[`searxng`](searxng/)** | Private Metasearch | `https://search.205hlab.com` | Method 2 (ForwardAuth) | Valkey 9 Cache, AirVPN WireGuard | [Runbook](searxng/README.md) |
 | **[`network-mon`](network-mon/)** | Network Diagnostics | `https://speedtest.205hlab.com` | Method 2 (ForwardAuth) / LAN | PostgreSQL 18, Host Port Binds | [Runbook](network-mon/README.md) |
 | **[`uptime-kuma`](uptime-kuma/)** | Observability & Sentinel | `https://uptime.205hlab.com`<br>`https://status.205hlab.com` | Method 2 (ForwardAuth) / Public | MariaDB 11.6, Docker Socket, MNGT Port Bind | [Runbook](uptime-kuma/README.md) |
+| **[`umami`](umami/)** | Privacy Analytics | `https://umami.internal.205hlab.com`<br>`https://analytics.205hlab.com` | Method 2 (ForwardAuth) / Stealth Public | PostgreSQL 18 (`umami`), Zero Local Volumes | [Runbook](umami/README.md) |
 | **[`changedetection`](changedetection/)** | Web Diff & Alerting | `https://changedetection.internal...` | Method 2 (ForwardAuth) | Playwright Stealth Chrome Engine | [Runbook](changedetection/README.md) |
 | **[`vikunja`](vikunja/)** | Task & Maintenance Reminders | `https://vikunja.205hlab.com` | Method 1 (Native OIDC) | PostgreSQL 18 (`vikunja`), `vikunja-data` | [Runbook](vikunja/README.md) |
 | **[`web-tools`](web-tools/)** | Client-Side WASM Utilities | `https://it-tools.205hlab.com` (omni, draw, pdf) | Method 2 (ForwardAuth) | Stateless (`read_only: true` Rootfs) | [Runbook](web-tools/README.md) |
@@ -67,6 +68,7 @@ flowchart TD
         Exporters["prom-exporters\n(Node, cAdvisor, ZFS, S.M.A.R.T.)"]
         Grafana["grafana (13.0.1)\nTelemetry Dashboards"]
         UptimeKuma["uptime-kuma (v2)\nMariaDB & Ingress Sentinel"]
+        Umami["umami (v3)\nPrivacy Analytics & Collector"]
         Exporters -->|Scrape| Prometheus
         UptimeKuma -.->|Metrics| Prometheus
         Prometheus -->|Data Source| Grafana
@@ -97,12 +99,14 @@ flowchart TD
     Traefik -->|Routed HTTPS| Layer3
     Traefik -->|Routed HTTPS| Layer4
     Traefik -->|Routed HTTPS| Grafana
+    Traefik -->|Routed HTTPS / Feeder| Umami
 
     %% Persistence Wiring
     Layer3 -->|SQL Connections| Postgres
     Layer4 -->|SQL Connections| Postgres
     Tracearr -->|Time-Series SQL| Timescale
     Authentik -->|App DB| Postgres
+    Umami -->|App DB| Postgres
 ```
 
 ---
@@ -145,7 +149,7 @@ Containers never share a single flat Docker bridge network. Instead, external br
 | Network Name | Driver | External | Purpose & Connected Workloads |
 | :--- | :--- | :--- | :--- |
 | **`traefik_network`** | `bridge` | `true` | Ingress gateway. Connects Traefik to all HTTP-serving containers. Direct inter-container communication across apps is blocked. |
-| **`postgres_network`** | `bridge` | `true` | Isolated database tier. Connects central PostgreSQL 18 and Adminer only to database consumers (Authentik, Mealie, Paperless, FreshRSS, Servarr, qui, Reactive Resume, Speedtest, Vikunja). Port 5432 is never exposed to the host LAN. |
+| **`postgres_network`** | `bridge` | `true` | Isolated database tier. Connects central PostgreSQL 18 and Adminer only to database consumers (Authentik, Mealie, Paperless, FreshRSS, Servarr, qui, Reactive Resume, Speedtest, Umami, Vikunja). Port 5432 is never exposed to the host LAN. |
 | **`monitoring_network`**| `bridge` | `true` | Telemetry bus. Dedicated for Prometheus scraping of cAdvisor, Node Exporter, PostgreSQL Exporter, Technitium Exporter, and Traefik metrics. |
 | **`servarr_backend`** | `bridge` | `true` | Automation pipeline. Interconnects Sonarr, Radarr, Lidarr, Prowlarr, Seerr, Bazarr, and the download clients (qBittorrent, qui). |
 | **Stack-Internal** | `bridge` | `false` | Private subnets declared within individual stacks (e.g., `paperless_internal`, `tracearr_internal`, `searxng_internal`) for local worker-to-broker queues. |
@@ -154,7 +158,7 @@ Containers never share a single flat Docker bridge network. Instead, external br
 
 ## 🛡️ Production Engineering Standards
 
-All 22 compose stacks enforce standardized operational rules:
+All 24 compose stacks enforce standardized operational rules:
 
 1. **Strict Resource Constraints**:  
    Every container defines explicit cgroup limits preventing rogue processes or memory leaks from destabilizing the host:
