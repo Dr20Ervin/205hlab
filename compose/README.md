@@ -2,14 +2,14 @@
 
 [![Docker Compose](https://img.shields.io/badge/Docker%20Compose-v2.30+-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://docs.docker.com/compose/)
 [![CI: Validate Compose](https://github.com/Dr20Ervin/205hlab/actions/workflows/validate-compose.yml/badge.svg)](https://github.com/Dr20Ervin/205hlab/actions/workflows/validate-compose.yml)
-[![Stacks](https://img.shields.io/badge/Production%20Stacks-24%20Active-007ACC?style=for-the-badge)](https://github.com/Dr20Ervin/205hlab/tree/main/compose)
+[![Stacks](https://img.shields.io/badge/Production%20Stacks-25%20Active-007ACC?style=for-the-badge)](https://github.com/Dr20Ervin/205hlab/tree/main/compose)
 [![Network Isolation](https://img.shields.io/badge/Network-Microsegmented-2ea44f?style=for-the-badge&logo=wireguard&logoColor=white)](#-network-topology--microsegmentation)
 [![Resource Limits](https://img.shields.io/badge/Limits-Strict%20CPU%20%26%20RAM-9b51e0?style=for-the-badge)](#-production-engineering-standards)
 [![Central Database](https://img.shields.io/badge/Data%20Tier-PostgreSQL%2018%20%26%20TimescaleDB-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)](postgres/)
 [![ADRs](https://img.shields.io/badge/Architecture-ADRs%20001--006-blue?style=for-the-badge)](../docs/adr/README.md)
 [![Runbooks](https://img.shields.io/badge/Operations-5%20Runbooks-238636?style=for-the-badge)](../docs/runbooks/README.md)
 
-This directory houses the **24 production Docker Compose stacks** powering the `205hlab` bare-metal infrastructure. Every stack is engineered as an autonomous, self-contained unit adhering to uniform DevOps standards: strict cgroup resource constraints, standardized healthchecks, isolated bridge networks, centralized persistence, and zero-trust edge authentication.
+This directory houses the **25 production Docker Compose stacks** powering the `205hlab` bare-metal infrastructure. Every stack is engineered as an autonomous, self-contained unit adhering to uniform DevOps standards: strict cgroup resource constraints, standardized healthchecks, isolated bridge networks, centralized persistence, and zero-trust edge authentication.
 
 ---
 
@@ -41,6 +41,7 @@ This directory houses the **24 production Docker Compose stacks** powering the `
 | **[`changedetection`](changedetection/)** | Web Diff & Alerting | `https://changedetection.internal...` | Method 2 (ForwardAuth) | Playwright Stealth Chrome Engine | [Runbook](changedetection/README.md) |
 | **[`vikunja`](vikunja/)** | Task & Maintenance Reminders | `https://vikunja.205hlab.com` | Method 1 (Native OIDC) | PostgreSQL 18 (`vikunja`), `vikunja-data` | [Runbook](vikunja/README.md) |
 | **[`web-tools`](web-tools/)** | Client-Side WASM Utilities | `https://it-tools.205hlab.com` (omni, draw, pdf) | Method 2 (ForwardAuth) | Stateless (`read_only: true` Rootfs) | [Runbook](web-tools/README.md) |
+| **[`wyoming`](wyoming/)** | Smart Home Voice AI | `${MNGT_IP}:10300` (STT)<br>`${MNGT_IP}:10200` (TTS)<br>`${MNGT_IP}:10400` (Wake) | MNGT VLAN TCP Only | `${PIPER_DATA_DIR}` (`jarvis-medium`), Named Volumes (`wyoming-whisper-data`, `wyoming-openwakeword-data`) | [Runbook](wyoming/README.md) |
 
 ---
 
@@ -84,6 +85,7 @@ flowchart TD
         SearXNG["searxng (Private Search)"]
         ChangeDet["changedetection (Diff Alerts)"]
         NetMon["network-mon (Speedtest, MyIP)"]
+        Wyoming["wyoming (Whisper, Piper & openWakeWord)"]
     end
 
     subgraph Layer4["Tier 4: Media Streaming & Automation"]
@@ -152,13 +154,13 @@ Containers never share a single flat Docker bridge network. Instead, external br
 | **`postgres_network`** | `bridge` | `true` | Isolated database tier. Connects central PostgreSQL 18 and Adminer only to database consumers (Authentik, Mealie, Paperless, FreshRSS, Servarr, qui, Reactive Resume, Speedtest, Umami, Vikunja). Port 5432 is never exposed to the host LAN. |
 | **`monitoring_network`**| `bridge` | `true` | Telemetry bus. Dedicated for Prometheus scraping of cAdvisor, Node Exporter, PostgreSQL Exporter, Technitium Exporter, and Traefik metrics. |
 | **`servarr_backend`** | `bridge` | `true` | Automation pipeline. Interconnects Sonarr, Radarr, Lidarr, Prowlarr, Seerr, Bazarr, and the download clients (qBittorrent, qui). |
-| **Stack-Internal** | `bridge` | `false` | Private subnets declared within individual stacks (e.g., `paperless_internal`, `tracearr_internal`, `searxng_internal`) for local worker-to-broker queues. |
+| **Stack-Internal** | `bridge` | `false` | Private subnets declared within individual stacks (e.g., `paperless_internal`, `tracearr_internal`, `searxng_internal`, `wyoming_network`) for local worker-to-broker queues. |
 
 ---
 
 ## 🛡️ Production Engineering Standards
 
-All 24 compose stacks enforce standardized operational rules:
+All 25 compose stacks enforce standardized operational rules:
 
 1. **Strict Resource Constraints**:  
    Every container defines explicit cgroup limits preventing rogue processes or memory leaks from destabilizing the host:

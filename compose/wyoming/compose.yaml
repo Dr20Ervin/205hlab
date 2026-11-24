@@ -1,0 +1,111 @@
+---
+services:
+  wyoming-whisper:
+    image: docker.io/rhasspy/wyoming-whisper:latest
+    restart: unless-stopped
+    container_name: wyoming-whisper
+    security_opt:
+      - no-new-privileges:true
+    ports:
+      - "${MNGT_IP:?MNGT_IP Not defined}:${WYOMING_WHISPER_PORT:-10300}:10300/tcp"
+    command:
+      - "--model"
+      - "${WHISPER_MODEL:-base-int8}"
+      - "--language"
+      - "${WHISPER_LANGUAGE:-en}"
+      - "--beam-size"
+      - "${WHISPER_BEAM_SIZE:-1}"
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+    environment:
+      - TZ=${TZ:-UTC}
+    networks:
+      - wyoming_network
+    volumes:
+      - wyoming_whisper_data:/data
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import socket; s = socket.create_connection(('127.0.0.1', 10300), timeout=3); s.close()"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
+
+  wyoming-piper:
+    image: docker.io/rhasspy/wyoming-piper:latest
+    restart: unless-stopped
+    container_name: wyoming-piper
+    security_opt:
+      - no-new-privileges:true
+    ports:
+      - "${MNGT_IP:?MNGT_IP Not defined}:${WYOMING_PIPER_PORT:-10200}:10200/tcp"
+    command:
+      - "--voice"
+      - "${PIPER_VOICE:-jarvis-medium}"
+      - "--data-dir"
+      - "/data"
+      - "--download-dir"
+      - "/data"
+      - "--length-scale"
+      - "${PIPER_LENGTH_SCALE:-1.08}"
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+    environment:
+      - TZ=${TZ:-UTC}
+    networks:
+      - wyoming_network
+    volumes:
+      - ${PIPER_DATA_DIR:?PIPER_DATA_DIR Not defined}:/data
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import socket; s = socket.create_connection(('127.0.0.1', 10200), timeout=3); s.close()"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 45s
+
+  wyoming-openwakeword:
+    image: docker.io/rhasspy/wyoming-openwakeword:latest
+    restart: unless-stopped
+    container_name: wyoming-openwakeword
+    security_opt:
+      - no-new-privileges:true
+    ports:
+      - "${MNGT_IP:?MNGT_IP Not defined}:${WYOMING_OPENWAKEWORD_PORT:-10400}:10400/tcp"
+    command:
+      - "--preload-model"
+      - "${OPENWAKEWORD_PRELOAD_MODEL:-hey_jarvis}"
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+    environment:
+      - TZ=${TZ:-UTC}
+    networks:
+      - wyoming_network
+    volumes:
+      - wyoming_openwakeword_data:/data
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import socket; s = socket.create_connection(('127.0.0.1', 10400), timeout=3); s.close()"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+networks:
+  wyoming_network:
+    name: wyoming_network
+    driver: bridge
+
+volumes:
+  wyoming_whisper_data:
+    name: wyoming-whisper-data
+    driver: local
+  wyoming_openwakeword_data:
+    name: wyoming-openwakeword-data
+    driver: local

@@ -175,7 +175,7 @@ To prevent LAN DNS outages when rebooting the primary Ubuntu server, **Technitiu
 
 ---
 
-### Service Catalog (24 Compose Stacks)
+### Service Catalog (25 Compose Stacks)
 
 > Full stack configurations, environment templates, and per-service documentation live in **[`compose/`](compose/README.md)**.
 
@@ -224,6 +224,7 @@ To prevent LAN DNS outages when rebooting the primary Ubuntu server, **Technitiu
 | [`searxng`](compose/searxng/) | **SearXNG** + **Gluetun (WireGuard/AirVPN)** + **Valkey 9** — Privacy metasearch routing outbound queries over VPN to avoid ISP rate limits. | `search.205hlab.com` | ForwardAuth |
 | [`changedetection`](compose/changedetection/) | **ChangeDetection.io** + **SockpuppetBrowser** (Playwright Chrome) — Web page change & price monitor. | `changedetection.internal.205hlab.com` | LAN-only |
 | [`web-tools`](compose/web-tools/) | **IT-Tools**, **Omni-Tools**, **Draw.io**, **BentoPDF** — Client-side browser/WASM utilities running on read-only root filesystems. | `it-tools` · `omni` · `draw` · `pdf`<br>`(.205hlab.com)` | ForwardAuth |
+| [`wyoming`](compose/wyoming/) | **Wyoming Whisper** (`base-int8` STT on `:10300`) + **Wyoming Piper** (`jarvis-medium` TTS on `:10200`) + **openWakeWord** (`hey_jarvis` on `:10400`) — Local CPU Jarvis voice pipeline offloaded from the HAOS appliance. | `${MNGT_IP}:10300`<br>`${MNGT_IP}:10200`<br>`${MNGT_IP}:10400` | MNGT VLAN TCP Only |
 
 #### 🎬 Media Automation & Delivery
 
@@ -273,7 +274,7 @@ Security is handled in layers from the Cloudflare edge down to individual contai
 │   ├── workflows/validate-compose.yml    # GitHub Actions CI: validates all compose stacks
 │   └── ISSUE_TEMPLATE/ & PR_TEMPLATE     # Repository contribution templates
 ├── assets/                               # Custom SVG/PNG icons & branding for Authentik/dashboards
-├── compose/                              # 24 Docker Compose stacks (compose.yaml, example.env, db-init.sql)
+├── compose/                              # 25 Docker Compose stacks (compose.yaml, example.env, db-init.sql)
 ├── docs/
 │   ├── adr/                              # Architecture Decision Records (ADR-001 .. ADR-005)
 │   └── runbooks/                         # Disaster recovery & operational SOPs
@@ -330,7 +331,7 @@ nano .env && docker compose up -d
 ```
 
 **Dependency Startup Sequence:**
-1. `traefik` → 2. `postgres` → 3. `databasus` → 4. `authentik` → 5. `technitium` → 6. `prometheus` & `prom-exporters` → 7. `grafana` & `umami` → 8. Application & Media stacks (`paperless`, `mealie`, `freshrss`, `reactive-resume`, `vikunja`, `changedetection`, `searxng`, `jelly`, `kavita`, `servarr`, `downloaderr`, `tracearr`, `network-mon`, `web-tools`).
+1. `traefik` → 2. `postgres` → 3. `databasus` → 4. `authentik` → 5. `technitium` → 6. `prometheus` & `prom-exporters` → 7. `grafana` & `umami` → 8. Application & Media stacks (`paperless`, `mealie`, `freshrss`, `reactive-resume`, `vikunja`, `changedetection`, `searxng`, `jelly`, `kavita`, `servarr`, `downloaderr`, `tracearr`, `network-mon`, `web-tools`, `wyoming`).
 
 </details>
 
