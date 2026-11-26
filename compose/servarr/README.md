@@ -24,7 +24,7 @@ This compose stack houses the core automation engines that manage media acquisit
             ▼                             ▼                             ▼
    [ Sonarr / Radarr / Lidarr ]       [ Prowlarr Indexer ]        [ Profilarr (+ Parser) ]
             │                             │                             │
-            │ Media Links                 │ Indexer Sync & Flaresolverr │ Profile Sync
+            │ Media Links                 │ Indexer Sync & Byparr       │ Profile Sync
             ▼                             ▼                             ▼
    [ Downloaderr Stack (VPN) ] ◄─── [ Usenet / Torrents ] ────────► [ Servarr APIs ]
             │
@@ -42,7 +42,7 @@ This compose stack houses the core automation engines that manage media acquisit
 4. **`chaptarr`** (`https://chaptarr.205hlab.com`): Audiobooks, podcasts, and digital books management.
 5. **`bazarr`** (`https://bazarr.205hlab.com`): Automated multi-lingual subtitle synchronizer (OpenSubtitles, Subscene).
 6. **`prowlarr`** (`https://prowlarr.205hlab.com`): Unified Torrent/Usenet indexer manager syncing indexers to all \*arr apps.
-7. **`flaresolverr`** (`http://flaresolverr:8191`): Internal headless proxy to bypass Cloudflare and DDoS protection on public indexers.
+7. **`byparr`** (`http://byparr:8191`): Internal FlareSolverr-compatible anti-bot proxy (Camoufox/Firefox + FastAPI) bypassing Cloudflare and DDoS protection on public indexers ([ADR-007](../../docs/adr/ADR-007-replace-flaresolverr-with-byparr.md)).
 8. **`profilarr`** (`https://profilarr.205hlab.com`): Centralized Trash Guides quality profile synchronizer.
 9. **`profilarr-parser`** (`http://profilarr-parser:5000`): Internal high-performance parsing backend for Profilarr.
 
@@ -148,7 +148,7 @@ Each database and role is initialized cleanly via [`db-init.sql`](db-init.sql).
 
 4. **Verify Connectivity**:
    - Access each service at `https://<service>.205hlab.com`.
-   - In Prowlarr, configure Flaresolverr at `http://flaresolverr:8191`.
+   - In Prowlarr (**Settings** > **Indexers** > **Indexer Proxies**), add a **FlareSolverr** proxy pointing to `http://byparr:8191`.
    - In Prowlarr, link your applications under **Settings** > **Apps** using internal Docker hostnames (`http://sonarr:8989`, `http://radarr:7878`, etc.).
 
 ---

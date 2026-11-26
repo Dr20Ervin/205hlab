@@ -38,6 +38,7 @@ flowchart LR
 | **[ADR-004](ADR-004-dockhand-gitops-continuous-deployment.md)** | Adopt Dockhand for GitOps Continuous Deployment and Zero-Plaintext Secret Injection | CI/CD & Operations | `Accepted` | `2026-10` |
 | **[ADR-005](ADR-005-decouple-smart-home-haos-appliance.md)** | Decouple Smart Home Infrastructure (HAOS) and Auxiliary DNS onto a Dedicated Hardware Appliance | Hardware & Topology | `Accepted` | `2026-10` |
 | **[ADR-006](ADR-006-dual-instance-uptime-kuma-monitoring.md)** | Deploy Dual-Instance Uptime Kuma Monitoring Topology with Dedicated MariaDB and Out-of-Band HAOS Watchdog | Observability & Reliability | `Accepted` | `2026-11` |
+| **[ADR-007](ADR-007-replace-flaresolverr-with-byparr.md)** | Replace FlareSolverr with Byparr (Camoufox) for Prowlarr Indexer Challenge Bypass | Media Automation & Acquisition | `Accepted` | `2026-11` |
 
 ---
 

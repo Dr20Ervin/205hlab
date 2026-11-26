@@ -6,7 +6,7 @@
 [![Network Isolation](https://img.shields.io/badge/Network-Microsegmented-2ea44f?style=for-the-badge&logo=wireguard&logoColor=white)](#-network-topology--microsegmentation)
 [![Resource Limits](https://img.shields.io/badge/Limits-Strict%20CPU%20%26%20RAM-9b51e0?style=for-the-badge)](#-production-engineering-standards)
 [![Central Database](https://img.shields.io/badge/Data%20Tier-PostgreSQL%2018%20%26%20TimescaleDB-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)](postgres/)
-[![ADRs](https://img.shields.io/badge/Architecture-ADRs%20001--006-blue?style=for-the-badge)](../docs/adr/README.md)
+[![ADRs](https://img.shields.io/badge/Architecture-ADRs%20001--007-blue?style=for-the-badge)](../docs/adr/README.md)
 [![Runbooks](https://img.shields.io/badge/Operations-5%20Runbooks-238636?style=for-the-badge)](../docs/runbooks/README.md)
 
 This directory houses the **25 production Docker Compose stacks** powering the `205hlab` bare-metal infrastructure. Every stack is engineered as an autonomous, self-contained unit adhering to uniform DevOps standards: strict cgroup resource constraints, standardized healthchecks, isolated bridge networks, centralized persistence, and zero-trust edge authentication.

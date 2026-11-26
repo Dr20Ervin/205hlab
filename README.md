@@ -157,6 +157,8 @@ Key architectural trade-offs and the alternatives I rejected are documented in [
 | **[ADR-003](docs/adr/ADR-003-split-horizon-technitium-dns.md)** | Split-Horizon Technitium DNS + Catalog HA | Keeps admin UIs (`*.internal.205hlab.com`) completely off public DNS while automatically syncing zones to the HAOS backup node. | [**`dns-failover-and-sync.md`**](docs/runbooks/dns-failover-and-sync.md) |
 | **[ADR-004](docs/adr/ADR-004-dockhand-gitops-continuous-deployment.md)** | Dockhand GitOps & Runtime Secrets | Syncs compose stacks from GitHub and injects secrets from an encrypted DB at container startup so plaintext `.env` files never sit on disk. | [**`stack-upgrade-and-rollback.md`**](docs/runbooks/stack-upgrade-and-rollback.md) |
 | **[ADR-005](docs/adr/ADR-005-decouple-smart-home-haos-appliance.md)** | Decoupled HAOS Appliance (ASUS X540SA) | Isolates Zigbee, UPS monitoring (NUT), and backup DNS onto low-power battery-backed hardware so server maintenance doesn't impact the house. | [**`power-outage-and-storage-health.md`**](docs/runbooks/power-outage-and-storage-health.md) |
+| **[ADR-006](docs/adr/ADR-006-dual-instance-uptime-kuma-monitoring.md)** | Dual-Instance Uptime Kuma + MariaDB | Pairs primary Uptime Kuma v2 (MariaDB 11.6) with a decoupled HAOS watchdog on the ASUS X540SA for out-of-band outage alerts and a slug-restricted public status page. | [**`power-outage-and-storage-health.md`**](docs/runbooks/power-outage-and-storage-health.md) |
+| **[ADR-007](docs/adr/ADR-007-replace-flaresolverr-with-byparr.md)** | Replace FlareSolverr with Byparr (Camoufox) | Swaps Chromium/Selenium FlareSolverr for stateless Camoufox-based Byparr (`http://byparr:8191`) to restore reliable Cloudflare Turnstile bypass for Prowlarr indexers. | [**`stack-upgrade-and-rollback.md`**](docs/runbooks/stack-upgrade-and-rollback.md) |
 
 ---
 
@@ -232,7 +234,7 @@ To prevent LAN DNS outages when rebooting the primary Ubuntu server, **Technitiu
 | :--- | :--- | :--- | :--- |
 | [`jelly`](compose/jelly/) | **Jellyfin** (Intel HD 4000 `/dev/dri` VAAPI hardware transcoding) + **Seerr** media request portal. | `jellyfin.205hlab.com`<br>`seer.205hlab.com` | OIDC (Plugin)<br>ForwardAuth |
 | [`kavita`](compose/kavita/) | **Kavita** — Digital reader for eBooks, manga, and comics mounted read-only from `BinPool`. | `kavita.205hlab.com` | OIDC |
-| [`servarr`](compose/servarr/) | **Sonarr** (TV) · **Radarr** (Movies) · **Lidarr** (Music) · **Chaptarr** (Books/Audiobooks) · **Bazarr** (Subtitles) · **Prowlarr** (Indexers) · **Profilarr** (Quality profiles) · **FlareSolverr**. Migrated to PostgreSQL 18. | `sonarr` · `radarr` · `lidarr`<br>`chaptarr` · `bazarr` · `prowlarr`<br>`profilarr` `(.205hlab.com)` | ForwardAuth<br>(Profilarr: OIDC) |
+| [`servarr`](compose/servarr/) | **Sonarr** (TV) · **Radarr** (Movies) · **Lidarr** (Music) · **Chaptarr** (Books/Audiobooks) · **Bazarr** (Subtitles) · **Prowlarr** (Indexers) · **Profilarr** (Quality profiles) · **Byparr**. Migrated to PostgreSQL 18. | `sonarr` · `radarr` · `lidarr`<br>`chaptarr` · `bazarr` · `prowlarr`<br>`profilarr` `(.205hlab.com)` | ForwardAuth<br>(Profilarr: OIDC) |
 | [`downloaderr`](compose/downloaderr/) | **qBittorrent** bound inside **Gluetun WireGuard VPN** (`network_mode: service:gluetun` with kill-switch) + **qui** web UI + **MeTube** downloader. | `qui.205hlab.com`<br>`metube.205hlab.com` | OIDC<br>ForwardAuth |
 | [`tracearr`](compose/tracearr/) | **Tracearr** + **TimescaleDB (PG18)** + **Valkey 9** — Playback analytics and streaming telemetry. | `tracearr.205hlab.com` | ForwardAuth |
 
@@ -276,7 +278,7 @@ Security is handled in layers from the Cloudflare edge down to individual contai
 ├── assets/                               # Custom SVG/PNG icons & branding for Authentik/dashboards
 ├── compose/                              # 25 Docker Compose stacks (compose.yaml, example.env, db-init.sql)
 ├── docs/
-│   ├── adr/                              # Architecture Decision Records (ADR-001 .. ADR-005)
+│   ├── adr/                              # Architecture Decision Records (ADR-001 .. ADR-007)
 │   └── runbooks/                         # Disaster recovery & operational SOPs
 ├── grafana-dashboards/                   # 11 versioned JSON dashboards (core, hardware, saas)
 └── README.md

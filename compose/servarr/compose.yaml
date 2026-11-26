@@ -46,10 +46,10 @@ services:
       - traefik.http.routers.prowlarr_https.tls.certresolver=cloudflare
       - traefik.http.routers.prowlarr_https.middlewares=authentik@docker
 
-  flaresolverr:
+  byparr:
     image: ghcr.io/thephaseless/byparr:latest
     restart: unless-stopped
-    container_name: flaresolverr
+    container_name: byparr
     deploy:
       resources:
         limits:
