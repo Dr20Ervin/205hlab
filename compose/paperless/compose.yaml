@@ -20,7 +20,7 @@ services:
       retries: 5
 
   gotenberg:
-    image: docker.io/gotenberg/gotenberg:9.9.0
+    image: docker.io/gotenberg/gotenberg:9.10.2
     restart: unless-stopped
     container_name: paperless-gotenberg
     command:
@@ -42,7 +42,7 @@ services:
       start_period: 15s
 
   tika:
-    image: docker.io/apache/tika:4.2.0-1
+    image: docker.io/apache/tika:4.2.0-2
     restart: unless-stopped
     container_name: paperless-tika
     deploy:
