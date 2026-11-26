@@ -47,7 +47,7 @@ services:
       - traefik.http.routers.prowlarr_https.middlewares=authentik@docker
 
   flaresolverr:
-    image: ghcr.io/flaresolverr/flaresolverr:latest
+    image: ghcr.io/thephaseless/byparr:latest
     restart: unless-stopped
     container_name: flaresolverr
     deploy:
@@ -56,17 +56,12 @@ services:
           cpus: '1.25'
           memory: 2G
     environment:
-      - LOG_LEVEL=${LOG_LEVEL:-info}
-      - LOG_FILE=${LOG_FILE:-none}
-      - LOG_HTML=${LOG_HTML:-false}
-      - CAPTCHA_SOLVER=${CAPTCHA_SOLVER:-none}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
       - TZ=${TZ:-UTC}
     networks:
       - servarr_backend
-    volumes:
-      - flaresolverr_data:/config
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:8191/ || exit 1"]
+      test: ["CMD-SHELL", "curl -f http://localhost:8191/health || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -394,9 +389,6 @@ volumes:
     driver: local
   sonarr_data:
     name: sonarr-data
-    driver: local
-  flaresolverr_data:
-    name: flaresolverr-data
     driver: local
   lidarr_data:
     name: lidarr-data
