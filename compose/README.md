@@ -52,12 +52,12 @@ The stacks operate in a layered topology where foundational services (Ingress, D
 ```mermaid
 flowchart TD
     subgraph Layer0["Tier 0: Edge Ingress & Network Hardening"]
-        Traefik["traefik (v3.7.18)\nEdge Proxy & ACME TLS"]
+        Traefik["traefik (v3.8.0)\nEdge Proxy & ACME TLS"]
         Technitium["technitium (15.6.2)\nSplit-Horizon Authoritative DNS"]
     end
 
     subgraph Layer1["Tier 1: Identity & Centralized State"]
-        Authentik["authentik (2026.8.5)\nCentralized OIDC & ForwardAuth"]
+        Authentik["authentik (2026.8.7)\nCentralized OIDC & ForwardAuth"]
         Postgres["postgres (18.3)\nCentralized DB with Checksums"]
         Databasus["databasus (v3.65.0)\nBackups & databasus-verifier Agent"]
         Timescale["tracearr-timescaledb\nTimescaleDB HA Cluster"]
@@ -67,7 +67,7 @@ flowchart TD
     subgraph Layer2["Tier 2: Observability & Telemetry"]
         Prometheus["prometheus (v3.11.3)\nCentral TSDB Engine"]
         Exporters["prom-exporters\n(Node, cAdvisor, ZFS, S.M.A.R.T.)"]
-        Grafana["grafana (13.0.1)\nTelemetry Dashboards"]
+        Grafana["grafana (13.3.2)\nTelemetry Dashboards"]
         UptimeKuma["uptime-kuma (v2)\nMariaDB & Ingress Sentinel"]
         Umami["umami (v3)\nPrivacy Analytics & Collector"]
         Exporters -->|Scrape| Prometheus

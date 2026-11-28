@@ -1,6 +1,6 @@
 # Grafana Dashboards — Production Observability & Telemetry
 
-[![Grafana](https://img.shields.io/badge/Grafana-13.0.1-F46800?style=for-the-badge&logo=grafana&logoColor=white)](https://grafana.com)
+[![Grafana](https://img.shields.io/badge/Grafana-13.3.2-F46800?style=for-the-badge&logo=grafana&logoColor=white)](https://grafana.com)
 [![Dashboards](https://img.shields.io/badge/Dashboards-11%20Production-orange?style=for-the-badge)](https://github.com/Dr20Ervin/205hlab/tree/main/grafana-dashboards)
 [![Folders](https://img.shields.io/badge/Grafana%20Folders-3%20Managed-blue?style=for-the-badge)](#-grafana-folder-organization)
 [![Metrics](https://img.shields.io/badge/Data%20Source-Prometheus%20v3-E6522C?style=for-the-badge&logo=prometheus&logoColor=white)](../compose/prometheus/)
@@ -69,7 +69,7 @@ In the Grafana interface, dashboards are organized into three dedicated folders:
 | **`205hlab - Core`** | **Traefik Standalone Dashboard** | [`core/traefik.json`](core/traefik.json) | Official (Modified) | Traefik v3 (:9090) | Total HTTP requests, status codes (2xx/4xx/5xx), router latencies, config reloads |
 | **`205hlab - Core`** | **y0nei's cAdvisor dashboard** | [`core/cadvisor-dashboard.json`](core/cadvisor-dashboard.json) | Community (Customized) | `cadvisor:latest` | Per-container CPU throttling, memory RSS/cache, network I/O, OOM killer events |
 | **`205hlab - Hardware`** | **APC UPS Dashboard** | [`hardware/apc-ups.json`](hardware/apc-ups.json) | Custom (Homelab) | Home Assistant (HAOS) | Battery charge percentage, input line voltage, real-time power load, runtime remaining |
-| **`205hlab - Hardware`** | **Node Exporter Full** | [`hardware/node-exporter-full.json`](hardware/node-exporter-full.json) | Community (Tuned) | `node-exporter:v1.8.2` | Bare-metal host CPU states, RAM breakdown, disk IOPS, TCP socket states, network rx/tx |
+| **`205hlab - Hardware`** | **Node Exporter Full** | [`hardware/node-exporter-full.json`](hardware/node-exporter-full.json) | Community (Tuned) | `node-exporter:v1.13.1` | Bare-metal host CPU states, RAM breakdown, disk IOPS, TCP socket states, network rx/tx |
 | **`205hlab - Hardware`** | **OpenWRT** | [`hardware/openwrt.json`](hardware/openwrt.json) | Community (Adapted) | OpenWrt router exporter | Router CPU/RAM load, WAN/LAN interface throughput, NAT connection tracking table |
 | **`205hlab - Hardware`** | **ZFS / Overview** | [`hardware/zfs.json`](hardware/zfs.json) | Community (Adapted) | `node-exporter` / `zfs_exporter` | OpenZFS pool health, ARC size and hit ratio, dataset compression, vdev error counts |
 | **`205hlab - SaaS`** | **Qui overview** | [`saas/qui-overview.json`](saas/qui-overview.json) | Custom / Modified | qui / qBittorrent | Active torrent counts, upload/download bandwidth, tracker status, session data |

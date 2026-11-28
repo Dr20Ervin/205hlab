@@ -1,6 +1,6 @@
 # Prometheus Exporters — Full-Stack Metric Collectors
 
-[![Node Exporter](https://img.shields.io/badge/Collector-Node%20Exporter%20v1.8-blue?style=for-the-badge&logo=prometheus&logoColor=white)](https://github.com/prometheus/node_exporter)
+[![Node Exporter](https://img.shields.io/badge/Collector-Node%20Exporter%20v1.13-blue?style=for-the-badge&logo=prometheus&logoColor=white)](https://github.com/prometheus/node_exporter)
 [![cAdvisor](https://img.shields.io/badge/Collector-cAdvisor-green?style=for-the-badge&logo=google&logoColor=white)](https://github.com/google/cadvisor)
 [![ZFS Exporter](https://img.shields.io/badge/Collector-OpenZFS%20Exporter-005C8A?style=for-the-badge)](https://github.com/pdf/zfs_exporter)
 [![Smartctl](https://img.shields.io/badge/Collector-smartctl--exporter-orange?style=for-the-badge)](https://github.com/prometheus-community/smartctl_exporter)
@@ -38,7 +38,7 @@ All exporters communicate over the isolated `monitoring_network` and expose stan
 ```
 
 ### 1. `node-exporter` (Port: `:9100`)
-- **Image:** `docker.io/prom/node-exporter:v1.8.2`
+- **Image:** `docker.io/prom/node-exporter:v1.13.1`
 - **Scope:** Host hardware telemetry (CPU states, RAM utilization, network interfaces, load averages, and thermal sensors).
 - **Hardening:** Runs with `pid: host` and mounts `/host/proc`, `/host/sys`, and `/` (`:ro,rslave`).
 - **Filtering:** Filters out virtual docker network interfaces (`veth.*`, `br-.*`, `docker.*`) and ephemeral filesystems to prevent metric bloat.

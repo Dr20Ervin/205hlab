@@ -41,7 +41,7 @@
    │                              umami (:3000)                                    │
    │  • Renamed Script: TRACKER_SCRIPT_NAME=pulse.js                               │
    │  • Renamed Endpoint: COLLECT_API_ENDPOINT=/api/collect                        │
-   │  • Docker/VPN Exclusion: IGNORE_IP=10.0.0.0/8,172.16.0.0/12                   │
+   │  • Loopback Exclusion: IGNORE_IP=127.0.0.1                                    │
    └───────────────────────────────────────┬───────────────────────────────────────┘
                                            │ postgres_network (:5432)
                                            ▼
@@ -65,7 +65,7 @@
 ### 4. Dual-Path Client IP Resolution (WAN + Split-Horizon LAN)
 - `CLIENT_IP_HEADER` is **intentionally left unset**.
 - Umami's built-in header precedence evaluates `cf-connecting-ip` first and falls back to `x-real-ip` and `x-forwarded-for`.
-- This ensures Cloudflare-proxied WAN visitors resolve to their real client IP, while split-horizon LAN clients (which hit Traefik directly without `CF-Connecting-IP`) fall back to their LAN IP so `IGNORE_IP` excludes homelab traffic cleanly.
+- This ensures Cloudflare-proxied WAN visitors resolve to their real client IP, while split-horizon LAN clients (which hit Traefik directly without `CF-Connecting-IP`) fall back to their LAN IP, while `IGNORE_IP` defaults to loopback only (`127.0.0.1`) so split-horizon LAN, VPN, and Docker bridge visits are tracked accurately (additional CIDRs can still be excluded via `UMAMI_IGNORE_IP`).
 
 ---
 
@@ -83,7 +83,7 @@
 | `UMAMI_APP_SECRET` | Cryptographic secret signing Umami tokens | *(Generated via `setup_secrets.sh`)* |
 | `UMAMI_TRACKER_SCRIPT_NAME` | Public JS filename (no leading slash) | `pulse.js` |
 | `UMAMI_COLLECT_API_ENDPOINT` | Public ingestion path (leading slash required) | `/api/collect` |
-| `UMAMI_IGNORE_IP` | Comma-separated CIDRs excluded from analytics | `10.0.0.0/8,172.16.0.0/12` |
+| `UMAMI_IGNORE_IP` | Comma-separated IPs/CIDRs excluded from analytics (loopback only by default) | `127.0.0.1` |
 
 ---
 

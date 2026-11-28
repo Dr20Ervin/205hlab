@@ -42,7 +42,7 @@ flowchart LR
 
 ---
 
-## 📋 Hybrid ADR Template (Copy for `ADR-006+`)
+## 📋 Hybrid ADR Template (Copy for `ADR-008+`)
 
 ```markdown
 # ADR-XXX: [Imperative Decision Title]

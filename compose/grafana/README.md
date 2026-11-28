@@ -1,6 +1,6 @@
 # Grafana — Metrics Visualization & Observability Platform
 
-[![Grafana](https://img.shields.io/badge/Grafana-13.0.1-F46800?style=for-the-badge&logo=grafana&logoColor=white)](https://grafana.com)
+[![Grafana](https://img.shields.io/badge/Grafana-13.3.2-F46800?style=for-the-badge&logo=grafana&logoColor=white)](https://grafana.com)
 [![Auth](https://img.shields.io/badge/Auth-Authentik%20OIDC-fd4b2d?style=for-the-badge&logo=authentik&logoColor=white)](https://goauthentik.io)
 [![Telemetry](https://img.shields.io/badge/Metrics-Prometheus-E6522C?style=for-the-badge&logo=prometheus&logoColor=white)](https://prometheus.io)
 [![Reverse Proxy](https://img.shields.io/badge/Ingress-Traefik%20v3-24A1C1?style=for-the-badge&logo=traefikproxy&logoColor=white)](https://traefik.io)

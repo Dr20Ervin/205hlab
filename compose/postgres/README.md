@@ -81,6 +81,7 @@ Each application maintains an isolated database and restricted user. Provisionin
 | `reactive-resume` | `reactive-resume_app`| [`compose/reactive-resume/`](../reactive-resume/) |
 | `speedtest_tracker` | `speedtest_app` | [`compose/network-mon/`](../network-mon/) |
 | `umami` | `umami_app` | [`compose/umami/`](../umami/) |
+| `vikunja` | `vikunja_app` | [`compose/vikunja/`](../vikunja/) |
 
 ---
 

@@ -155,7 +155,7 @@ Key architectural trade-offs and the alternatives I rejected are documented in [
 | ADR | Decision | Why I Built It This Way | Operational Runbook |
 | :--- | :--- | :--- | :--- |
 | **[ADR-001](docs/adr/ADR-001-centralized-postgresql-18.md)** | Centralized PostgreSQL 18 (`--data-checksums`) | Running 1 shared Postgres container instead of 9 separate DB instances saves ~2.5 GB of idle RAM on a 32 GB host and simplifies nightly backups. | [**`disaster-recovery.md`**](docs/runbooks/disaster-recovery.md) |
-| **[ADR-002](docs/adr/ADR-002-authentik-unified-iam.md)** | Unified Authentik SSO & ForwardAuth | Puts a single login and RBAC layer in front of all 32 services (native OIDC where supported, Traefik ForwardAuth everywhere else). | [**`iam-and-ingress-recovery.md`**](docs/runbooks/iam-and-ingress-recovery.md) |
+| **[ADR-002](docs/adr/ADR-002-authentik-unified-iam.md)** | Unified Authentik SSO & ForwardAuth | Puts a single login and RBAC layer in front of all 35 services (native OIDC where supported, Traefik ForwardAuth everywhere else). | [**`iam-and-ingress-recovery.md`**](docs/runbooks/iam-and-ingress-recovery.md) |
 | **[ADR-003](docs/adr/ADR-003-split-horizon-technitium-dns.md)** | Split-Horizon Technitium DNS + Catalog HA | Keeps admin UIs (`*.internal.205hlab.com`) completely off public DNS while automatically syncing zones to the HAOS backup node. | [**`dns-failover-and-sync.md`**](docs/runbooks/dns-failover-and-sync.md) |
 | **[ADR-004](docs/adr/ADR-004-dockhand-gitops-continuous-deployment.md)** | Dockhand GitOps & Runtime Secrets | Syncs compose stacks from GitHub and injects secrets from an encrypted DB at container startup so plaintext `.env` files never sit on disk. | [**`stack-upgrade-and-rollback.md`**](docs/runbooks/stack-upgrade-and-rollback.md) |
 | **[ADR-005](docs/adr/ADR-005-decouple-smart-home-haos-appliance.md)** | Decoupled HAOS Appliance (ASUS X540SA) | Isolates Zigbee, UPS monitoring (NUT), and backup DNS onto low-power battery-backed hardware so server maintenance doesn't impact the house. | [**`power-outage-and-storage-health.md`**](docs/runbooks/power-outage-and-storage-health.md) |
@@ -187,7 +187,7 @@ To prevent LAN DNS outages when rebooting the primary Ubuntu server, **Technitiu
 
 | Stack | Services & Role | Route | Auth / Access |
 | :--- | :--- | :--- | :--- |
-| [`traefik`](compose/traefik/) | **Traefik v3.7** — Reverse proxy, Cloudflare DNS-01 ACME TLS, ForwardAuth chaining, Prometheus metrics (`:9090`). | — | Edge Ingress |
+| [`traefik`](compose/traefik/) | **Traefik v3.8** — Reverse proxy, Cloudflare DNS-01 ACME TLS, ForwardAuth chaining, Prometheus metrics (`:9090`). | — | Edge Ingress |
 | [`authentik`](compose/authentik/) | **Authentik 2026.8** — Central IdP providing OIDC, OAuth2, Traefik ForwardAuth outpost, and group RBAC. | `authentik.205hlab.com` | IdP Root |
 | [`technitium`](compose/technitium/) | **Technitium DNS 15.6** — Primary split-horizon resolver, DNSSEC, Catalog sync to HAOS `technitium-aux`. | `technitium.internal.205hlab.com` | LAN-only (`:5380` mngt) |
 | [`postgres`](compose/postgres/) | **PostgreSQL 18.3** (`--data-checksums`, per-app DBs provisioned via `db-init.sql`) + **Adminer** web UI. | `adminer.internal.205hlab.com` | LAN-only |
@@ -199,7 +199,7 @@ To prevent LAN DNS outages when rebooting the primary Ubuntu server, **Technitiu
 | Stack | Services & Role | Route | Auth / Access |
 | :--- | :--- | :--- | :--- |
 | [`prometheus`](compose/prometheus/) | **Prometheus v3.11** — Central TSDB (30-day retention, 50 GB cap). | `prometheus.internal.205hlab.com` | LAN-only |
-| [`grafana`](compose/grafana/) | **Grafana 13.0** — Dashboards with Authentik OIDC role mapping (`Admin`, `Editor`, `Viewer`). | `grafana.205hlab.com` | OIDC |
+| [`grafana`](compose/grafana/) | **Grafana 13.3** — Dashboards with Authentik OIDC role mapping (`Admin`, `Editor`, `Viewer`). | `grafana.205hlab.com` | OIDC |
 | [`prom-exporters`](compose/prom-exporters/) | **6 Metric Exporters** — `node-exporter`, `cadvisor`, `postgres`, `technitium`, `zfs`, `smartctl` (+ OpenWrt & NUT scrapes). | Internal scrape network | Internal |
 | [`network-mon`](compose/network-mon/) | **Speedtest Tracker** (3-hour WAN tests on PG18), **OpenSpeedTest** (LAN throughput on `:3000`), and **MyIP** (leak diagnostics on `:18966`). | `speedtest.205hlab.com`<br>`openspeed.internal.205hlab.com`<br>`myip.internal.205hlab.com` | ForwardAuth<br>LAN-only<br>LAN + ForwardAuth |
 | [`uptime-kuma`](compose/uptime-kuma/) | **Uptime Kuma v2** + **MariaDB 11.6** — Blackbox service sentinel, container healthchecks, and slug-whitelisted public status page. Probed out-of-band by HAOS watchdog. | `uptime.205hlab.com`<br>`uptime.205hlab.com/status/public` | ForwardAuth<br>Public (`/status/public`) |
@@ -220,9 +220,9 @@ To prevent LAN DNS outages when rebooting the primary Ubuntu server, **Technitiu
 
 | Stack | Services & Engineering Notes | Route | Auth |
 | :--- | :--- | :--- | :--- |
-| [`paperless`](compose/paperless/) | **Paperless-ngx** + **Gotenberg 8** + **Apache Tika** + **Valkey 9** — OCR document archive stored on `BinPool`. | `paperless.205hlab.com` | OIDC |
+| [`paperless`](compose/paperless/) | **Paperless-ngx** + **Gotenberg 9** + **Apache Tika** + **Valkey 9** — OCR document archive stored on `BinPool`. | `paperless.205hlab.com` | OIDC |
 | [`mealie`](compose/mealie/) | **Mealie** — Household recipe manager and meal planner backed by PostgreSQL 18. | `mealie.205hlab.com` | OIDC |
-| [`freshrss`](compose/freshrss/) | **FreshRSS 1.30** — News reader + **Release Sentinel** tracking GitHub releases for all 22 stacks via versioned OPML ([`rss-feeds/`](compose/freshrss/rss-feeds/)). | `freshrss.205hlab.com` | OIDC |
+| [`freshrss`](compose/freshrss/) | **FreshRSS 1.30** — News reader + **Release Sentinel** tracking GitHub releases for all 25 stacks via versioned OPML ([`rss-feeds/`](compose/freshrss/rss-feeds/)). | `freshrss.205hlab.com` | OIDC |
 | [`reactive-resume`](compose/reactive-resume/) | **Reactive Resume v6** + **Valkey 9** — Self-hosted CV builder backed by PostgreSQL 18. | `resume.205hlab.com` | OIDC |
 | [`vikunja`](compose/vikunja/) | **Vikunja** — Task manager & recurring homelab maintenance reminders (CalDAV sync, PG18 backend). | `vikunja.205hlab.com` | OIDC |
 | [`searxng`](compose/searxng/) | **SearXNG** + **Gluetun (WireGuard/AirVPN)** + **Valkey 9** — Privacy metasearch routing outbound queries over VPN to avoid ISP rate limits. | `search.205hlab.com` | ForwardAuth |
@@ -336,7 +336,7 @@ nano .env && docker compose up -d
 ```
 
 **Dependency Startup Sequence:**
-1. `traefik` → 2. `postgres` → 3. `databasus` → 4. `authentik` → 5. `technitium` → 6. `prometheus` & `prom-exporters` → 7. `grafana` & `umami` → 8. Application & Media stacks (`paperless`, `mealie`, `freshrss`, `reactive-resume`, `vikunja`, `changedetection`, `searxng`, `jelly`, `kavita`, `servarr`, `downloaderr`, `tracearr`, `network-mon`, `web-tools`, `wyoming`).
+1. `traefik` → 2. `postgres` → 3. `databasus` → 4. `authentik` → 5. `technitium` → 6. `prometheus` & `prom-exporters` → 7. `grafana`, `uptime-kuma`, & `umami` → 8. Application & Media stacks (`paperless`, `mealie`, `freshrss`, `reactive-resume`, `vikunja`, `changedetection`, `searxng`, `jelly`, `kavita`, `servarr`, `downloaderr`, `tracearr`, `network-mon`, `web-tools`, `wyoming`).
 
 </details>
 

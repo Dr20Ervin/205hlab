@@ -1,6 +1,6 @@
 # Authentik — Identity & Access Management (IAM) Hub
 
-[![Authentik](https://img.shields.io/badge/Authentik-2026.8.5-fd4b2d?style=for-the-badge&logo=authentik&logoColor=white)](https://goauthentik.io)
+[![Authentik](https://img.shields.io/badge/Authentik-2026.8.7-fd4b2d?style=for-the-badge&logo=authentik&logoColor=white)](https://goauthentik.io)
 [![Architecture](https://img.shields.io/badge/Architecture-Server%20%2B%20Worker-blue?style=for-the-badge)](../../docs/adr/ADR-002-authentik-unified-iam.md)
 [![Zero Trust](https://img.shields.io/badge/Policy-Zero--Trust%20Gateway-green?style=for-the-badge)](https://docs.goauthentik.io/add-secure-apps/providers/proxy/)
 [![Database](https://img.shields.io/badge/Database-PostgreSQL%2018-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org)
@@ -106,6 +106,7 @@ Access to applications, administrative privileges, and internal role mappings ar
 | | `grafana_editors` | Mapped to Grafana **Editor** role (create/edit dashboards and alert rules) |
 | | `grafana_viewers` | Mapped to Grafana **Viewer** role (read-only telemetry viewing) |
 | | `umami_admins` | Access to self-hosted Umami v3 analytics admin dashboard (`umami.internal.205hlab.com`) |
+| | `kuma_admins` | Access to primary Uptime Kuma monitoring dashboard (`uptime.205hlab.com`) |
 | **Household SaaS** | `mealie_admins` | Mapped to Mealie **Admin** role (system settings, recipe management, household control) |
 | | `mealie_users` | Mapped to Mealie **User** role (view recipes, generate shopping lists, log meals) |
 | | `paperless_admins` | Document management administrator (system settings, global tags, users) |
@@ -162,7 +163,7 @@ These services do not implement native OIDC or are hardened by enforcing zero-tr
 | **BentoPDF** | `pdf.205hlab.com` | ForwardAuth | `web-tools_users` | [`compose/web-tools/`](../web-tools/) |
 | **Changedetection**| `changedetection.internal.205hlab.com` | ForwardAuth | `changedetection_admins` | [`compose/changedetection/`](../changedetection/) |
 | **Chaptarr** | `chaptarr.205hlab.com` | ForwardAuth | `servarr_users` | [`compose/servarr/`](../servarr/) |
-| **Databasus** | `databasus.internal.205hlab.com` | ForwardAuth | `pgdb_admins` | *(internal)* |
+| **Databasus** | `databasus.internal.205hlab.com` | ForwardAuth | `pgdb_admins` | [`compose/databasus/`](../databasus/) |
 | **Draw.io** | `draw.205hlab.com` | ForwardAuth | `web-tools_users` | [`compose/web-tools/`](../web-tools/) |
 | **IT-Tools** | `it-tools.205hlab.com` | ForwardAuth | `it-tools_users` | [`compose/web-tools/`](../web-tools/) |
 | **Lidarr** | `lidarr.205hlab.com` | ForwardAuth | `servarr_users` | [`compose/servarr/`](../servarr/) |

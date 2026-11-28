@@ -116,5 +116,5 @@ labels:
 
 ## 🩺 Healthcheck & Monitoring
 
-- **Databasus Health:** Probed every 30s via HTTP spider on `http://localhost:4005/`.
+- **Databasus Readiness:** No container-level `healthcheck` is configured on `databasus`; its loopback API (`http://127.0.0.1:4005`) is polled by `databasus-verifier` on startup and monitored externally via Traefik/Uptime Kuma.
 - **Verifier Health:** Probed every 30s confirming `/tmp/verification-agent run` stays alive as foreground `PID 1`.

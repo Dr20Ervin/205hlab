@@ -1,6 +1,6 @@
 # Traefik v3 — Edge Reverse Proxy & Automated TLS Ingress
 
-[![Traefik](https://img.shields.io/badge/Traefik-v3.7.18-24A1C1?style=for-the-badge&logo=traefikproxy&logoColor=white)](https://traefik.io)
+[![Traefik](https://img.shields.io/badge/Traefik-v3.8.0-24A1C1?style=for-the-badge&logo=traefikproxy&logoColor=white)](https://traefik.io)
 [![TLS](https://img.shields.io/badge/TLS-Let's%20Encrypt%20(DNS--01)-success?style=for-the-badge&logo=letsencrypt&logoColor=white)](https://letsencrypt.org/)
 [![Cloudflare](https://img.shields.io/badge/DNS-Cloudflare%20API-F38020?style=for-the-badge&logo=cloudflare&logoColor=white)](https://www.cloudflare.com/)
 [![Observability](https://img.shields.io/badge/Metrics-Prometheus%20Export-E6522C?style=for-the-badge&logo=prometheus&logoColor=white)](https://prometheus.io)

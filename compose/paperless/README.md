@@ -24,7 +24,7 @@ Paperless-ngx is an enterprise-grade document management and archiving system th
                                       │
             ┌─────────────────────────┼─────────────────────────┐
             ▼                         ▼                         ▼
-   [ Valkey 9 Broker ]       [ Gotenberg 8.37 ]         [ Apache Tika 3.3.1 ]
+   [ Valkey 9 Broker ]       [ Gotenberg 9.10.2 ]       [ Apache Tika 4.2.0-2 ]
     (Async Task Queue)       (Sandboxed PDF Engine)     (Content Extraction)
             │                         │                         │
             └─────────────────────────┼─────────────────────────┘
@@ -34,8 +34,8 @@ Paperless-ngx is an enterprise-grade document management and archiving system th
 
 - **Core Server (`paperless-server`)**: Runs the Django web application, OCR workers, indexers, and the consuming engine.
 - **Message Broker (`paperless-valkey`)**: Valkey 9 (open-source Redis fork) queues asynchronous OCR tasks, document parsing, and full-text indexing.
-- **Office & PDF Rendering Engine (`paperless-gotenberg`)**: Gotenberg 8.37 converts DOCX, XLSX, PPTX, and HTML into standardized PDF/A documents with strict security options (`--chromium-disable-javascript=true`).
-- **Metadata & Text Extraction (`paperless-tika`)**: Apache Tika 3.3.1 parses text and metadata from arbitrary binary formats.
+- **Office & PDF Rendering Engine (`paperless-gotenberg`)**: Gotenberg 9.10.2 converts DOCX, XLSX, PPTX, and HTML into standardized PDF/A documents with strict security options (`--chromium-disable-javascript=true`).
+- **Metadata & Text Extraction (`paperless-tika`)**: Apache Tika 4.2.0-2 parses text and metadata from arbitrary binary formats.
 - **Database Engine**: Central PostgreSQL 18 instance with dedicated schema and database `paperless`.
 
 ---
