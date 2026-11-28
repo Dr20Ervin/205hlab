@@ -6,7 +6,7 @@
 | **Date** | `2026-10` |
 | **Deciders** | Vajda Ervin-Oliver |
 | **Domain** | Hardware Topology & Physical Fault Isolation |
-| **Related Documentation** | [`README.md#-physical-infrastructure`](../../README.md#-physical-infrastructure), [`ADR-003`](ADR-003-split-horizon-technitium-dns.md), [`ADR-004`](ADR-004-dockhand-gitops-continuous-deployment.md), [`power-outage-and-storage-health.md`](../runbooks/power-outage-and-storage-health.md) |
+| **Related Documentation** | [`README.md#-physical-infrastructure`](../../README.md#-physical-infrastructure), [`ADR-002`](ADR-002-authentik-unified-iam.md), [`ADR-003`](ADR-003-split-horizon-technitium-dns.md), [`ADR-004`](ADR-004-dockhand-gitops-continuous-deployment.md), [`ADR-006`](ADR-006-dual-instance-uptime-kuma-monitoring.md), [`power-outage-and-storage-health.md`](../runbooks/power-outage-and-storage-health.md) |
 
 ---
 
@@ -68,6 +68,7 @@ Smart-home infrastructure and auxiliary DNS are physically separated onto the de
 2. **Strict GitOps & Lifecycle Boundary:** HAOS manages its own native add-on lifecycles (`no Git repo synced` to HAOS). Cross-node integration with the primary server is strictly limited to:
    - **Dockhand Hawser Agent (`standard v0.2.52`)** ([ADR-004](ADR-004-dockhand-gitops-continuous-deployment.md)) for remote container health inspection, log streaming, and troubleshooting from `dockhand.internal.205hlab.com`.
    - **Prometheus Telemetry** surfacing APC UPS load/runtime metrics on Grafana's `APC UPS Dashboard` (`205hlab - Hardware`).
+3. **Isolated Remote Access (Dedicated Cloudflare Tunnel):** While all primary-server WAN services route through **Cloudflare Proxy/WAF + OpenWrt `iptables` Cloudflare CIDR allowlisting + Traefik v3 + Authentik** ([ADR-002](ADR-002-authentik-unified-iam.md)), the **Home Assistant Web UI** (alongside `uptime-kuma-aux` per [ADR-006](ADR-006-dual-instance-uptime-kuma-monitoring.md)) is exposed independently via an isolated HAOS Cloudflare Tunnel add-on with native authentication/2FA, ensuring remote smart-home control survives primary-server, Traefik, or Authentik downtime.
 
 ## Consequences
 

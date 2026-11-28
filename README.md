@@ -67,7 +67,8 @@ Because my household relies on these services daily, I treat the setup like a re
 | **System** | Repurposed ASUS X540SA Laptop · Home Assistant OS (HAOS) |
 | **CPU, RAM & Storage** | Intel Celeron N3060 (2C/2T) · 4 GB DDR3 · 240 GB Kingston A400 SSD |
 | **USB Peripherals** | SONOFF Zigbee 3.0 Dongle Plus · APC Back-UPS XS 950U (NUT server) |
-| **Role** | Smart home automation, UPS power telemetry, and **Auxiliary Technitium DNS** (`technitium-aux`) |
+| **Role** | Smart home automation, UPS power telemetry, **Auxiliary Technitium DNS** (`technitium-aux`), and **Auxiliary Uptime Kuma** (`uptime-kuma-aux`) |
+| **Remote Access** | Isolated **Cloudflare Tunnel** (HAOS add-on) strictly for the Home Assistant Web UI & `uptime-kuma-aux` — fully independent of Traefik/Authentik on the primary server |
 
 ### Network Gear & Edge
 
@@ -75,7 +76,7 @@ Because my household relies on these services daily, I treat the setup like a re
 | :--- | :--- |
 | **Xiaomi Redmi Router AX6S** | Flashed with custom-compiled **OpenWrt** — VLAN isolation, firewall zones, hardware NAT, Cloudflare CIDR port-forwarding |
 | **TP-Link 5-Port GbE Switch** | Wired gigabit LAN switching |
-| **Cloudflare** | Edge reverse proxy, WAF, DDoS mitigation, and DNS-01 ACME certificate validation |
+| **Cloudflare** | Edge reverse proxy, WAF, DDoS mitigation, and DNS-01 ACME certificate validation for the primary server, plus an isolated **Cloudflare Tunnel** strictly for HAOS web access |
 
 ### Why This Hardware?
 
@@ -103,7 +104,7 @@ flowchart TD
     end
 
     subgraph HAOS["🏠 ASUS X540SA — Home Assistant OS"]
-        HA["Home Assistant OS\n• Zigbee (SONOFF Dongle)\n• NUT Server (apc-950va)"]
+        HA["Home Assistant OS\n• Zigbee (SONOFF Dongle)\n• NUT Server (apc-950va)\n• Uptime Kuma AUX + Isolated CF Tunnel"]
         AuxDNS["Technitium DNS — AUX\n• Zone Replica via Catalog\n• DNS Redundancy"]
         Switch -.->|LAN| HA
         Switch -.->|LAN| AuxDNS
@@ -144,6 +145,7 @@ flowchart TD
     ExternalApps --> PG & VLK
     Media --> PG & TSB
     DNS -.->|Catalog replication| AuxDNS
+    CF -.->|Isolated CF Tunnel · HAOS Web UI| HA
 ```
 
 ### 📜 Architecture Decision Records (ADRs) & Runbooks
@@ -261,6 +263,7 @@ Security is handled in layers from the Cloudflare edge down to individual contai
 | **Perimeter Firewall** | OpenWrt `iptables` and Ubuntu host rules drop all inbound WAN packets unless they originate from official **Cloudflare IP ranges**. Direct-to-IP scans on ports 80/443 are silently dropped. |
 | **Zero-Port-80 TLS** | Traefik obtains wildcard certificates via Let's Encrypt **DNS-01 ACME** (Cloudflare API token), avoiding HTTP-01 port 80 exposure. |
 | **Mandatory WAN SSO** | Every `*.205hlab.com` route requires **Authentik** authentication—either via native OIDC with JWT entitlement claims or Traefik's `authentik@docker` ForwardAuth middleware (with strict path-whitelisted public exceptions for `uptime.205hlab.com/status/public` and `analytics.205hlab.com`). |
+| **Decoupled HAOS Tunnel** | Remote access to the **Home Assistant Web UI** (and `uptime-kuma-aux`) uses a dedicated, isolated **Cloudflare Tunnel** on the ASUS X540SA appliance with native auth/2FA rather than routing through Traefik/Authentik on the primary server. |
 | **Network Microsegmentation** | Stacks communicate over scoped bridge networks (`traefik_network`, `postgres_network`, `monitoring_network`, `servarr_backend`). Database ports are never published to the host. |
 | **Container Hardening** | Containers run with `no-new-privileges:true`, non-root `PUID`/`PGID` mappings, read-only Docker sockets (`:ro`), and explicit CPU/RAM limits (`deploy.resources.limits`) so a runaway process cannot starve the host. |
 | **No Plaintext `.env` Files** | Production credentials live encrypted inside **Dockhand's** database and are injected into container memory at deploy time. No production `.env` files sit on the host SSD, and repository `example.env` files use strict `${VAR:?error}` validation guards with dummy placeholders. |
@@ -386,7 +389,7 @@ While `205hlab` represents my current bare-metal Ubuntu Server baseline, it is t
 - **OS & Container Orchestration (`CLI` → `Portainer` → `Dockge & Unraid` → `Ubuntu + Dockhand`):** Progressed from raw Docker CLI to **Portainer**, and then to **Dockge on Unraid** (monitored alongside **Beszel**). While Unraid was convenient as a consumer NAS, it abstracted away too much of the underlying OS—limiting direct control over `systemd`, raw OpenZFS, kernel tuning, and `iptables`. I moved back to **bare-metal Ubuntu Server LTS** paired with **Dockhand GitOps** and encrypted deploy-time secret injection ([ADR-004](docs/adr/ADR-004-dockhand-gitops-continuous-deployment.md)).
 - **Databases (`SQLite / phpMyAdmin / pgAdmin` → `Centralized PostgreSQL 18`):** Earlier lab generations mixed default **SQLite** files with scattered SQL/PostgreSQL instances managed first through **phpMyAdmin** and later via a desktop **pgAdmin** client on my laptop. Consolidating onto a single **PostgreSQL 18** (`--data-checksums`) cluster solved SQLite concurrency lock errors, saved gigabytes of idle RAM, enabled browser-based inspection via **Adminer**, and unified nightly backups and restore verification under **Databasus** ([ADR-001](docs/adr/ADR-001-centralized-postgresql-18.md)).
 - **Directory Services & IAM (`Windows AD DS` → `OpenLDAP` → `FreeIPA` → `Authentik`):** Started with **Windows Server Active Directory (AD DS)** in a VM (GPO, Kerberos, DNS, DHCP), migrated to **OpenLDAP**, and then adopted Red Hat **FreeIPA** to govern centralized POSIX UID/GID permissions across **OpenZFS datasets and NFS shares** (intentionally omitted from this single-node bare-metal host, and ready to re-deploy when scaling to a multi-node cluster). For web apps, I moved from selective SSO to 100% mandatory **Authentik** OIDC and Traefik ForwardAuth across every service ([ADR-002](docs/adr/ADR-002-authentik-unified-iam.md)).
-- **Ingress & Perimeter (`NPM + Cloudflared` → `Cloudflared Only` → `Traefik v3 + WAF + iptables`):** Early labs combined **Nginx Proxy Manager (NPM)** with **Cloudflare Tunnels (`cloudflared`)**, then used Cloudflare Tunnels exclusively. For `205hlab`, I retired tunnels in favor of **Traefik Proxy v3** (DNS-01 ACME TLS, dynamic providers, middleware chaining) behind **Cloudflare Proxy/WAF** and strict OpenWrt/Ubuntu **`iptables` Cloudflare origin IP allowlisting** ([ADR-002](docs/adr/ADR-002-authentik-unified-iam.md)).
+- **Ingress & Perimeter (`NPM + Cloudflared` → `Cloudflared Only` → `Traefik v3 + WAF + iptables`):** Early labs combined **Nginx Proxy Manager (NPM)** with **Cloudflare Tunnels (`cloudflared`)**, then used Cloudflare Tunnels exclusively. For `205hlab`, I retired tunnels on the primary server in favor of **Traefik Proxy v3** (DNS-01 ACME TLS, dynamic providers, middleware chaining) behind **Cloudflare Proxy/WAF** and strict OpenWrt/Ubuntu **`iptables` Cloudflare origin IP allowlisting** ([ADR-002](docs/adr/ADR-002-authentik-unified-iam.md)). The sole intentional exception is the physically isolated HAOS appliance, which retains a dedicated Cloudflare Tunnel strictly for independent Home Assistant Web UI and `uptime-kuma-aux` access ([ADR-005](docs/adr/ADR-005-decouple-smart-home-haos-appliance.md), [ADR-006](docs/adr/ADR-006-dual-instance-uptime-kuma-monitoring.md)).
 - **DNS Progression (`Pi-hole` → `AdGuard Home` → `ISC BIND9` → `Technitium DNS`):** Iterated through four DNS setups: **Pi-hole** (with external multi-node sync scripts), **AdGuard Home** (with sync), raw **ISC BIND9** (authoritative text zonefiles and AXFR transfers), and finally dual-node **Technitium DNS**—combining BIND9-style authoritative zones, DNSSEC, and native **RFC Catalog Zone** automatic replication with built-in ad/malware blocklists and an OIDC web UI ([ADR-003](docs/adr/ADR-003-split-horizon-technitium-dns.md)).
 - **Observability (`InfluxDB + Telegraf` / `Uptime Kuma` / `Loki & Alloy` → `Prometheus + Grafana`):** Built monitoring stacks with **InfluxDB + Telegraf**, **Uptime Kuma**, **Grafana Loki**, and **Grafana Alloy** (evaluated and deferred until multi-node expansion), currently standardized on **Prometheus v3** and **Grafana 13**.
 - **Smart Home Fault Isolation (`Main-Server VM` → `Dedicated HAOS Appliance`):** After running Home Assistant inside a **VM on my main server** for years—where every host reboot or maintenance window took down apartment lighting and Zigbee sensors—I moved **Home Assistant OS (HAOS)**, the **NUT UPS server**, and the **auxiliary Technitium DNS replica** onto the dedicated, battery-backed **ASUS X540SA** appliance ([ADR-005](docs/adr/ADR-005-decouple-smart-home-haos-appliance.md)).
